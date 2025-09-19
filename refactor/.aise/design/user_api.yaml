@@ -1,0 +1,1649 @@
+openapi: 3.0.3
+info:
+  title: daloRADIUS User Management API
+  description: |
+    daloRADIUS用户管理模块的RESTful API接口规范
+
+    本API模块专注于用户管理的核心功能，遵循SOLID设计原则：
+    - 单一职责：专注于用户生命周期管理
+    - 开闭原则：支持用户类型和认证方式扩展
+    - 接口隔离：提供细粒度的用户操作接口
+    - 依赖倒置：依赖抽象的用户服务接口
+
+    核心功能包括：
+    - 用户账户的增删改查操作
+    - 用户认证和授权管理
+    - 用户组织关系管理
+    - 用户状态和生命周期管理
+    - 用户属性和配置管理
+  version: 2.0.0
+  contact:
+    name: daloRADIUS User API Support
+    email: support@daloradius.com
+  license:
+    name: GPL v2
+    url: https://www.gnu.org/licenses/gpl-2.0.html
+
+servers:
+  - url: https://api.daloradius.com/v2
+    description: Production server
+  - url: https://staging-api.daloradius.com/v2
+    description: Staging server
+  - url: http://localhost:8000/api/v2
+    description: Development server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # 通用响应模式 - 遵循DRY原则
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 请求是否成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          description: 响应数据
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiError"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+      required:
+        - success
+        - message
+
+    ApiError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 错误代码
+          example: "VALIDATION_ERROR"
+        field:
+          type: string
+          description: 错误相关字段
+          example: "username"
+        message:
+          type: string
+          description: 错误详细描述
+          example: "用户名长度必须在3-64字符之间"
+      required:
+        - code
+        - message
+
+    ResponseMeta:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+        request_id:
+          type: string
+          description: 请求追踪ID
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: 当前页码
+          example: 1
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: 每页记录数
+          example: 20
+        total_pages:
+          type: integer
+          description: 总页数
+          example: 10
+        total_records:
+          type: integer
+          description: 总记录数
+          example: 195
+        has_next:
+          type: boolean
+          description: 是否有下一页
+          example: true
+        has_previous:
+          type: boolean
+          description: 是否有上一页
+          example: false
+
+    # 用户核心实体模型 - 遵循SRP原则
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 用户唯一标识
+          example: "usr_123456789"
+        username:
+          type: string
+          description: 用户名
+          example: "john.doe"
+        email:
+          type: string
+          format: email
+          description: 邮箱地址
+          example: "john.doe@example.com"
+        first_name:
+          type: string
+          description: 名字
+          example: "John"
+        last_name:
+          type: string
+          description: 姓氏
+          example: "Doe"
+        status:
+          $ref: "#/components/schemas/UserStatus"
+        type:
+          $ref: "#/components/schemas/UserType"
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: 最后更新时间
+          example: "2024-01-20T14:25:30Z"
+        last_login:
+          type: string
+          format: date-time
+          description: 最后登录时间
+          example: "2024-01-20T09:15:22Z"
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+        authentication:
+          $ref: "#/components/schemas/UserAuthentication"
+        organization:
+          $ref: "#/components/schemas/UserOrganization"
+      required:
+        - id
+        - username
+        - status
+        - type
+
+    # 用户状态枚举 - 遵循ISP原则，细化状态管理
+    UserStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+        - suspended
+        - expired
+        - pending_activation
+        - password_reset_required
+      description: |
+        用户状态说明：
+        - active: 活跃用户，可正常使用系统
+        - inactive: 非活跃用户，暂时禁用
+        - suspended: 被管理员暂停使用
+        - expired: 账户已过期
+        - pending_activation: 等待激活
+        - password_reset_required: 需要重置密码
+      example: "active"
+
+    # 用户类型枚举 - 支持OCP原则的用户分类扩展
+    UserType:
+      type: string
+      enum:
+        - standard
+        - premium
+        - enterprise
+        - admin
+        - operator
+        - readonly
+      description: |
+        用户类型说明：
+        - standard: 标准用户
+        - premium: 高级用户
+        - enterprise: 企业用户
+        - admin: 系统管理员
+        - operator: 操作员
+        - readonly: 只读用户
+      example: "standard"
+
+    # 用户配置文件 - 遵循SRP原则，分离基本信息和配置
+    UserProfile:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: 电话号码
+          example: "+1-555-0123"
+        mobile:
+          type: string
+          description: 手机号码
+          example: "+1-555-0124"
+        address:
+          $ref: "#/components/schemas/UserAddress"
+        organization_name:
+          type: string
+          description: 组织机构名称
+          example: "Acme Corporation"
+        department:
+          type: string
+          description: 部门
+          example: "IT Department"
+        position:
+          type: string
+          description: 职位
+          example: "Network Administrator"
+        notes:
+          type: string
+          description: 备注信息
+          example: "VIP customer, priority support"
+        preferences:
+          $ref: "#/components/schemas/UserPreferences"
+        custom_attributes:
+          $ref: "#/components/schemas/UserCustomAttributes"
+
+    # 用户地址信息 - 遵循DRY原则
+    UserAddress:
+      type: object
+      properties:
+        street:
+          type: string
+          description: 街道地址
+          example: "123 Main Street"
+        city:
+          type: string
+          description: 城市
+          example: "New York"
+        state:
+          type: string
+          description: 州/省
+          example: "NY"
+        postal_code:
+          type: string
+          description: 邮政编码
+          example: "10001"
+        country:
+          type: string
+          description: 国家
+          example: "USA"
+
+    # 用户偏好设置 - 遵循ISP原则
+    UserPreferences:
+      type: object
+      properties:
+        language:
+          type: string
+          description: 首选语言
+          example: "en"
+        timezone:
+          type: string
+          description: 时区
+          example: "America/New_York"
+        date_format:
+          type: string
+          description: 日期格式
+          example: "MM/DD/YYYY"
+        email_notifications:
+          type: boolean
+          description: 是否接收邮件通知
+          example: true
+        sms_notifications:
+          type: boolean
+          description: 是否接收短信通知
+          example: false
+
+    # 用户自定义属性 - 遵循OCP原则，支持业务扩展
+    UserCustomAttributes:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          description: 员工ID
+          example: "EMP001"
+        cost_center:
+          type: string
+          description: 成本中心
+          example: "CC100"
+        department_code:
+          type: string
+          description: 部门代码
+          example: "IT"
+        manager_id:
+          type: string
+          description: 上级主管ID
+          example: "MGR123"
+        hire_date:
+          type: string
+          format: date
+          description: 入职日期
+          example: "2024-01-15"
+        contract_type:
+          type: string
+          enum:
+            - full_time
+            - part_time
+            - contractor
+            - intern
+          description: 合同类型
+          example: "full_time"
+        security_clearance:
+          type: string
+          enum:
+            - public
+            - internal
+            - confidential
+            - secret
+          description: 安全级别
+          example: "internal"
+      description: |
+        用户自定义属性，支持业务扩展需求。
+        通过明确定义的属性替代additionalProperties，
+        确保类型安全和API契约的明确性。
+
+    # 用户认证信息 - 遵循DIP原则，支持多种认证方式
+    UserAuthentication:
+      type: object
+      properties:
+        password_hash:
+          type: string
+          description: 密码哈希值（仅用于内部，不在API中返回）
+        password_last_changed:
+          type: string
+          format: date-time
+          description: 密码最后修改时间
+        failed_login_attempts:
+          type: integer
+          description: 连续失败登录次数
+          example: 0
+        lockout_until:
+          type: string
+          format: date-time
+          description: 账户锁定解除时间
+        two_factor_enabled:
+          type: boolean
+          description: 是否启用双因子认证
+          example: false
+        authentication_methods:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthenticationMethod"
+          description: 支持的认证方法
+
+    # 认证方法 - 支持OCP原则的认证扩展
+    AuthenticationMethod:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - password
+            - totp
+            - sms
+            - email
+            - ldap
+            - radius
+          description: 认证方法类型
+        is_primary:
+          type: boolean
+          description: 是否为主要认证方法
+        is_enabled:
+          type: boolean
+          description: 是否启用
+        configuration:
+          type: object
+          description: 认证方法配置（具体内容依认证类型而定）
+
+    # 用户组织关系 - 遵循SRP原则
+    UserOrganization:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserGroup"
+          description: 用户所属组织
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+          description: 用户角色
+        permissions:
+          type: array
+          items:
+            type: string
+          description: 用户权限列表
+          example:
+            - "user.read"
+            - "user.write"
+            - "accounting.read"
+
+    # 用户组 - 遵循ISP原则
+    UserGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 组ID
+          example: "grp_corp_users"
+        name:
+          type: string
+          description: 组名称
+          example: "Corporate Users"
+        description:
+          type: string
+          description: 组描述
+          example: "Standard corporate network users"
+        type:
+          type: string
+          enum:
+            - department
+            - project
+            - access_level
+            - custom
+          description: 组类型
+      required:
+        - id
+        - name
+
+    # 用户角色 - 遵循ISP原则
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 角色ID
+          example: "role_network_admin"
+        name:
+          type: string
+          description: 角色名称
+          example: "Network Administrator"
+        description:
+          type: string
+          description: 角色描述
+          example: "Network administration and management"
+        permissions:
+          type: array
+          items:
+            type: string
+          description: 角色权限
+      required:
+        - id
+        - name
+
+    # 用户创建请求 - 遵循KISS原则，仅包含必要字段
+    UserCreateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[a-zA-Z0-9_.-]+$"
+          description: 用户名（3-64字符，仅支持字母、数字、下划线、点、连字符）
+          example: "john.doe"
+        password:
+          type: string
+          minLength: 8
+          description: 密码（至少8位字符）
+          example: "SecurePass123!"
+        email:
+          type: string
+          format: email
+          description: 邮箱地址
+          example: "john.doe@example.com"
+        first_name:
+          type: string
+          maxLength: 50
+          description: 名字
+          example: "John"
+        last_name:
+          type: string
+          maxLength: 50
+          description: 姓氏
+          example: "Doe"
+        type:
+          $ref: "#/components/schemas/UserType"
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+        groups:
+          type: array
+          items:
+            type: string
+          description: 用户组ID列表
+          example: ["grp_corp_users"]
+        roles:
+          type: array
+          items:
+            type: string
+          description: 用户角色ID列表
+          example: ["role_standard_user"]
+        send_welcome_email:
+          type: boolean
+          description: 是否发送欢迎邮件
+          default: true
+      required:
+        - username
+        - password
+        - email
+
+    # 用户更新请求 - 遵循KISS原则，支持部分更新
+    UserUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: 邮箱地址
+        first_name:
+          type: string
+          maxLength: 50
+          description: 名字
+        last_name:
+          type: string
+          maxLength: 50
+          description: 姓氏
+        status:
+          $ref: "#/components/schemas/UserStatus"
+        type:
+          $ref: "#/components/schemas/UserType"
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+        groups:
+          type: array
+          items:
+            type: string
+          description: 用户组ID列表
+        roles:
+          type: array
+          items:
+            type: string
+          description: 用户角色ID列表
+
+    # 密码修改请求 - 遵循SRP原则，单独处理密码操作
+    PasswordChangeRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          description: 当前密码
+        new_password:
+          type: string
+          minLength: 8
+          description: 新密码（至少8位字符）
+        confirm_password:
+          type: string
+          description: 确认新密码
+      required:
+        - current_password
+        - new_password
+        - confirm_password
+
+    # 密码重置请求 - 遵循SRP原则
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: 用户邮箱地址
+      required:
+        - email
+
+    # 用户查询过滤器 - 遵循ISP原则，提供细粒度过滤
+    UserQueryFilter:
+      type: object
+      properties:
+        search:
+          type: string
+          description: 搜索关键词（用户名、邮箱、姓名）
+          example: "john"
+        status:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserStatus"
+          description: 用户状态过滤
+        type:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserType"
+          description: 用户类型过滤
+        group:
+          type: array
+          items:
+            type: string
+          description: 用户组过滤
+        role:
+          type: array
+          items:
+            type: string
+          description: 用户角色过滤
+        created_after:
+          type: string
+          format: date
+          description: 创建时间起始过滤
+          example: "2024-01-01"
+        created_before:
+          type: string
+          format: date
+          description: 创建时间结束过滤
+          example: "2024-12-31"
+        last_login_after:
+          type: string
+          format: date
+          description: 最后登录时间起始过滤
+        last_login_before:
+          type: string
+          format: date
+          description: 最后登录时间结束过滤
+
+    # 批量操作请求 - 遵循DRY原则
+    BatchOperationRequest:
+      type: object
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: string
+          description: 用户ID列表
+          example: ["usr_123", "usr_456", "usr_789"]
+        operation:
+          type: string
+          enum:
+            - activate
+            - deactivate
+            - suspend
+            - delete
+            - reset_password
+            - unlock
+          description: 批量操作类型
+        parameters:
+          type: object
+          description: 操作参数（具体内容依操作类型而定）
+      required:
+        - user_ids
+        - operation
+
+    # 用户统计信息 - 遵循SRP原则
+    UserStatistics:
+      type: object
+      properties:
+        total_users:
+          type: integer
+          description: 用户总数
+          example: 1250
+        active_users:
+          type: integer
+          description: 活跃用户数
+          example: 1100
+        inactive_users:
+          type: integer
+          description: 非活跃用户数
+          example: 150
+        users_by_type:
+          $ref: "#/components/schemas/UserTypeStatistics"
+        users_by_status:
+          $ref: "#/components/schemas/UserStatusStatistics"
+        new_users_last_30_days:
+          type: integer
+          description: 最近30天新增用户数
+          example: 45
+        login_activity:
+          type: object
+          properties:
+            daily_active:
+              type: integer
+              description: 日活跃用户数
+              example: 850
+            weekly_active:
+              type: integer
+              description: 周活跃用户数
+              example: 950
+            monthly_active:
+              type: integer
+              description: 月活跃用户数
+              example: 1050
+
+    # 用户类型统计 - 遵循OCP原则，明确定义支持的用户类型
+    UserTypeStatistics:
+      type: object
+      properties:
+        standard:
+          type: integer
+          description: 标准用户数量
+          example: 1000
+        premium:
+          type: integer
+          description: 高级用户数量
+          example: 200
+        enterprise:
+          type: integer
+          description: 企业用户数量
+          example: 50
+        admin:
+          type: integer
+          description: 管理员用户数量
+          example: 10
+        operator:
+          type: integer
+          description: 操作员用户数量
+          example: 20
+        readonly:
+          type: integer
+          description: 只读用户数量
+          example: 15
+      description: |
+        按用户类型分组的统计数据。
+        明确定义每种用户类型，避免使用additionalProperties。
+
+    # 用户状态统计 - 遵循ISP原则，明确定义支持的用户状态
+    UserStatusStatistics:
+      type: object
+      properties:
+        active:
+          type: integer
+          description: 活跃用户数量
+          example: 1100
+        inactive:
+          type: integer
+          description: 非活跃用户数量
+          example: 100
+        suspended:
+          type: integer
+          description: 暂停用户数量
+          example: 50
+        expired:
+          type: integer
+          description: 过期用户数量
+          example: 25
+        pending_activation:
+          type: integer
+          description: 待激活用户数量
+          example: 30
+        password_reset_required:
+          type: integer
+          description: 需要重置密码用户数量
+          example: 10
+      description: |
+        按用户状态分组的统计数据。
+        明确定义每种用户状态，确保类型安全性。
+
+tags:
+  - name: User Management
+    description: 用户账户管理操作
+  - name: User Authentication
+    description: 用户认证相关操作
+  - name: User Organization
+    description: 用户组织关系管理
+  - name: User Statistics
+    description: 用户统计和分析
+
+paths:
+  # 用户管理核心接口 - 遵循RESTful设计原则
+  /users:
+    get:
+      tags:
+        - User Management
+      summary: 获取用户列表
+      description: |
+        分页获取系统中的用户列表，支持多维度过滤和搜索。
+        遵循SRP原则，专注于用户列表查询功能。
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: 页码
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: 每页记录数
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 搜索关键词（用户名、邮箱、姓名）
+          example: "john"
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/UserStatus"
+          style: form
+          explode: false
+          description: 用户状态过滤
+        - name: type
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/UserType"
+          style: form
+          explode: false
+          description: 用户类型过滤
+        - name: group
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: 用户组过滤
+        - name: role
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: 用户角色过滤
+        - name: created_after
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 创建时间起始过滤
+        - name: created_before
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 创建时间结束过滤
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+              - last_login
+              - username
+              - email
+            default: created_at
+          description: 排序字段
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          description: 排序方向
+      responses:
+        "200":
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/User"
+              examples:
+                successful_response:
+                  summary: 成功响应示例
+                  value:
+                    success: true
+                    message: "用户列表获取成功"
+                    data:
+                      - id: "usr_123456789"
+                        username: "john.doe"
+                        email: "john.doe@example.com"
+                        first_name: "John"
+                        last_name: "Doe"
+                        status: "active"
+                        type: "standard"
+                        created_at: "2024-01-15T10:30:00Z"
+                    meta:
+                      timestamp: "2024-01-20T14:25:30Z"
+                      request_id: "req_abc123"
+                      pagination:
+                        page: 1
+                        page_size: 20
+                        total_pages: 10
+                        total_records: 195
+                        has_next: true
+                        has_previous: false
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+              examples:
+                validation_error:
+                  summary: 参数验证错误
+                  value:
+                    success: false
+                    message: "请求参数验证失败"
+                    errors:
+                      - code: "INVALID_PARAMETER"
+                        field: "page_size"
+                        message: "每页记录数必须在1-100之间"
+        "401":
+          description: 未授权访问
+        "403":
+          description: 权限不足
+
+    post:
+      tags:
+        - User Management
+      summary: 创建新用户
+      description: |
+        在系统中创建一个新的用户账户。
+        遵循SRP原则，专注于用户创建功能。
+        支持OCP原则，通过用户类型支持不同的用户配置。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequest"
+            examples:
+              standard_user:
+                summary: 标准用户创建示例
+                value:
+                  username: "john.doe"
+                  password: "SecurePass123!"
+                  email: "john.doe@example.com"
+                  first_name: "John"
+                  last_name: "Doe"
+                  type: "standard"
+                  profile:
+                    phone: "+1-555-0123"
+                    organization_name: "Acme Corporation"
+                    department: "IT Department"
+                  groups: ["grp_corp_users"]
+                  roles: ["role_standard_user"]
+              admin_user:
+                summary: 管理员用户创建示例
+                value:
+                  username: "admin.smith"
+                  password: "AdminPass456!"
+                  email: "admin@example.com"
+                  first_name: "Jane"
+                  last_name: "Smith"
+                  type: "admin"
+                  groups: ["grp_administrators"]
+                  roles: ["role_system_admin"]
+                  send_welcome_email: false
+      responses:
+        "201":
+          description: 用户创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+              examples:
+                created_user:
+                  summary: 用户创建成功示例
+                  value:
+                    success: true
+                    message: "用户创建成功"
+                    data:
+                      id: "usr_987654321"
+                      username: "john.doe"
+                      email: "john.doe@example.com"
+                      first_name: "John"
+                      last_name: "Doe"
+                      status: "active"
+                      type: "standard"
+                      created_at: "2024-01-20T14:25:30Z"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+              examples:
+                validation_error:
+                  summary: 数据验证错误
+                  value:
+                    success: false
+                    message: "用户创建失败"
+                    errors:
+                      - code: "VALIDATION_ERROR"
+                        field: "username"
+                        message: "用户名已存在"
+                      - code: "VALIDATION_ERROR"
+                        field: "password"
+                        message: "密码强度不足"
+        "409":
+          description: 用户名或邮箱已存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /users/{userId}:
+    get:
+      tags:
+        - User Management
+      summary: 获取用户详情
+      description: |
+        根据用户ID获取用户的详细信息。
+        遵循SRP原则，专注于单个用户查询功能。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+          example: "usr_123456789"
+        - name: include
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - profile
+                - authentication
+                - organization
+                - statistics
+          style: form
+          explode: false
+          description: 包含的额外信息
+      responses:
+        "200":
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+        "404":
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+    put:
+      tags:
+        - User Management
+      summary: 更新用户信息
+      description: |
+        更新指定用户的信息。
+        遵循OCP原则，支持部分字段更新而不影响其他数据。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+        "400":
+          description: 请求参数错误
+        "404":
+          description: 用户不存在
+        "409":
+          description: 数据冲突（如邮箱已被使用）
+
+    delete:
+      tags:
+        - User Management
+      summary: 删除用户
+      description: |
+        从系统中删除指定的用户。
+        遵循SRP原则，专注于用户删除功能。
+        注意：此操作不可逆，建议先将用户状态设为inactive。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+        - name: force
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: 是否强制删除（删除关联数据）
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          description: 用户不存在
+        "409":
+          description: 用户有关联数据，无法删除
+
+  # 用户认证接口 - 遵循ISP原则，独立的认证功能
+  /users/{userId}/password:
+    put:
+      tags:
+        - User Authentication
+      summary: 修改用户密码
+      description: |
+        用户修改自己的密码或管理员重置用户密码。
+        遵循SRP原则，专注于密码管理功能。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
+      responses:
+        "200":
+          description: 密码修改成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          description: 密码验证失败
+        "401":
+          description: 当前密码错误
+        "404":
+          description: 用户不存在
+
+  /users/{userId}/password/reset:
+    post:
+      tags:
+        - User Authentication
+      summary: 重置用户密码
+      description: |
+        管理员重置用户密码，生成临时密码并发送通知。
+        遵循SRP原则，专注于密码重置功能。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                send_email:
+                  type: boolean
+                  description: 是否发送密码重置邮件
+                  default: true
+                temporary_password:
+                  type: string
+                  description: 指定临时密码（可选）
+      responses:
+        "200":
+          description: 密码重置成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          temporary_password:
+                            type: string
+                            description: 临时密码（如果未发送邮件）
+        "404":
+          description: 用户不存在
+
+  /users/{userId}/unlock:
+    post:
+      tags:
+        - User Authentication
+      summary: 解锁用户账户
+      description: |
+        解锁因多次登录失败而被锁定的用户账户。
+        遵循SRP原则，专注于账户解锁功能。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      responses:
+        "200":
+          description: 账户解锁成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          description: 用户不存在
+        "409":
+          description: 账户未被锁定
+
+  # 用户组织关系接口 - 遵循ISP原则
+  /users/{userId}/groups:
+    get:
+      tags:
+        - User Organization
+      summary: 获取用户组列表
+      description: |
+        获取用户所属的组织列表。
+        遵循SRP原则，专注于组织关系查询。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      responses:
+        "200":
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserGroup"
+
+    put:
+      tags:
+        - User Organization
+      summary: 更新用户组
+      description: |
+        更新用户所属的组织列表。
+        遵循OCP原则，支持组织关系的灵活配置。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                group_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: 用户组ID列表
+              required:
+                - group_ids
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /users/{userId}/roles:
+    get:
+      tags:
+        - User Organization
+      summary: 获取用户角色列表
+      description: |
+        获取用户的角色列表。
+        遵循SRP原则，专注于角色关系查询。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      responses:
+        "200":
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserRole"
+
+    put:
+      tags:
+        - User Organization
+      summary: 更新用户角色
+      description: |
+        更新用户的角色列表。
+        遵循OCP原则，支持角色权限的灵活配置。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 用户ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: 用户角色ID列表
+              required:
+                - role_ids
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # 批量操作接口 - 遵循DRY原则
+  /users/batch:
+    post:
+      tags:
+        - User Management
+      summary: 批量操作用户
+      description: |
+        对多个用户执行批量操作。
+        遵循KISS原则，提供常用的批量操作功能。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchOperationRequest"
+            examples:
+              batch_activate:
+                summary: 批量激活用户
+                value:
+                  user_ids: ["usr_123", "usr_456", "usr_789"]
+                  operation: "activate"
+              batch_delete:
+                summary: 批量删除用户
+                value:
+                  user_ids: ["usr_abc", "usr_def"]
+                  operation: "delete"
+                  parameters:
+                    force: true
+      responses:
+        "200":
+          description: 批量操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          successful:
+                            type: array
+                            items:
+                              type: string
+                            description: 操作成功的用户ID列表
+                          failed:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                user_id:
+                                  type: string
+                                error:
+                                  type: string
+                            description: 操作失败的用户及错误信息
+        "400":
+          description: 请求参数错误
+
+  # 用户统计接口 - 遵循SRP原则
+  /users/statistics:
+    get:
+      tags:
+        - User Statistics
+      summary: 获取用户统计信息
+      description: |
+        获取用户相关的统计数据。
+        遵循SRP原则，专注于统计数据查询。
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum:
+              - daily
+              - weekly
+              - monthly
+              - yearly
+            default: monthly
+          description: 统计周期
+        - name: group_by
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - type
+                - status
+                - group
+                - department
+          style: form
+          explode: false
+          description: 分组维度
+      responses:
+        "200":
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserStatistics"
+
+  # 用户导入导出接口 - 遵循SRP原则
+  /users/export:
+    post:
+      tags:
+        - User Management
+      summary: 导出用户数据
+      description: |
+        导出用户数据到指定格式文件。
+        遵循SRP原则，专注于数据导出功能。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - csv
+                    - excel
+                    - json
+                  default: csv
+                  description: 导出格式
+                filters:
+                  $ref: "#/components/schemas/UserQueryFilter"
+                fields:
+                  type: array
+                  items:
+                    type: string
+                  description: 导出字段列表
+                  example:
+                    - "username"
+                    - "email"
+                    - "first_name"
+                    - "last_name"
+                    - "status"
+      responses:
+        "200":
+          description: 导出成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          download_url:
+                            type: string
+                            format: uri
+                            description: 文件下载链接
+                          expires_at:
+                            type: string
+                            format: date-time
+                            description: 链接过期时间
+
+  /users/import:
+    post:
+      tags:
+        - User Management
+      summary: 导入用户数据
+      description: |
+        从文件导入用户数据。
+        遵循SRP原则，专注于数据导入功能。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 用户数据文件
+                format:
+                  type: string
+                  enum:
+                    - csv
+                    - excel
+                  description: 文件格式
+                options:
+                  type: object
+                  properties:
+                    skip_header:
+                      type: boolean
+                      default: true
+                      description: 是否跳过标题行
+                    update_existing:
+                      type: boolean
+                      default: false
+                      description: 是否更新已存在的用户
+                    send_welcome_email:
+                      type: boolean
+                      default: false
+                      description: 是否发送欢迎邮件
+              required:
+                - file
+      responses:
+        "202":
+          description: 导入任务已创建
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          task_id:
+                            type: string
+                            description: 导入任务ID
+                          status:
+                            type: string
+                            enum:
+                              - pending
+                              - processing
+                              - completed
+                              - failed
+                            description: 任务状态
+        "400":
+          description: 文件格式错误或数据验证失败
