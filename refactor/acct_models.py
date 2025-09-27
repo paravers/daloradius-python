@@ -65,9 +65,11 @@ class TerminateCause(str, Enum):
 
 class RadiusAttribute(str, Enum):
     """RADIUS attributes - follows ISP principle"""
+    MAX_ALL_SESSION = "Max-All-Session"
     MAX_DAILY_SESSION = "Max-Daily-Session"
     MAX_WEEKLY_SESSION = "Max-Weekly-Session"
     MAX_MONTHLY_SESSION = "Max-Monthly-Session"
+    EXPIRATION = "Expiration"
     SESSION_TIMEOUT = "Session-Timeout"
     IDLE_TIMEOUT = "Idle-Timeout"
     ACCT_INTERIM_INTERVAL = "Acct-Interim-Interval"
@@ -83,24 +85,24 @@ class RadiusAccountingRecord(BaseAcctModel):
     Core RADIUS accounting record model
     Maps to radacct table structure
     """
-    radacctid: Optional[int] = Field(None, description="Unique accounting record ID")
+    radacctid: Optional[int] = Field(None, alias="RadAcctId", description="Unique accounting record ID")
     username: str = Field(..., description="Username of the session")
     realm: Optional[str] = Field(None, description="Realm/domain of the user")
     session_id: str = Field(..., alias="acctsessionid", description="Unique session identifier")
-    nas_ip_address: IPv4Address = Field(..., alias="nasipaddress", description="NAS device IP address")
+    nas_ip_address: IPv4Address = Field(..., alias="NASIPAddress", description="NAS device IP address")
     nas_port_id: Optional[str] = Field(None, alias="nasportid", description="NAS port identifier")
     nas_port_type: Optional[str] = Field(None, alias="nasporttype", description="NAS port type")
-    framed_ip_address: Optional[IPv4Address] = Field(None, alias="framedipaddress", description="User's assigned IP address")
+    framed_ip_address: Optional[IPv4Address] = Field(None, alias="FramedIPAddress", description="User's assigned IP address")
     calling_station_id: Optional[str] = Field(None, alias="callingstationid", description="Client MAC address")
     called_station_id: Optional[str] = Field(None, alias="calledstationid", description="NAS MAC address/SSID")
-    start_time: Optional[datetime] = Field(None, alias="acctstarttime", description="Session start timestamp")
-    stop_time: Optional[datetime] = Field(None, alias="acctstoptime", description="Session stop timestamp")
-    session_time: Optional[int] = Field(None, alias="acctsessiontime", description="Session duration in seconds")
-    input_octets: Optional[int] = Field(None, alias="acctinputoctets", description="Bytes received from user")
-    output_octets: Optional[int] = Field(None, alias="acctoutputoctets", description="Bytes sent to user")
+    start_time: Optional[datetime] = Field(None, alias="AcctStartTime", description="Session start timestamp")
+    stop_time: Optional[datetime] = Field(None, alias="AcctStopTime", description="Session stop timestamp")
+    session_time: Optional[int] = Field(None, alias="AcctSessionTime", description="Session duration in seconds")
+    input_octets: Optional[int] = Field(None, alias="AcctInputOctets", description="Bytes received from user")
+    output_octets: Optional[int] = Field(None, alias="AcctOutputOctets", description="Bytes sent to user")
     input_packets: Optional[int] = Field(None, alias="acctinputpackets", description="Packets received from user")
     output_packets: Optional[int] = Field(None, alias="acctoutputpackets", description="Packets sent to user")
-    terminate_cause: Optional[TerminateCause] = Field(None, alias="acctterminatecause", description="Session termination reason")
+    terminate_cause: Optional[TerminateCause] = Field(None, alias="AcctTerminateCause", description="Session termination reason")
     nas_identifier: Optional[str] = Field(None, alias="nasidentifier", description="NAS identifier string")
     unique_id: Optional[str] = Field(None, alias="acctuniqueid", description="Unique session identifier")
     class_attribute: Optional[str] = Field(None, alias="class", description="Class attribute")
@@ -118,18 +120,38 @@ class RadiusAccountingRecord(BaseAcctModel):
         if v is not None and v < 0:
             raise ValueError('Traffic counters must be non-negative')
         return v
+    
+    @validator('terminate_cause', pre=True)
+    def normalize_terminate_cause(cls, v):
+        """Normalize terminate cause - convert '0' to 'Unknown'"""
+        if v == '0' or v == 0:
+            return TerminateCause.UNKNOWN
+        return v
 
 
 class HotspotInfo(BaseAcctModel):
     """
     Hotspot information model
-    Maps to hotspots table structure - SRP principle
+    Maps to dalohotspots table structure - SRP principle
     """
     id: Optional[int] = Field(None, description="Hotspot unique ID")
     name: str = Field(..., description="Hotspot name")
     mac_address: Optional[str] = Field(None, alias="mac", description="Hotspot MAC address")
     location: Optional[str] = Field(None, description="Physical location")
     description: Optional[str] = Field(None, description="Hotspot description")
+    
+    @validator('mac_address')
+    def validate_mac_address(cls, v):
+        """Validate MAC address format if provided"""
+        if v and v.strip():
+            # Basic MAC address validation (allowing different formats)
+            import re
+            mac_pattern = r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+            if not re.match(mac_pattern, v):
+                # Try alternative format without separators
+                if not re.match(r'^[0-9A-Fa-f]{12}$', v.replace(':', '').replace('-', '')):
+                    raise ValueError('Invalid MAC address format')
+        return v
 
 
 class AccountingRecordWithHotspot(RadiusAccountingRecord):
@@ -185,6 +207,21 @@ class NASQueryParams(BaseQueryParams):
 class HotspotQueryParams(BaseQueryParams):
     """Hotspot query parameters"""
     hotspot: Optional[List[str]] = Field(None, description="List of hotspot names")
+    
+    @validator('hotspot', pre=True)
+    def clean_hotspot_names(cls, v):
+        """Clean hotspot names by removing % characters and empty values"""
+        if not v:
+            return v
+        if isinstance(v, str):
+            v = [v]
+        cleaned = []
+        for item in v:
+            if item:
+                clean_item = item.replace('%', '').strip()
+                if clean_item and clean_item not in cleaned:
+                    cleaned.append(clean_item)
+        return cleaned or None
 
 
 class DateRangeQueryParams(BaseQueryParams, DateRangeParams):
@@ -200,7 +237,19 @@ class ActiveUserQueryParams(BaseQueryParams, DateRangeParams):
 class PlansUsageQueryParams(BaseQueryParams, DateRangeParams):
     """Plans usage query parameters"""
     username: Optional[str] = Field(None, description="Username to filter by")
-    plan_name: Optional[str] = Field(None, description="Plan name to filter by")
+    plan_name: Optional[str] = Field(None, alias="planname", description="Plan name to filter by")
+
+
+class DateRangeAccountingQueryParams(BaseQueryParams, DateRangeParams):
+    """Date range accounting query parameters with username filter"""
+    username: Optional[str] = Field(None, description="Username to filter by")
+    
+    @validator('username')
+    def clean_username(cls, v):
+        """Clean username by removing % characters"""
+        if v:
+            return v.replace('%', '').strip()
+        return v
 
 
 # =====================================================================
@@ -242,6 +291,7 @@ class UserSessionStatus(str, Enum):
     """User session status enumeration"""
     ACTIVE = "active"
     EXPIRED = "expired"
+    ENDED = "ended"
     QUOTA_EXCEEDED = "quota_exceeded"
     TIME_EXCEEDED = "time_exceeded"
 
@@ -250,17 +300,38 @@ class ActiveUserRecord(BaseAcctModel):
     """Active user record with usage information"""
     username: str = Field(..., description="Username")
     attribute: RadiusAttribute = Field(..., description="RADIUS attribute name")
-    max_time_expiration: Optional[int] = Field(None, description="Maximum allowed session time")
+    max_time_expiration: Optional[Union[int, str]] = Field(None, description="Maximum allowed session time or expiration date")
     used_time: int = Field(0, description="Total used time in seconds")
     status: UserSessionStatus = Field(..., description="Current session status")
     usage_percentage: float = Field(0.0, ge=0.0, le=100.0, description="Usage percentage")
+    time_left: Optional[int] = Field(None, description="Time left in seconds (for time-based attributes)")
+    days_until_expiration: Optional[int] = Field(None, description="Days until expiration (for date-based attributes)")
+    
+    @validator('max_time_expiration')
+    def validate_max_time_expiration(cls, v, values):
+        """Validate max_time_expiration based on attribute type"""
+        attribute = values.get('attribute')
+        if attribute == RadiusAttribute.EXPIRATION:
+            # For expiration attribute, this should be a date string
+            if isinstance(v, int):
+                raise ValueError('Expiration attribute should have date value, not integer')
+        elif attribute == RadiusAttribute.MAX_ALL_SESSION:
+            # For time-based attributes, this should be an integer
+            if isinstance(v, str):
+                try:
+                    return int(v)
+                except ValueError:
+                    raise ValueError('Time-based attribute should have integer value')
+        return v
     
     @validator('usage_percentage')
     def calculate_usage_percentage(cls, v, values):
         """Calculate usage percentage based on used time and max expiration"""
+        attribute = values.get('attribute')
         max_time = values.get('max_time_expiration')
         used_time = values.get('used_time', 0)
-        if max_time and max_time > 0:
+        
+        if attribute == RadiusAttribute.MAX_ALL_SESSION and max_time and isinstance(max_time, int) and max_time > 0:
             return min((used_time / max_time) * 100, 100.0)
         return 0.0
 
@@ -278,18 +349,38 @@ class PlanInfo(BaseAcctModel):
     """Plan information model"""
     plan_name: str = Field(..., description="Plan name")
     plan_type: Optional[str] = Field(None, description="Plan type")
-    time_bank: Optional[int] = Field(None, description="Total time allowance in seconds")
+    time_bank: Optional[int] = Field(None, alias="plantimebank", description="Total time allowance in seconds")
+    time_type: Optional[str] = Field(None, alias="planTimeType", description="Plan time type")
     data_bank: Optional[int] = Field(None, description="Total data allowance in bytes")
 
 
 class UserPlanUsage(BaseAcctModel):
     """User plan usage model"""
     username: str = Field(..., description="Username")
-    plan_name: str = Field(..., description="Associated plan name")
-    session_time: int = Field(0, description="Total session time used")
-    plan_time_bank: Optional[int] = Field(None, description="Plan time allowance")
+    plan_name: str = Field(..., alias="planname", description="Associated plan name")
+    session_time: int = Field(0, alias="sessiontime", description="Total session time used")
+    plan_time_bank: Optional[int] = Field(None, alias="plantimebank", description="Plan time allowance")
+    plan_time_type: Optional[str] = Field(None, alias="planTimeType", description="Plan time type")
+    upload_octets: int = Field(0, alias="upload", description="Total upload bytes")
+    download_octets: int = Field(0, alias="download", description="Total download bytes") 
     total_traffic: int = Field(0, description="Total traffic (input + output octets)")
-    usage_percentage: float = Field(0.0, ge=0.0, le=100.0, description="Time usage percentage")
+    usage_percentage: float = Field(0.0, ge=0.0, description="Time usage percentage")
+    
+    @validator('total_traffic', always=True)
+    def calculate_total_traffic(cls, v, values):
+        """Calculate total traffic from upload and download"""
+        upload = values.get('upload_octets', 0)
+        download = values.get('download_octets', 0)
+        return upload + download
+    
+    @validator('usage_percentage', always=True)
+    def calculate_usage_percentage(cls, v, values):
+        """Calculate usage percentage based on session time and plan time bank"""
+        session_time = values.get('session_time', 0)
+        plan_time_bank = values.get('plan_time_bank')
+        if plan_time_bank and plan_time_bank > 0:
+            return (session_time / plan_time_bank) * 100
+        return 0.0
     
     @validator('total_traffic')
     def ensure_positive_traffic(cls, v):
@@ -308,9 +399,18 @@ class PlansUsageResponse(BaseListResponse):
 
 class CleanupOperation(BaseAcctModel):
     """Cleanup operation parameters"""
-    username: Optional[str] = Field(None, description="Username to clean up")
-    end_date: Optional[date] = Field(None, description="Cleanup records before this date")
+    username: Optional[str] = Field(None, description="Username to clean up stale sessions for")
+    end_date: Optional[date] = Field(None, alias="enddate", description="Cleanup records before this date")
     cleanup_type: str = Field("stale_sessions", description="Type of cleanup operation")
+    
+    @root_validator
+    def validate_cleanup_params(cls, values):
+        """Ensure either username or end_date is provided"""
+        username = values.get('username')
+        end_date = values.get('end_date')
+        if not username and not end_date:
+            raise ValueError('Either username or end_date must be provided')
+        return values
 
 
 class CleanupResult(BaseAcctModel):
@@ -319,6 +419,8 @@ class CleanupResult(BaseAcctModel):
     message: str = Field(..., description="Result message")
     records_affected: int = Field(0, description="Number of records affected")
     operation_type: str = Field(..., description="Type of operation performed")
+    username: Optional[str] = Field(None, description="Username that was cleaned up")
+    end_date: Optional[date] = Field(None, description="End date used for cleanup")
 
 
 class DeleteOperation(BaseAcctModel):
@@ -459,6 +561,7 @@ class AcctModelRegistry:
         'nas_query_params': NASQueryParams,
         'hotspot_query_params': HotspotQueryParams,
         'date_range_query_params': DateRangeQueryParams,
+        'date_range_accounting_query_params': DateRangeAccountingQueryParams,
         'active_user_query_params': ActiveUserQueryParams,
         'plans_usage_query_params': PlansUsageQueryParams,
         
@@ -533,6 +636,7 @@ __all__ = [
     'NASQueryParams',
     'HotspotQueryParams',
     'DateRangeQueryParams',
+    'DateRangeAccountingQueryParams',
     'ActiveUserQueryParams',
     'PlansUsageQueryParams',
     
