@@ -2,6 +2,12 @@
  * 导出所有类型定义
  */
 
+// 通用类型
+export * from './common'
+
+// 业务类型
+export * from './user'
+
 // API 相关
 export * from './api'
 
