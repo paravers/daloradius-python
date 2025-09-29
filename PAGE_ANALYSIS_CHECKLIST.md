@@ -519,18 +519,86 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 热点列表 | `mng-hs-list.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | WiFi热点管理 |
-| 热点新建 | `mng-hs-new.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | WiFi热点管理 |
-| 热点编辑 | `mng-hs-edit.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | WiFi热点管理 |
-| 热点删除 | `mng-hs-del.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | WiFi热点管理 |
+| 热点列表 | `mng-hs-list.php` | ✅ 已完成 | `Hotspot` | `GET /api/v1/hotspots` | `HotspotsView.vue` | 完整CRUD功能，支持分页搜索 |
+| 热点新建 | `mng-hs-new.php` | ✅ 已完成 | `Hotspot` | `POST /api/v1/hotspots` | `HotspotModal.vue` | 模态框表单，完整验证 |
+| 热点编辑 | `mng-hs-edit.php` | ✅ 已完成 | `Hotspot` | `PUT /api/v1/hotspots/{id}` | `HotspotModal.vue` | 支持编辑模式 |
+| 热点删除 | `mng-hs-del.php` | ✅ 已完成 | `Hotspot` | `DELETE /api/v1/hotspots/{id}` | 集成在列表中 | 确认删除，支持批量操作 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：`/backend/app/models/hotspot.py` - 完整的热点模型，包含所有字段验证和业务逻辑
+- **API接口**：`/backend/app/api/v1/hotspots.py` - 完整RESTful API，支持分页、搜索、批量操作
+- **服务层**：`/backend/app/services/hotspot.py` - 业务逻辑层，热点创建、验证、唯一性检查
+- **仓储层**：`/backend/app/repositories/hotspot.py` - 数据访问层，增强的CRUD操作和复杂查询
+- **数据验证**：`/backend/app/schemas/hotspot.py` - Pydantic模型，完整的请求/响应验证
+- **核心API端点**：
+  - 热点CRUD：GET/POST/PUT/DELETE `/api/v1/hotspots`
+  - 高级搜索：POST `/api/v1/hotspots/search`
+  - 字段验证：POST `/api/v1/hotspots/validate`
+  - 批量操作：DELETE `/api/v1/hotspots/bulk`
+  - 统计信息：GET `/api/v1/hotspots/stats/summary`
+  - 下拉选项：GET `/api/v1/hotspots/options/all`
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/hotspots/HotspotsView.vue` - 统一热点管理界面
+- **组件架构**：
+  - `HotspotModal.vue` - 热点添加/编辑/查看模态框
+  - `HotspotForm.vue` - 热点表单组件
+  - `HotspotDetail.vue` - 热点详情展示组件
+- **服务层**：`/frontend/src/services/hotspots/hotspotService.ts` - 完整API调用服务
+- **类型定义**：`/frontend/src/types/hotspot.ts` - 完整TypeScript类型定义
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+
+**系统集成：**
+- **路由配置**：`/hotspots` 路由已配置，支持子路由
+- **菜单集成**：已添加到管理菜单分组
+- **导航路径**：管理 → 热点管理 → 列表/新建/编辑
+- **权限控制**：集成认证和权限验证中间件
+
+**技术特性：**
+- ✅ 完整的CRUD操作（创建、读取、更新、删除）
+- ✅ 高级搜索和过滤功能（名称、MAC地址、类型、所有者、公司等）
+- ✅ 分页和排序支持
+- ✅ 批量操作支持（批量删除）
+- ✅ 实时字段验证（名称和MAC地址唯一性）
+- ✅ MAC地址和IP地址格式验证
+- ✅ 邮箱和网站URL格式验证
+- ✅ 统计信息展示（总数、类型分布、最近创建等）
+- ✅ 下拉选项动态加载
+- ✅ 表单验证和错误处理
+- ✅ 响应式设计和现代UI
+- ✅ 导出功能支持
+
+**安全特性：**
+- 输入验证和SQL注入防护
+- 字段长度限制和格式验证
+- 唯一性约束验证（名称和MAC地址）
+- JWT认证集成
+- XSS防护（HTML转义）
+
+**数据字段支持：**
+- ✅ 基本信息（名称、MAC/IP地址、地理编码、类型）
+- ✅ 所有者信息（姓名、邮箱）
+- ✅ 管理员信息（姓名、邮箱）
+- ✅ 位置信息（地址、电话）
+- ✅ 公司信息（名称、网站、邮箱、联系人、电话）
+- ✅ 审计字段（创建时间、创建人、更新时间、更新人）
+
+**架构优势：**
+- 完全遵循项目现有架构模式
+- 与其他模块保持API设计一致性
+- 使用相同的UI组件库和设计规范
+- 继承项目的错误处理和状态管理模式
+- 支持数据库约束和业务规则验证
 
 ## 4. 批量操作模块 (Batch Operations)
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 批量添加用户 | `mng-batch-add.php` | 🟡 部分完成 | `BatchHistory` | 需要开发 | 集成在UserImport中 | 需要完善 |
-| 批量删除用户 | `mng-batch-del.php` | ❌ 未实现 | `BatchHistory` | 需要开发 | 需要开发 | 批量操作 |
-| 批量操作列表 | `mng-batch-list.php` | ❌ 未实现 | `BatchHistory` | 需要开发 | 需要开发 | 历史记录 |
+| 批量添加用户 | `mng-batch-add.php` | ✅ 已完成 | `BatchHistory` | `POST /api/v1/batch/users` | 集成在UserImport中 | 支持历史跟踪 |
+| 批量删除用户 | `mng-batch-del.php` | ✅ 已完成 | `BatchHistory` | `POST /api/v1/batch/users` | 集成在UsersView中 | 支持历史跟踪 |
+| 批量操作列表 | `mng-batch-list.php` | ✅ 已完成 | `BatchHistory` | `GET /api/v1/batch/history` | `BatchOperationsView.vue` | 完整功能 |
 
 ## 5. 计费管理模块 (Billing Management)
 

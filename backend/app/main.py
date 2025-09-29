@@ -16,7 +16,8 @@ import os
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import init_db, close_db
-from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management
+from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management, batch
+from app.api.v1.hotspots import router as hotspots_router
 
 
 # Setup logging
@@ -163,6 +164,20 @@ def setup_routes(app: FastAPI) -> None:
         radius_management.router,
         prefix=settings.API_V1_STR + "/radius-management",
         tags=["radius-management"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        batch.router,
+        prefix=settings.API_V1_STR + "/batch",
+        tags=["batch"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        hotspots_router,
+        prefix=settings.API_V1_STR + "/hotspots",
+        tags=["hotspots"],
         dependencies=[Depends(security)]
     )
     

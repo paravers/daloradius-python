@@ -9,7 +9,7 @@ with the SQLAlchemy metadata and available for use throughout the application.
 from .base import BaseModel, LegacyBaseModel, RadiusBaseModel
 
 # Import core models
-from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo
+from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo, BatchHistory
 from .radius import RadCheck, RadReply, RadUserGroup
 from .nas import Nas  
 from .accounting import RadAcct
@@ -22,6 +22,7 @@ from .nas import Realm, Proxy
 from .radius import RadHuntGroup
 from .billing import BillingPlan, BillingHistory, BillingMerchant, BillingRate, BillingPlanProfile
 from .access_control import OperatorAcl, OperatorAclFile, Dictionary, Message, MessageType
+from .hotspot import Hotspot
 
 # Export all models
 __all__ = [
@@ -35,6 +36,7 @@ __all__ = [
     "UserInfo",
     "UserGroup", 
     "UserBillingInfo",
+    "BatchHistory",
     "Operator",
     "RadCheck",
     "RadReply", 
@@ -69,5 +71,8 @@ __all__ = [
     "OperatorAclFile",
     "Dictionary",
     "Message",
-    "MessageType"
+    "MessageType",
+    
+    # Hotspot Management
+    "Hotspot"
 ]

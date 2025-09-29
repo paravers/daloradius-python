@@ -452,3 +452,189 @@ class BulkPaymentProcessing(BaseModel):
     """Schema for bulk payment processing"""
     payments: List[PaymentCreate] = Field(..., max_items=100)
     auto_apply_to_invoices: bool = Field(True, description="Auto-apply to outstanding invoices")
+
+
+# =====================================================================
+# API-compatible schemas for existing billing models
+# =====================================================================
+
+# Billing Plan schemas matching the database model
+class BillingPlanBase(BaseModel):
+    """Base schema for BillingPlan model"""
+    planName: Optional[str] = Field(None, max_length=128, description="Plan name")
+    planId: Optional[str] = Field(None, max_length=128, description="Plan identifier")
+    planType: Optional[str] = Field(None, max_length=128, description="Plan type")
+    planTimeBank: Optional[str] = Field(None, max_length=128, description="Time bank")
+    planTimeType: Optional[str] = Field(None, max_length=128, description="Time type")
+    planTimeRefillCost: Optional[str] = Field(None, max_length=128, description="Time refill cost")
+    planBandwidthUp: Optional[str] = Field(None, max_length=128, description="Upload bandwidth")
+    planBandwidthDown: Optional[str] = Field(None, max_length=128, description="Download bandwidth")
+    planTrafficTotal: Optional[str] = Field(None, max_length=128, description="Total traffic")
+    planTrafficUp: Optional[str] = Field(None, max_length=128, description="Upload traffic")
+    planTrafficDown: Optional[str] = Field(None, max_length=128, description="Download traffic")
+    planTrafficRefillCost: Optional[str] = Field(None, max_length=128, description="Traffic refill cost")
+    planRecurring: Optional[str] = Field(None, max_length=128, description="Recurring")
+    planRecurringPeriod: Optional[str] = Field(None, max_length=128, description="Recurring period")
+    planRecurringBillingSchedule: Optional[str] = Field(None, max_length=128, description="Billing schedule")
+    planCost: Optional[str] = Field(None, max_length=128, description="Plan cost")
+    planSetupCost: Optional[str] = Field(None, max_length=128, description="Setup cost")
+    planTax: Optional[str] = Field(None, max_length=128, description="Tax")
+    planCurrency: Optional[str] = Field(None, max_length=128, description="Currency")
+    planGroup: Optional[str] = Field(None, max_length=128, description="Plan group")
+    planActive: Optional[bool] = Field(None, description="Is plan active")
+
+
+class BillingPlanCreate(BillingPlanBase):
+    """Schema for creating billing plans"""
+    planName: str = Field(..., description="Plan name is required")
+
+
+class BillingPlanUpdate(BaseModel):
+    """Schema for updating billing plans"""
+    planName: Optional[str] = Field(None, max_length=128)
+    planId: Optional[str] = Field(None, max_length=128)
+    planType: Optional[str] = Field(None, max_length=128)
+    planTimeBank: Optional[str] = Field(None, max_length=128)
+    planTimeType: Optional[str] = Field(None, max_length=128)
+    planTimeRefillCost: Optional[str] = Field(None, max_length=128)
+    planBandwidthUp: Optional[str] = Field(None, max_length=128)
+    planBandwidthDown: Optional[str] = Field(None, max_length=128)
+    planTrafficTotal: Optional[str] = Field(None, max_length=128)
+    planTrafficUp: Optional[str] = Field(None, max_length=128)
+    planTrafficDown: Optional[str] = Field(None, max_length=128)
+    planTrafficRefillCost: Optional[str] = Field(None, max_length=128)
+    planRecurring: Optional[str] = Field(None, max_length=128)
+    planRecurringPeriod: Optional[str] = Field(None, max_length=128)
+    planRecurringBillingSchedule: Optional[str] = Field(None, max_length=128)
+    planCost: Optional[str] = Field(None, max_length=128)
+    planSetupCost: Optional[str] = Field(None, max_length=128)
+    planTax: Optional[str] = Field(None, max_length=128)
+    planCurrency: Optional[str] = Field(None, max_length=128)
+    planGroup: Optional[str] = Field(None, max_length=128)
+    planActive: Optional[bool] = Field(None)
+
+
+class BillingPlanResponse(BillingPlanBase):
+    """Schema for billing plan responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Billing History schemas
+class BillingHistoryBase(BaseModel):
+    """Base schema for BillingHistory model"""
+    username: Optional[str] = Field(None, max_length=128, description="Username")
+    planId: Optional[int] = Field(None, description="Plan ID")
+    billAmount: Optional[str] = Field(None, max_length=200, description="Bill amount")
+    billAction: Optional[str] = Field(None, max_length=128, description="Bill action")
+    billPerformer: Optional[str] = Field(None, max_length=200, description="Bill performer")
+    billReason: Optional[str] = Field(None, max_length=200, description="Bill reason")
+    paymentmethod: Optional[str] = Field(None, max_length=200, description="Payment method")
+    cash: Optional[str] = Field(None, max_length=200, description="Cash amount")
+    creditcardname: Optional[str] = Field(None, max_length=200, description="Credit card name")
+    creditcardnumber: Optional[str] = Field(None, max_length=200, description="Credit card number")
+    creditcardverification: Optional[str] = Field(None, max_length=200, description="Credit card verification")
+    creditcardtype: Optional[str] = Field(None, max_length=200, description="Credit card type")
+    creditcardexp: Optional[str] = Field(None, max_length=200, description="Credit card expiration")
+
+
+class BillingHistoryCreate(BillingHistoryBase):
+    """Schema for creating billing history"""
+    username: str = Field(..., description="Username is required")
+    billAction: str = Field(..., description="Bill action is required")
+
+
+class BillingHistoryResponse(BillingHistoryBase):
+    """Schema for billing history responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Billing Rate schemas
+class BillingRateBase(BaseModel):
+    """Base schema for BillingRate model"""
+    rateName: Optional[str] = Field(None, max_length=128, description="Rate name")
+    rateType: Optional[str] = Field(None, max_length=128, description="Rate type")
+    rateCost: Optional[int] = Field(None, description="Rate cost")
+
+
+class BillingRateCreate(BillingRateBase):
+    """Schema for creating billing rates"""
+    rateName: str = Field(..., description="Rate name is required")
+    rateType: str = Field(..., description="Rate type is required")
+    rateCost: int = Field(..., description="Rate cost is required")
+
+
+class BillingRateUpdate(BaseModel):
+    """Schema for updating billing rates"""
+    rateName: Optional[str] = Field(None, max_length=128)
+    rateType: Optional[str] = Field(None, max_length=128)
+    rateCost: Optional[int] = Field(None)
+
+
+class BillingRateResponse(BillingRateBase):
+    """Schema for billing rate responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Merchant Transaction schemas
+class MerchantTransactionBase(BaseModel):
+    """Base schema for BillingMerchant model"""
+    username: Optional[str] = Field(None, max_length=128, description="Username")
+    password: Optional[str] = Field(None, max_length=128, description="Password")
+    mac: Optional[str] = Field(None, max_length=200, description="MAC address")
+    pin: Optional[str] = Field(None, max_length=200, description="PIN")
+    txnId: Optional[str] = Field(None, max_length=200, description="Transaction ID")
+    planName: Optional[str] = Field(None, max_length=128, description="Plan name")
+    planId: Optional[int] = Field(None, description="Plan ID")
+    quantity: Optional[str] = Field(None, max_length=200, description="Quantity")
+    business_email: Optional[str] = Field(None, max_length=200, description="Business email")
+    business_id: Optional[str] = Field(None, max_length=200, description="Business ID")
+    txn_type: Optional[str] = Field(None, max_length=200, description="Transaction type")
+    txn_id: Optional[str] = Field(None, max_length=200, description="Transaction ID")
+    payment_type: Optional[str] = Field(None, max_length=200, description="Payment type")
+
+
+class MerchantTransactionCreate(MerchantTransactionBase):
+    """Schema for creating merchant transactions"""
+    username: str = Field(..., description="Username is required")
+    txnId: str = Field(..., description="Transaction ID is required")
+    business_email: str = Field(..., description="Business email is required")
+    business_id: str = Field(..., description="Business ID is required")
+
+
+class MerchantTransactionResponse(MerchantTransactionBase):
+    """Schema for merchant transaction responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Paginated response schema
+class PaginatedResponse(BaseModel):
+    """Generic paginated response schema"""
+    data: List[Any] = Field(..., description="Response data")
+    total: int = Field(..., description="Total number of items")
+    page: int = Field(..., description="Current page number")
+    page_size: int = Field(..., description="Page size")
+    total_pages: int = Field(..., description="Total number of pages")

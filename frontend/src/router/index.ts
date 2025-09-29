@@ -92,6 +92,17 @@ const routes: RouteRecordRaw[] = [
         } as RouteMeta,
       },
       {
+        path: 'batch',
+        name: 'BatchOperations',
+        component: () => import('@/views/batch/BatchOperationsView.vue'),
+        meta: {
+          title: '批量操作',
+          icon: 'AppstoreAddOutlined',
+          requiresAuth: true,
+          permissions: ['batch.view'],
+        } as RouteMeta,
+      },
+      {
         path: 'config',
         name: 'Config',
         component: () => import('@/views/config/ConfigView.vue'),

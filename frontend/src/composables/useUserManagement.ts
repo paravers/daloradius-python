@@ -1,6 +1,7 @@
-import { ref, computed } from 'vue'
-import type { User, UserQueryParams, UserListResponse } from '@/types'
-import { userService } from '@/services'
+import { ref, computed, watch, readonly } from 'vue'
+import type { User, UserQueryParams, CreateUserRequest, UpdateUserRequest, UserListResponse } from '@/types/user'
+import { userService } from '@/services/userService'
+import { batchService } from '@/services/batchService'
 
 /**
  * 用户管理组合式函数
@@ -139,10 +140,18 @@ export function useUserManagement() {
 
     try {
       loading.value = true
-      await userService.batchDeleteUsers(userIds)
+      // Use batch service with history tracking
+      const numericIds = userIds.map(id => parseInt(id))
+      const result = await batchService.batchDeleteUsersWithHistory(numericIds, {
+        batchName: `批量删除 ${numericIds.length} 个用户`,
+        description: `通过用户管理界面执行的批量删除操作`
+      })
+      
       clearSelection()
       await fetchUsers() // 重新获取数据
-      return true
+      
+      // Return success if no failures
+      return result.failure_count === 0
     } catch (err: any) {
       error.value = err.message || '批量删除失败'
       return false
@@ -158,10 +167,22 @@ export function useUserManagement() {
 
     try {
       loading.value = true
-      await userService.batchUpdateUsers(userIds, { status })
+      // Use batch service with history tracking
+      const numericIds = userIds.map(id => parseInt(id))
+      const result = await batchService.batchUpdateUserStatusWithHistory(
+        numericIds, 
+        status as 'active' | 'inactive',
+        {
+          batchName: `批量${status === 'active' ? '激活' : '停用'} ${numericIds.length} 个用户`,
+          description: `通过用户管理界面执行的批量状态更新操作`
+        }
+      )
+      
       clearSelection()
       await fetchUsers() // 重新获取数据
-      return true
+      
+      // Return success if no failures
+      return result.failure_count === 0
     } catch (err: any) {
       error.value = err.message || '批量更新状态失败'
       return false
@@ -199,13 +220,13 @@ export function useUserManagement() {
 
   return {
     // 状态
-    loading: loading.readonly(),
-    users: users.readonly(),
-    total: total.readonly(),
-    error: error.readonly(),
-    queryParams: queryParams.readonly(),
-    selectedRowKeys: selectedRowKeys.readonly(),
-    selectedRows: selectedRows.readonly(),
+    loading: readonly(loading),
+    users: readonly(users),
+    total: readonly(total),
+    error: readonly(error),
+    queryParams: readonly(queryParams),
+    selectedRowKeys: readonly(selectedRowKeys),
+    selectedRows: readonly(selectedRows),
     
     // 计算属性
     dataSource,
