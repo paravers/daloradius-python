@@ -16,7 +16,7 @@ import os
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import init_db, close_db
-from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius
+from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management
 
 
 # Setup logging
@@ -149,6 +149,20 @@ def setup_routes(app: FastAPI) -> None:
         radius.router,
         prefix=settings.API_V1_STR + "/radius",
         tags=["radius"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        user_groups.router,
+        prefix=settings.API_V1_STR + "/user-groups",
+        tags=["user-groups"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        radius_management.router,
+        prefix=settings.API_V1_STR + "/radius-management",
+        tags=["radius-management"],
         dependencies=[Depends(security)]
     )
     

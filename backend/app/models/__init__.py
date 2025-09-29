@@ -17,6 +17,9 @@ from .system import BackupHistory
 
 # Import new models
 from .radius_groups import RadGroupCheck, RadGroupReply, RadPostAuth, NasReload, RadIpPool
+from .radius_profile import RadiusProfile, ProfileUsage
+from .nas import Realm, Proxy
+from .radius import RadHuntGroup
 from .billing import BillingPlan, BillingHistory, BillingMerchant, BillingRate, BillingPlanProfile
 from .access_control import OperatorAcl, OperatorAclFile, Dictionary, Message, MessageType
 
@@ -46,6 +49,13 @@ __all__ = [
     "RadPostAuth", 
     "NasReload",
     "RadIpPool",
+    
+    # RADIUS Management
+    "RadiusProfile",
+    "ProfileUsage",
+    "Realm",
+    "Proxy",
+    "RadHuntGroup",
     
     # Billing System
     "BillingPlan",

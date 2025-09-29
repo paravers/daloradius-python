@@ -726,20 +726,39 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
         ]
 
 
-class RadgroupcheckRepository(BaseRepository[Radgroupcheck, RadgroupcheckCreate, None]):
+class GroupCheckRepository(BaseRepository[GroupCheck, RadgroupcheckCreate, None]):
     """Repository for RADIUS group check attributes"""
     
     def __init__(self, db_session: AsyncSession):
-        super().__init__(Radgroupcheck, db_session)
+        super().__init__(GroupCheck, db_session)
 
     def _add_relationship_loading(self, query):
         """Add relationship loading for radgroupcheck queries"""
         return query
 
-    async def get_group_attributes(self, groupname: str) -> List[Radgroupcheck]:
+    async def get_group_attributes(self, groupname: str) -> List[GroupCheck]:
         """Get all check attributes for a group"""
         filters = {"groupname": groupname}
         return await self.get_multi(filters=filters, order_by="attribute")
+    
+    async def get_groups_list(self) -> List[str]:
+        """Get list of unique group names"""
+        query = select(GroupCheck.groupname).distinct()
+        result = await self.db.execute(query)
+        return [row[0] for row in result.all()]
+    
+    async def get_group_statistics(self) -> Dict[str, Any]:
+        """Get group statistics"""
+        query = select(
+            func.count(GroupCheck.id).label('total_attributes'),
+            func.count(func.distinct(GroupCheck.groupname)).label('total_groups')
+        )
+        result = await self.db.execute(query)
+        stats = result.first()
+        return {
+            'total_attributes': stats.total_attributes,
+            'total_groups': stats.total_groups
+        }
 
     async def set_group_attribute(
         self,
@@ -747,13 +766,13 @@ class RadgroupcheckRepository(BaseRepository[Radgroupcheck, RadgroupcheckCreate,
         attribute: str,
         operator: str,
         value: str
-    ) -> Radgroupcheck:
+    ) -> GroupCheck:
         """Set or update a group attribute"""
         # Check if attribute exists
-        query = select(Radgroupcheck).where(
+        query = select(GroupCheck).where(
             and_(
-                Radgroupcheck.groupname == groupname,
-                Radgroupcheck.attribute == attribute
+                GroupCheck.groupname == groupname,
+                GroupCheck.attribute == attribute
             )
         )
         result = await self.db.execute(query)
@@ -775,22 +794,54 @@ class RadgroupcheckRepository(BaseRepository[Radgroupcheck, RadgroupcheckCreate,
                 value=value
             )
             return await self.create(attr_data)
+    
+    async def delete_group_attributes(self, groupname: str) -> int:
+        """Delete all attributes for a group"""
+        query = select(GroupCheck).where(GroupCheck.groupname == groupname)
+        result = await self.db.execute(query)
+        attributes = result.scalars().all()
+        
+        count = 0
+        for attr in attributes:
+            await self.delete(attr.id)
+            count += 1
+        
+        return count
 
 
-class RadgroupreplyRepository(BaseRepository[Radgroupreply, RadgroupreplyCreate, None]):
+class GroupReplyRepository(BaseRepository[GroupReply, RadgroupreplyCreate, None]):
     """Repository for RADIUS group reply attributes"""
     
     def __init__(self, db_session: AsyncSession):
-        super().__init__(Radgroupreply, db_session)
+        super().__init__(GroupReply, db_session)
 
     def _add_relationship_loading(self, query):
         """Add relationship loading for radgroupreply queries"""
         return query
 
-    async def get_group_attributes(self, groupname: str) -> List[Radgroupreply]:
+    async def get_group_attributes(self, groupname: str) -> List[GroupReply]:
         """Get all reply attributes for a group"""
         filters = {"groupname": groupname}
         return await self.get_multi(filters=filters, order_by="attribute")
+    
+    async def get_groups_list(self) -> List[str]:
+        """Get list of unique group names"""
+        query = select(GroupReply.groupname).distinct()
+        result = await self.db.execute(query)
+        return [row[0] for row in result.all()]
+    
+    async def get_group_statistics(self) -> Dict[str, Any]:
+        """Get group statistics"""
+        query = select(
+            func.count(GroupReply.id).label('total_attributes'),
+            func.count(func.distinct(GroupReply.groupname)).label('total_groups')
+        )
+        result = await self.db.execute(query)
+        stats = result.first()
+        return {
+            'total_attributes': stats.total_attributes,
+            'total_groups': stats.total_groups
+        }
 
     async def set_group_attribute(
         self,
@@ -798,13 +849,13 @@ class RadgroupreplyRepository(BaseRepository[Radgroupreply, RadgroupreplyCreate,
         attribute: str,
         operator: str,
         value: str
-    ) -> Radgroupreply:
+    ) -> GroupReply:
         """Set or update a group reply attribute"""
         # Check if attribute exists
-        query = select(Radgroupreply).where(
+        query = select(GroupReply).where(
             and_(
-                Radgroupreply.groupname == groupname,
-                Radgroupreply.attribute == attribute
+                GroupReply.groupname == groupname,
+                GroupReply.attribute == attribute
             )
         )
         result = await self.db.execute(query)
@@ -826,3 +877,16 @@ class RadgroupreplyRepository(BaseRepository[Radgroupreply, RadgroupreplyCreate,
                 value=value
             )
             return await self.create(attr_data)
+    
+    async def delete_group_attributes(self, groupname: str) -> int:
+        """Delete all attributes for a group"""
+        query = select(GroupReply).where(GroupReply.groupname == groupname)
+        result = await self.db.execute(query)
+        attributes = result.scalars().all()
+        
+        count = 0
+        for attr in attributes:
+            await self.delete(attr.id)
+            count += 1
+        
+        return count

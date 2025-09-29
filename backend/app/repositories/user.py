@@ -342,6 +342,158 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             }
             for row in result.all()
         ]
+    
+    async def get_all_groups(self) -> List[str]:
+        """Get list of all unique group names"""
+        query = select(UserGroup.groupname).distinct().order_by(UserGroup.groupname)
+        result = await self.db.execute(query)
+        return [row[0] for row in result.all()]
+    
+    async def get_user_group_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive user group statistics"""
+        # Get basic counts
+        total_associations_query = select(func.count(UserGroup.id))
+        total_groups_query = select(func.count(func.distinct(UserGroup.groupname)))
+        total_users_query = select(func.count(func.distinct(UserGroup.username)))
+        
+        # Execute queries
+        total_associations_result = await self.db.execute(total_associations_query)
+        total_groups_result = await self.db.execute(total_groups_query)
+        total_users_result = await self.db.execute(total_users_query)
+        
+        total_associations = total_associations_result.scalar()
+        total_groups = total_groups_result.scalar()
+        total_users = total_users_result.scalar()
+        
+        # Get groups with most users
+        top_groups_query = (
+            select(
+                UserGroup.groupname,
+                func.count(UserGroup.username).label('user_count')
+            )
+            .group_by(UserGroup.groupname)
+            .order_by(func.count(UserGroup.username).desc())
+            .limit(10)
+        )
+        top_groups_result = await self.db.execute(top_groups_query)
+        top_groups = [
+            {"groupname": row.groupname, "user_count": row.user_count}
+            for row in top_groups_result.all()
+        ]
+        
+        return {
+            "total_associations": total_associations,
+            "total_groups": total_groups,
+            "total_users": total_users,
+            "top_groups": top_groups
+        }
+    
+    async def batch_add_users_to_group(
+        self,
+        usernames: List[str],
+        groupname: str,
+        priority: int = 1
+    ) -> Dict[str, Any]:
+        """Batch add multiple users to a group"""
+        results = {
+            "groupname": groupname,
+            "requested": len(usernames),
+            "added": 0,
+            "failed": 0,
+            "errors": []
+        }
+        
+        for username in usernames:
+            try:
+                await self.add_user_to_group(username, groupname, priority)
+                results["added"] += 1
+            except Exception as e:
+                results["failed"] += 1
+                results["errors"].append(f"Failed to add {username}: {str(e)}")
+        
+        return results
+    
+    async def batch_remove_users_from_group(
+        self,
+        usernames: List[str],
+        groupname: str
+    ) -> Dict[str, Any]:
+        """Batch remove multiple users from a group"""
+        results = {
+            "groupname": groupname,
+            "requested": len(usernames),
+            "removed": 0,
+            "failed": 0,
+            "errors": []
+        }
+        
+        for username in usernames:
+            try:
+                success = await self.remove_user_from_group(username, groupname)
+                if success:
+                    results["removed"] += 1
+                else:
+                    results["failed"] += 1
+                    results["errors"].append(f"User {username} not in group {groupname}")
+            except Exception as e:
+                results["failed"] += 1
+                results["errors"].append(f"Failed to remove {username}: {str(e)}")
+        
+        return results
+    
+    async def get_user_groups_with_details(self, username: str) -> List[Dict[str, Any]]:
+        """Get user groups with additional details"""
+        query = (
+            select(UserGroup)
+            .where(UserGroup.username == username)
+            .order_by(UserGroup.priority)
+        )
+        
+        result = await self.db.execute(query)
+        user_groups = result.scalars().all()
+        
+        groups_with_details = []
+        for ug in user_groups:
+            # Get group member count
+            group_count_query = select(func.count(UserGroup.username)).where(
+                UserGroup.groupname == ug.groupname
+            )
+            count_result = await self.db.execute(group_count_query)
+            member_count = count_result.scalar()
+            
+            groups_with_details.append({
+                "id": ug.id,
+                "groupname": ug.groupname,
+                "priority": ug.priority,
+                "member_count": member_count,
+                "joined_at": ug.created_at
+            })
+        
+        return groups_with_details
+    
+    async def search_user_groups(
+        self,
+        username_pattern: Optional[str] = None,
+        groupname_pattern: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[UserGroup]:
+        """Search user group associations with patterns"""
+        query = select(UserGroup)
+        
+        conditions = []
+        if username_pattern:
+            conditions.append(UserGroup.username.ilike(f"%{username_pattern}%"))
+        if groupname_pattern:
+            conditions.append(UserGroup.groupname.ilike(f"%{groupname_pattern}%"))
+        
+        if conditions:
+            query = query.where(and_(*conditions))
+        
+        query = query.offset(skip).limit(limit).order_by(UserGroup.username, UserGroup.groupname)
+        
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
 
 class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate]):

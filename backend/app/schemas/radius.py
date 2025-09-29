@@ -157,6 +157,29 @@ class RadgroupreplyResponse(RadgroupreplyBase):
         from_attributes = True
 
 
+# Group management schemas
+class GroupListResponse(BaseModel):
+    """Group list response schema"""
+    groups: List[str] = Field(..., description="List of group names")
+    total: int = Field(..., description="Total number of groups")
+
+
+class GroupAttributesResponse(BaseModel):
+    """Group attributes response schema"""
+    groupname: str = Field(..., description="Group name")
+    check_attributes: List[RadgroupcheckResponse] = Field(..., description="Group check attributes")
+    reply_attributes: List[RadgroupreplyResponse] = Field(..., description="Group reply attributes")
+    total_attributes: int = Field(..., description="Total number of attributes")
+
+
+class GroupStatisticsResponse(BaseModel):
+    """Group statistics response schema"""
+    total_groups: int = Field(..., description="Total number of groups")
+    total_check_attributes: int = Field(..., description="Total number of check attributes")
+    total_reply_attributes: int = Field(..., description="Total number of reply attributes")
+    groups_with_attributes: int = Field(..., description="Number of groups with attributes")
+
+
 # RADIUS Accounting schemas
 class RadacctBase(BaseModel):
     """Base RADIUS accounting schema"""

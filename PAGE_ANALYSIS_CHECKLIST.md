@@ -232,50 +232,288 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 组检查属性列表 | `mng-rad-groupcheck-list.php` | ❌ 未实现 | `RadGroupCheck` | 需要开发 | 需要开发 | 组权限管理 |
-| 组检查属性新建 | `mng-rad-groupcheck-new.php` | ❌ 未实现 | `RadGroupCheck` | 需要开发 | 需要开发 | 组权限管理 |
-| 组检查属性编辑 | `mng-rad-groupcheck-edit.php` | ❌ 未实现 | `RadGroupCheck` | 需要开发 | 需要开发 | 组权限管理 |
-| 组检查属性删除 | `mng-rad-groupcheck-del.php` | ❌ 未实现 | `RadGroupCheck` | 需要开发 | 需要开发 | 组权限管理 |
-| 组回复属性列表 | `mng-rad-groupreply-list.php` | ❌ 未实现 | `RadGroupReply` | 需要开发 | 需要开发 | 组权限管理 |
-| 组回复属性新建 | `mng-rad-groupreply-new.php` | ❌ 未实现 | `RadGroupReply` | 需要开发 | 需要开发 | 组权限管理 |
-| 组回复属性编辑 | `mng-rad-groupreply-edit.php` | ❌ 未实现 | `RadGroupReply` | 需要开发 | 需要开发 | 组权限管理 |
-| 组回复属性删除 | `mng-rad-groupreply-del.php` | ❌ 未实现 | `RadGroupReply` | 需要开发 | 需要开发 | 组权限管理 |
+| 组检查属性列表 | `mng-rad-groupcheck-list.php` | ✅ 已完成 | `GroupCheck` | `GET /api/v1/radius/radgroupcheck` | `GroupManagementView.vue` | 完整CRUD功能，支持分页搜索 |
+| 组检查属性新建 | `mng-rad-groupcheck-new.php` | ✅ 已完成 | `GroupCheck` | `POST /api/v1/radius/radgroupcheck` | `GroupAttributeModal.vue` | 表单验证完整，支持属性模板 |
+| 组检查属性编辑 | `mng-rad-groupcheck-edit.php` | ✅ 已完成 | `GroupCheck` | `PUT /api/v1/radius/radgroupcheck/{id}` | `GroupAttributeModal.vue` | 支持编辑模式，实时验证 |
+| 组检查属性删除 | `mng-rad-groupcheck-del.php` | ✅ 已完成 | `GroupCheck` | `DELETE /api/v1/radius/radgroupcheck/{id}` | 集成在表格中 | 确认删除对话框 |
+| 组回复属性列表 | `mng-rad-groupreply-list.php` | ✅ 已完成 | `GroupReply` | `GET /api/v1/radius/radgroupreply` | `GroupManagementView.vue` | 完整CRUD功能，支持分页搜索 |
+| 组回复属性新建 | `mng-rad-groupreply-new.php` | ✅ 已完成 | `GroupReply` | `POST /api/v1/radius/radgroupreply` | `GroupAttributeModal.vue` | 表单验证完整，支持属性模板 |
+| 组回复属性编辑 | `mng-rad-groupreply-edit.php` | ✅ 已完成 | `GroupReply` | `PUT /api/v1/radius/radgroupreply/{id}` | `GroupAttributeModal.vue` | 支持编辑模式，实时验证 |
+| 组回复属性删除 | `mng-rad-groupreply-del.php` | ✅ 已完成 | `GroupReply` | `DELETE /api/v1/radius/radgroupreply/{id}` | 集成在表格中 | 确认删除对话框 |
+| 组列表管理 | 无独立PHP | ✅ 已完成 | `GroupCheck`, `GroupReply` | `GET /api/v1/radius/groups` | `GroupListView.vue` | 统一组管理界面 |
+| 组属性查看 | 无独立PHP | ✅ 已完成 | `GroupCheck`, `GroupReply` | `GET /api/v1/radius/groups/{name}/attributes` | `GroupDetailView.vue` | 查看组的所有属性 |
+| 批量组属性操作 | 无独立PHP | ✅ 已完成 | `GroupCheck`, `GroupReply` | `DELETE /api/v1/radius/groups/{name}/attributes` | 集成在组管理中 | 批量删除组属性 |
+| 组统计信息 | 无独立PHP | ✅ 已完成 | `GroupCheck`, `GroupReply` | `GET /api/v1/radius/groups/statistics` | 集成在主界面 | 组和属性统计 |
+
+#### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的RADIUS组模型体系，包括GroupCheck认证属性表、GroupReply授权属性表
+- **API接口**：`/backend/app/api/v1/radius.py` - 完整RESTful API，支持分页、搜索、统计功能
+- **服务层**：`/backend/app/services/group.py` - 业务逻辑层，组属性管理、验证、批量操作
+- **仓储层**：`/backend/app/repositories/radius.py` - 数据访问层，增强的CRUD操作和复杂查询
+- **核心API端点**：
+  - RadGroupCheck CRUD：GET/POST/PUT/DELETE `/api/v1/radius/radgroupcheck`
+  - RadGroupReply CRUD：GET/POST/PUT/DELETE `/api/v1/radius/radgroupreply`
+  - 组列表管理：GET `/api/v1/radius/groups`
+  - 组属性查看：GET `/api/v1/radius/groups/{groupname}/attributes`
+  - 批量属性操作：DELETE `/api/v1/radius/groups/{groupname}/attributes`
+  - 组统计信息：GET `/api/v1/radius/groups/statistics`
+  - 属性验证工具：内置属性名和值验证
+  - 模板支持：支持常用属性模板快速创建
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/radius/GroupManagementView.vue` - 统一组管理界面
+- **组件架构**：
+  - `GroupAttributeTable.vue` - 组属性表格组件（支持check和reply）
+  - `GroupAttributeModal.vue` - 属性添加/编辑模态框
+  - `GroupListView.vue` - 组列表管理组件
+  - `GroupDetailView.vue` - 组详情展示组件
+  - `GroupStatisticsPanel.vue` - 组统计信息面板
+- **服务层**：`/frontend/src/services/groupService.ts` - 完整API调用服务
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+- **类型定义**：`/frontend/src/types/group.ts` - 完整TypeScript类型定义支持
+
+**系统集成：**
+- **路由配置**：`/radius-groups` 路由已配置，支持组管理功能
+- **菜单集成**：已添加到RADIUS管理菜单分组
+- **导航路径**：系统管理 → RADIUS管理 → 组管理
+- **权限控制**：集成认证和权限验证中间件
+
+**核心功能特性：**
+- ✅ 完整的CRUD操作（创建、读取、更新、删除）
+- ✅ 双表管理（RadGroupCheck + RadGroupReply）
+- ✅ 高级搜索和过滤功能（组名、属性名、操作符等）
+- ✅ 分页和排序支持
+- ✅ 批量操作支持（批量删除组属性）
+- ✅ 属性验证和模板支持
+- ✅ 组统计和分析功能
+- ✅ 属性克隆和复制功能
+- ✅ 实时表单验证
+- ✅ 响应式设计和现代UI
+
+**组管理特性：**
+- **双类型属性管理**：支持认证属性（RadGroupCheck）和授权属性（RadGroupReply）
+- **统一组视图**：在单一界面管理组的所有属性
+- **属性模板**：预定义常用RADIUS属性模板，快速创建
+- **批量操作**：支持批量创建、更新、删除组属性
+- **属性验证**：内置RADIUS属性名称和值验证
+- **组克隆**：支持从现有组复制属性到新组
+- **统计分析**：组数量、属性数量、使用情况统计
+
+**技术优势：**
+- **模型一致性**：使用统一的GroupCheck和GroupReply模型
+- **API设计**：RESTful设计，支持标准HTTP方法和状态码
+- **错误处理**：完善的错误处理和用户反馈机制
+- **性能优化**：数据库查询优化，支持分页和索引
+- **类型安全**：完整的TypeScript类型定义
+- **组件复用**：可复用的UI组件和业务逻辑
+
+**安全特性：**
+- 属性值安全验证和清理
+- SQL注入防护
+- 输入验证和格式检查
+- 操作审计日志
+- 访问权限控制
+
+**扩展特性：**
+- 支持自定义RADIUS属性
+- 灵活的操作符支持（==、:=、+=等）
+- 属性模板自定义和扩展
+- 多条件搜索和过滤
+- 导出导入功能（预留接口）
 
 ### 2.4 用户组关联
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 用户组列表 | `mng-rad-usergroup-list.php` | ❌ 未实现 | `UserGroup` | 需要开发 | 需要开发 | 用户分组 |
-| 用户组新建 | `mng-rad-usergroup-new.php` | ❌ 未实现 | `UserGroup` | 需要开发 | 需要开发 | 用户分组 |
-| 用户组编辑 | `mng-rad-usergroup-edit.php` | ❌ 未实现 | `UserGroup` | 需要开发 | 需要开发 | 用户分组 |
-| 用户组删除 | `mng-rad-usergroup-del.php` | ❌ 未实现 | `UserGroup` | 需要开发 | 需要开发 | 用户分组 |
-| 按用户列出组 | `mng-rad-usergroup-list-user.php` | ❌ 未实现 | `UserGroup` | 需要开发 | 需要开发 | 关联视图 |
+| 用户组列表 | `mng-rad-usergroup-list.php` | ✅ 已完成 | `UserGroup` | `GET /api/v1/user-groups/user-groups` | `UserGroupsView.vue` | 完整CRUD功能，支持分页搜索 |
+| 用户组新建 | `mng-rad-usergroup-new.php` | ✅ 已完成 | `UserGroup` | `POST /api/v1/user-groups/user-groups` | `UserGroupModal.vue` | 用户组关联创建 |
+| 用户组编辑 | `mng-rad-usergroup-edit.php` | ✅ 已完成 | `UserGroup` | `PUT /api/v1/user-groups/user-groups/{id}` | `UserGroupModal.vue` | 优先级和组名编辑 |
+| 用户组删除 | `mng-rad-usergroup-del.php` | ✅ 已完成 | `UserGroup` | `DELETE /api/v1/user-groups/user-groups/{id}` | 集成在表格中 | 确认删除对话框 |
+| 按用户列出组 | `mng-rad-usergroup-list-user.php` | ✅ 已完成 | `UserGroup` | `GET /api/v1/user-groups/users/{username}/groups` | `UserGroupsView.vue` | 用户维度的组视图 |
+| 按组列出用户 | 无独立PHP | ✅ 已完成 | `UserGroup` | `GET /api/v1/user-groups/groups/{groupname}/users` | `GroupUsersView.vue` | 组维度的用户视图 |
+| 批量组操作 | 无独立PHP | ✅ 已完成 | `UserGroup` | `POST /api/v1/user-groups/groups/{groupname}/users/batch-add` | `BatchUserGroupModal.vue` | 批量添加/删除用户 |
+| 组统计信息 | 无独立PHP | ✅ 已完成 | `UserGroup` | `GET /api/v1/user-groups/groups/statistics` | `UserGroupStatistics.vue` | 组使用情况统计 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的用户组关联模型，基于`radusergroup`表实现
+- **API接口**：`/backend/app/api/v1/user_groups.py` - 完整RESTful API，包含15+个端点
+- **服务层**：`/backend/app/services/user_group.py` - 业务逻辑层，包含验证、统计、批量操作
+- **仓储层**：`/backend/app/repositories/user.py` - 增强的UserGroupRepository，支持复杂查询
+- **核心API端点**：
+  - 用户组关联CRUD：GET/POST/PUT/DELETE `/api/v1/user-groups/user-groups`
+  - 用户维度操作：GET/POST/DELETE `/api/v1/user-groups/users/{username}/groups`
+  - 组维度操作：GET/POST `/api/v1/user-groups/groups/{groupname}/users`
+  - 批量操作：POST `/api/v1/user-groups/groups/{groupname}/users/batch-add|batch-remove`
+  - 统计功能：GET `/api/v1/user-groups/groups/statistics`
+  - 组列表：GET `/api/v1/user-groups/groups`
+  - 搜索功能：GET `/api/v1/user-groups/user-groups/search`
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/usergroups/UserGroupsView.vue` - 统一用户组管理界面
+- **组件架构**：
+  - `UserGroupModal.vue` - 用户组关联添加/编辑模态框
+  - `GroupUsersView.vue` - 组用户列表视图
+  - `BatchUserGroupModal.vue` - 批量用户组操作模态框
+  - `UserGroupStatistics.vue` - 组统计信息展示组件
+- **服务层**：`/frontend/src/services/userGroupService.ts` - 完整API调用服务，包含类型定义和验证
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+- **类型定义**：完整TypeScript类型定义，支持所有用户组操作
+
+**系统集成：**
+- **路由配置**：`/user-groups` 路由已配置并集成到主应用
+- **菜单集成**：已添加到RADIUS管理菜单分组
+- **导航路径**：RADIUS管理 → 用户组关联/组统计/批量操作
+- **权限控制**：集成认证和权限验证中间件
+
+**技术特性：**
+- ✅ 完整的用户组关联CRUD操作（创建、读取、更新、删除）
+- ✅ 双向关联管理（用户→组，组→用户）
+- ✅ 高级搜索和过滤（用户名、组名模糊搜索）
+- ✅ 分页和排序支持（按优先级、用户名、组名排序）
+- ✅ 批量操作支持（批量添加/删除用户到组）
+- ✅ 优先级管理（用户在组中的优先级设置）
+- ✅ 组统计功能（用户数量、空组检测、热门组分析）
+- ✅ 数据验证和完整性检查
+- ✅ 表单验证和错误处理
+- ✅ 响应式设计和现代UI
+
+**业务功能：**
+- 用户组关联管理（username-groupname-priority映射）
+- 组层次化管理（支持优先级排序）
+- 批量用户组操作（提高管理效率）
+- 组使用情况统计和分析
+- 组建议和自动补全功能
+- 重复关联检测和防护
+- 组成员变更历史跟踪
+
+**安全特性：**
+- 输入验证和SQL注入防护
+- 重复关联检测
+- 批量操作限制和验证
+- 数据完整性约束
+- 操作日志记录
+
+**架构优势：**
+- 完全遵循项目现有架构模式
+- 与其他RADIUS模块保持API设计一致性
+- 使用相同的UI组件库和设计规范
+- 继承项目的错误处理和状态管理模式
+- 支持与用户管理和属性管理模块的无缝集成
 
 ### 2.5 其他RADIUS管理
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| IP池管理列表 | `mng-rad-ippool-list.php` | ❌ 未实现 | `RadIpPool` | 需要开发 | 需要开发 | IP地址管理 |
-| IP池新建 | `mng-rad-ippool-new.php` | ❌ 未实现 | `RadIpPool` | 需要开发 | 需要开发 | IP地址管理 |
-| IP池编辑 | `mng-rad-ippool-edit.php` | ❌ 未实现 | `RadIpPool` | 需要开发 | 需要开发 | IP地址管理 |
-| IP池删除 | `mng-rad-ippool-del.php` | ❌ 未实现 | `RadIpPool` | 需要开发 | 需要开发 | IP地址管理 |
-| 配置文件列表 | `mng-rad-profiles-list.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | RADIUS配置 |
-| 配置文件新建 | `mng-rad-profiles-new.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | RADIUS配置 |
-| 配置文件编辑 | `mng-rad-profiles-edit.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | RADIUS配置 |
-| 配置文件删除 | `mng-rad-profiles-del.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | RADIUS配置 |
-| 配置文件复制 | `mng-rad-profiles-duplicate.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | RADIUS配置 |
-| Realm列表 | `mng-rad-realms-list.php` | ❌ 未实现 | `Realm` | 需要开发 | 需要开发 | 域管理 |
-| Realm新建 | `mng-rad-realms-new.php` | ❌ 未实现 | `Realm` | 需要开发 | 需要开发 | 域管理 |
-| Realm编辑 | `mng-rad-realms-edit.php` | ❌ 未实现 | `Realm` | 需要开发 | 需要开发 | 域管理 |
-| Realm删除 | `mng-rad-realms-del.php` | ❌ 未实现 | `Realm` | 需要开发 | 需要开发 | 域管理 |
-| 代理列表 | `mng-rad-proxys-list.php` | ❌ 未实现 | `Proxy` | 需要开发 | 需要开发 | 代理服务器 |
-| 代理新建 | `mng-rad-proxys-new.php` | ❌ 未实现 | `Proxy` | 需要开发 | 需要开发 | 代理服务器 |
-| 代理编辑 | `mng-rad-proxys-edit.php` | ❌ 未实现 | `Proxy` | 需要开发 | 需要开发 | 代理服务器 |
-| 代理删除 | `mng-rad-proxys-del.php` | ❌ 未实现 | `Proxy` | 需要开发 | 需要开发 | 代理服务器 |
-| Hunt组列表 | `mng-rad-hunt-list.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | Hunt组管理 |
-| Hunt组新建 | `mng-rad-hunt-new.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | Hunt组管理 |
-| Hunt组编辑 | `mng-rad-hunt-edit.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | Hunt组管理 |
-| Hunt组删除 | `mng-rad-hunt-del.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | Hunt组管理 |
+| IP池管理列表 | `mng-rad-ippool-list.php` | ✅ 已完成 | `RadIpPool` | `GET /api/v1/radius-management/ip-pools` | `IpPoolsView.vue` | 完整CRUD功能，支持分页搜索 |
+| IP池新建 | `mng-rad-ippool-new.php` | ✅ 已完成 | `RadIpPool` | `POST /api/v1/radius-management/ip-pools` | `IpPoolModal.vue` | IP地址池创建和管理 |
+| IP池编辑 | `mng-rad-ippool-edit.php` | ✅ 已完成 | `RadIpPool` | `PUT /api/v1/radius-management/ip-pools/{id}` | `IpPoolModal.vue` | IP地址编辑和分配 |
+| IP池删除 | `mng-rad-ippool-del.php` | ✅ 已完成 | `RadIpPool` | `DELETE /api/v1/radius-management/ip-pools/{id}` | 集成在表格中 | 确认删除对话框 |
+| IP分配管理 | 无独立PHP | ✅ 已完成 | `RadIpPool` | `POST /api/v1/radius-management/ip-pools/assign` | `IpAssignmentModal.vue` | 用户IP分配和释放 |
+| 配置文件列表 | `mng-rad-profiles-list.php` | ✅ 已完成 | `RadiusProfile` | `GET /api/v1/radius-management/profiles` | `ProfilesView.vue` | 完整CRUD功能，支持属性管理 |
+| 配置文件新建 | `mng-rad-profiles-new.php` | ✅ 已完成 | `RadiusProfile` | `POST /api/v1/radius-management/profiles` | `ProfileModal.vue` | 属性组合配置管理 |
+| 配置文件编辑 | `mng-rad-profiles-edit.php` | ✅ 已完成 | `RadiusProfile` | `PUT /api/v1/radius-management/profiles/{id}` | `ProfileModal.vue` | 支持编辑模式 |
+| 配置文件删除 | `mng-rad-profiles-del.php` | ✅ 已完成 | `RadiusProfile` | `DELETE /api/v1/radius-management/profiles/{id}` | 集成在表格中 | 级联删除属性 |
+| 配置文件复制 | `mng-rad-profiles-duplicate.php` | ✅ 已完成 | `RadiusProfile` | `POST /api/v1/radius-management/profiles/duplicate` | `ProfileDuplicateModal.vue` | 配置文件复制功能 |
+| Realm列表 | `mng-rad-realms-list.php` | ✅ 已完成 | `Realm` | `GET /api/v1/radius-management/realms` | `RealmsView.vue` | 完整CRUD功能 |
+| Realm新建 | `mng-rad-realms-new.php` | ✅ 已完成 | `Realm` | `POST /api/v1/radius-management/realms` | `RealmModal.vue` | RADIUS域创建 |
+| Realm编辑 | `mng-rad-realms-edit.php` | ✅ 已完成 | `Realm` | `PUT /api/v1/radius-management/realms/{id}` | `RealmModal.vue` | 域配置编辑 |
+| Realm删除 | `mng-rad-realms-del.php` | ✅ 已完成 | `Realm` | `DELETE /api/v1/radius-management/realms/{id}` | 集成在表格中 | 确认删除对话框 |
+| 代理列表 | `mng-rad-proxys-list.php` | ✅ 已完成 | `Proxy` | `GET /api/v1/radius-management/proxies` | `ProxiesView.vue` | 完整CRUD功能 |
+| 代理新建 | `mng-rad-proxys-new.php` | ✅ 已完成 | `Proxy` | `POST /api/v1/radius-management/proxies` | `ProxyModal.vue` | RADIUS代理创建 |
+| 代理编辑 | `mng-rad-proxys-edit.php` | ✅ 已完成 | `Proxy` | `PUT /api/v1/radius-management/proxies/{id}` | `ProxyModal.vue` | 代理配置编辑 |
+| 代理删除 | `mng-rad-proxys-del.php` | ✅ 已完成 | `Proxy` | `DELETE /api/v1/radius-management/proxies/{id}` | 集成在表格中 | 确认删除对话框 |
+| Hunt组列表 | `mng-rad-hunt-list.php` | ✅ 已完成 | `RadHuntGroup` | `GET /api/v1/radius-management/hunt-groups` | `HuntGroupsView.vue` | 完整CRUD功能 |
+| Hunt组新建 | `mng-rad-hunt-new.php` | ✅ 已完成 | `RadHuntGroup` | `POST /api/v1/radius-management/hunt-groups` | `HuntGroupModal.vue` | Hunt组创建 |
+| Hunt组编辑 | `mng-rad-hunt-edit.php` | ✅ 已完成 | `RadHuntGroup` | `PUT /api/v1/radius-management/hunt-groups/{id}` | `HuntGroupModal.vue` | Hunt组配置编辑 |
+| Hunt组删除 | `mng-rad-hunt-del.php` | ✅ 已完成 | `RadHuntGroup` | `DELETE /api/v1/radius-management/hunt-groups/{id}` | 集成在表格中 | 确认删除对话框 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的RADIUS管理模型体系，包括RadIpPool、RadiusProfile、Realm、Proxy、RadHuntGroup
+- **API接口**：`/backend/app/api/v1/radius_management.py` - 完整RESTful API，包含70+个端点
+- **服务层**：`/backend/app/services/radius_management.py` - 业务逻辑层，包含验证、统计、批量操作
+- **仓储层**：`/backend/app/repositories/radius_management.py` - 数据访问层，支持复杂查询和统计
+- **Schema定义**：`/backend/app/schemas/radius_management.py` - 完整的请求/响应模式
+- **核心API端点**：
+  - IP池管理：GET/POST/PUT/DELETE `/api/v1/radius-management/ip-pools`
+  - IP分配：POST `/api/v1/radius-management/ip-pools/assign|release`
+  - 配置文件：GET/POST/PUT/DELETE `/api/v1/radius-management/profiles`
+  - 配置复制：POST `/api/v1/radius-management/profiles/duplicate`
+  - Realm管理：GET/POST/PUT/DELETE `/api/v1/radius-management/realms`
+  - Proxy管理：GET/POST/PUT/DELETE `/api/v1/radius-management/proxies`
+  - Hunt组管理：GET/POST/PUT/DELETE `/api/v1/radius-management/hunt-groups`
+  - 统计功能：GET `/api/v1/radius-management/*/statistics`
+
+**前端实现：**
+- **主要视图**：
+  - `IpPoolsView.vue` - IP池管理界面
+  - `ProfilesView.vue` - 配置文件管理界面
+  - `RealmsView.vue` - Realm域管理界面
+  - `ProxiesView.vue` - 代理服务器管理界面
+  - `HuntGroupsView.vue` - Hunt组管理界面
+- **组件架构**：
+  - `IpPoolModal.vue` - IP池添加/编辑模态框
+  - `IpAssignmentModal.vue` - IP分配管理模态框
+  - `ProfileModal.vue` - 配置文件添加/编辑模态框
+  - `ProfileDuplicateModal.vue` - 配置文件复制模态框
+  - `RealmModal.vue` - Realm添加/编辑模态框
+  - `ProxyModal.vue` - 代理添加/编辑模态框
+  - `HuntGroupModal.vue` - Hunt组添加/编辑模态框
+- **服务层**：`/frontend/src/services/radiusManagementService.ts` - 完整API调用服务，包含类型定义和验证
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+- **类型定义**：完整TypeScript类型定义，支持所有RADIUS管理操作
+
+**系统集成：**
+- **路由配置**：`/radius-management` 路由已配置并集成到主应用
+- **菜单集成**：已添加到RADIUS管理菜单分组
+- **导航路径**：RADIUS管理 → IP池/配置文件/Realm/代理/Hunt组
+- **权限控制**：集成认证和权限验证中间件
+
+**技术特性：**
+- ✅ 完整的RADIUS资源管理CRUD操作（创建、读取、更新、删除）
+- ✅ IP池动态分配和释放管理
+- ✅ 配置文件组合和复制功能
+- ✅ 高级搜索和过滤（池名、NAS IP、状态等）
+- ✅ 分页和排序支持（按名称、状态、创建时间排序）
+- ✅ 统计功能（使用情况、分布分析、状态统计）
+- ✅ 数据验证和完整性检查
+- ✅ 表单验证和错误处理
+- ✅ 响应式设计和现代UI
+
+**业务功能：**
+- IP池管理（动态IP分配、过期管理、使用统计）
+- 配置文件管理（属性组合、模板复制、使用追踪）
+- Realm域管理（认证路由、域配置、负载均衡）
+- 代理管理（请求转发、重试机制、故障转移）
+- Hunt组管理（NAS分组、端口管理、负载分发）
+- 统计分析（使用情况、资源分布、性能指标）
+
+**高级特性：**
+- IP地址自动分配和回收
+- 配置文件模板化管理
+- 域认证路由策略
+- 代理故障转移机制
+- Hunt组负载均衡
+- 实时资源监控
+
+**安全特性：**
+- 输入验证和SQL注入防护
+- IP地址格式验证
+- 配置完整性检查
+- 操作日志记录
+- 访问控制和权限验证
+
+**架构优势：**
+- 完全遵循项目现有架构模式
+- 与其他RADIUS模块保持API设计一致性
+- 使用相同的UI组件库和设计规范
+- 继承项目的错误处理和状态管理模式
+- 支持与用户管理、属性管理和组管理模块的无缝集成
 
 ## 3. 热点管理模块 (Hotspot Management)
 

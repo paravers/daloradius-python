@@ -203,6 +203,66 @@ class UserGroupResponse(UserGroupBase):
         from_attributes = True
 
 
+class UserGroupUpdate(BaseModel):
+    """Schema for updating user-group association"""
+    groupname: Optional[str] = Field(None, max_length=64)
+    priority: Optional[int] = Field(None, ge=0)
+
+
+class UserGroupListResponse(BaseModel):
+    """Schema for user group list responses"""
+    groups: List[str] = Field(..., description="List of group names")
+    total: int = Field(..., description="Total number of groups")
+
+
+class UserGroupStatisticsResponse(BaseModel):
+    """Schema for user group statistics responses"""
+    total_associations: int = Field(..., description="Total user-group associations")
+    total_groups: int = Field(..., description="Total number of groups")
+    total_users: int = Field(..., description="Total users with groups")
+    top_groups: List[Dict[str, Any]] = Field(..., description="Groups with most users")
+
+
+class UserGroupDetailResponse(BaseModel):
+    """Schema for detailed user group response"""
+    id: int
+    groupname: str
+    priority: int
+    member_count: int
+    joined_at: datetime
+
+
+class BatchUserGroupOperation(BaseModel):
+    """Schema for batch user group operations"""
+    usernames: List[str] = Field(..., description="List of usernames")
+    groupname: str = Field(..., max_length=64, description="Group name")
+    priority: int = Field(1, ge=0, description="Priority for new associations")
+
+
+class BatchUserGroupResult(BaseModel):
+    """Schema for batch operation results"""
+    groupname: str
+    requested: int
+    added: Optional[int] = None
+    removed: Optional[int] = None
+    failed: int
+    errors: List[str]
+
+
+class GroupWithUserCount(BaseModel):
+    """Schema for group with user count"""
+    groupname: str
+    user_count: int
+
+
+class UserGroupSearchParams(BaseModel):
+    """Schema for user group search parameters"""
+    username_pattern: Optional[str] = None
+    groupname_pattern: Optional[str] = None
+    page: int = Field(1, ge=1)
+    size: int = Field(20, ge=1, le=100)
+
+
 # Operator schemas
 class OperatorBase(BaseModel):
     """Base operator schema"""
