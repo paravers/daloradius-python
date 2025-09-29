@@ -7,6 +7,7 @@ export * from './common'
 
 // 业务类型
 export * from './user'
+export * from './billing'
 
 // API 相关
 export * from './api'
