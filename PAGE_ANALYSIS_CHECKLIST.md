@@ -148,10 +148,85 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| NAS列表 | `mng-rad-nas-list.php` | 🟡 部分完成 | `Nas` | 需要开发 | `DevicesView.vue` | 占位符存在 |
-| NAS新建 | `mng-rad-nas-new.php` | ❌ 未实现 | `Nas` | 需要开发 | 需要开发 | 高优先级 |
-| NAS编辑 | `mng-rad-nas-edit.php` | ❌ 未实现 | `Nas` | 需要开发 | 需要开发 | 高优先级 |
-| NAS删除 | `mng-rad-nas-del.php` | ❌ 未实现 | `Nas` | 需要开发 | 需要开发 | 高优先级 |
+| NAS列表 | `mng-rad-nas-list.php` | ✅ 已完成 | `Nas` | `GET /api/v1/nas` | `DevicesView.vue` | 完整CRUD功能，支持分页搜索 |
+| NAS新建 | `mng-rad-nas-new.php` | ✅ 已完成 | `Nas` | `POST /api/v1/nas` | `DeviceForm.vue` | 表单验证完整，支持连接测试 |
+| NAS编辑 | `mng-rad-nas-edit.php` | ✅ 已完成 | `Nas` | `PUT /api/v1/nas/{id}` | `DeviceForm.vue` | 支持编辑模式，实时验证 |
+| NAS删除 | `mng-rad-nas-del.php` | ✅ 已完成 | `Nas` | `DELETE /api/v1/nas/{id}` | 集成在列表中 | 防止删除有活动会话的NAS |
+| NAS搜索 | `mng-rad-nas-search.php` | ✅ 已完成 | `Nas` | `GET /api/v1/nas/search/{query}` | 集成在主视图中 | 支持名称、描述、服务器搜索 |
+| NAS状态监控 | 无独立PHP | ✅ 已完成 | `Nas`, `NasMonitoring` | `GET /api/v1/nas/{id}/status` | `DeviceDetail.vue` | 实时状态监控 |
+| 连接性测试 | 无独立PHP | ✅ 已完成 | `Nas` | `POST /api/v1/nas/{id}/test-connection` | 集成在设备详情 | Ping、RADIUS、SNMP测试 |
+| 活动会话查看 | 无独立PHP | ✅ 已完成 | `RadAcct` | `GET /api/v1/nas/{id}/sessions` | 集成在设备详情 | 实时会话监控 |
+| 批量操作 | 无独立PHP | ✅ 已完成 | `Nas` | `DELETE /api/v1/nas/batch` | 集成在列表中 | 批量删除NAS设备 |
+| 统计信息 | 无独立PHP | ✅ 已完成 | `Nas`, `RadAcct` | `GET /api/v1/nas/statistics/overview` | 集成在主界面 | 设备统计和利用率 |
+
+#### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的NAS模型体系，包括Nas主表、NasMonitoring监控表、NasGroup分组表
+- **API接口**：`/backend/app/api/v1/nas.py` - 完整RESTful API，支持分页、搜索、监控、批量操作
+- **服务层**：`/backend/app/services/nas.py` - 业务逻辑层，连接性测试、状态监控、性能分析
+- **仓储层**：`/backend/app/repositories/radius.py` - 数据访问层，增强的CRUD操作和复杂查询
+- **核心API端点**：
+  - NAS CRUD：GET/POST/PUT/DELETE `/api/v1/nas`
+  - 状态监控：GET `/api/v1/nas/{id}/status`
+  - 连接测试：POST `/api/v1/nas/{id}/test-connection`
+  - 活动会话：GET `/api/v1/nas/{id}/sessions`
+  - 批量操作：DELETE `/api/v1/nas/batch`
+  - 搜索功能：GET `/api/v1/nas/search/{query}`
+  - 设备类型：GET `/api/v1/nas/types/available`
+  - 统计信息：GET `/api/v1/nas/statistics/overview`
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/devices/DevicesView.vue` - 统一设备管理界面
+- **组件架构**：
+  - `DeviceForm.vue` - 设备添加/编辑表单组件
+  - `DeviceDetail.vue` - 设备详情展示组件
+  - `DeviceStatusMonitor.vue` - 设备状态监控组件
+  - `ConnectivityTestPanel.vue` - 连接性测试面板
+- **服务层**：`/frontend/src/services/nasService.ts` - 完整API调用服务
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+- **类型定义**：完整TypeScript类型定义支持
+
+**系统集成：**
+- **路由配置**：`/devices` 路由已配置，支持设备管理功能
+- **菜单集成**：已添加到网络设备菜单分组
+- **导航路径**：网络管理 → 设备管理 → NAS设备
+- **权限控制**：集成认证和权限验证中间件
+
+**核心功能特性：**
+- ✅ 完整的CRUD操作（创建、读取、更新、删除）
+- ✅ 高级搜索和过滤功能（设备名、类型、状态等）
+- ✅ 分页和排序支持
+- ✅ 实时连接性测试（Ping、RADIUS、SNMP）
+- ✅ 设备状态监控和健康检查
+- ✅ 活动会话实时监控
+- ✅ 批量操作支持（批量删除）
+- ✅ 设备统计和性能分析
+- ✅ 多种NAS类型支持（Cisco、Juniper、MikroTik等）
+- ✅ 端口利用率监控
+- ✅ 设备分组管理
+- ✅ 错误处理和用户友好提示
+
+**监控和测试功能：**
+- **连接性测试**：支持Ping、RADIUS端口（1812/1813）、SNMP连通性测试
+- **状态监控**：实时设备状态、会话数、端口利用率监控
+- **性能指标**：请求成功率、响应时间、历史性能趋势
+- **告警机制**：设备离线、高利用率、连接失败告警
+
+**安全特性：**
+- RADIUS密钥安全存储和管理
+- 设备访问权限控制
+- 操作审计日志
+- 连接测试安全验证
+- 输入验证和防护
+
+**技术优势：**
+- 完全遵循项目现有架构模式
+- 与其他模块保持API设计一致性
+- 使用相同的UI组件库和设计规范
+- 继承项目的错误处理和状态管理模式
+- 支持异步操作和实时更新
+- 高性能的数据库查询优化
 
 ### 2.3 RADIUS 组管理
 

@@ -591,6 +591,140 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             for row in result.all()
         ]
 
+    async def get_nas_by_type(
+        self, 
+        nas_type: str,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Nas]:
+        """Get NAS devices by type"""
+        filters = {"type": nas_type}
+        return await self.get_multi(
+            skip=skip,
+            limit=limit,
+            filters=filters,
+            order_by="shortname"
+        )
+
+    async def get_nas_statistics(self) -> Dict[str, Any]:
+        """Get NAS statistics"""
+        # Total NAS count
+        total_query = select(func.count(Nas.id))
+        total_result = await self.db.execute(total_query)
+        total_nas = total_result.scalar()
+
+        # Active NAS count
+        active_query = select(func.count(Nas.id)).where(Nas.is_active == True)
+        active_result = await self.db.execute(active_query)
+        active_nas = active_result.scalar()
+
+        # NAS by type
+        type_query = select(
+            Nas.type,
+            func.count(Nas.id).label('count')
+        ).group_by(Nas.type)
+        type_result = await self.db.execute(type_query)
+        nas_by_type = {row.type or 'other': row.count for row in type_result.all()}
+
+        return {
+            "total_nas": total_nas,
+            "active_nas": active_nas,
+            "inactive_nas": total_nas - active_nas,
+            "nas_by_type": nas_by_type
+        }
+
+    async def update_nas_status(self, nas_id: int, is_active: bool) -> bool:
+        """Update NAS active status"""
+        try:
+            await self.update(nas_id, {"is_active": is_active})
+            return True
+        except Exception:
+            return False
+
+    async def update_last_seen(self, nas_id: int) -> bool:
+        """Update NAS last seen timestamp"""
+        try:
+            await self.update(nas_id, {"last_seen": func.now()})
+            return True
+        except Exception:
+            return False
+
+    async def increment_request_counters(
+        self, 
+        nas_id: int, 
+        total_requests: int = 1,
+        successful_requests: int = 0
+    ) -> bool:
+        """Increment NAS request counters"""
+        try:
+            nas = await self.get_by_id(nas_id)
+            if nas:
+                new_total = (nas.total_requests or 0) + total_requests
+                new_successful = (nas.successful_requests or 0) + successful_requests
+                
+                await self.update(nas_id, {
+                    "total_requests": new_total,
+                    "successful_requests": new_successful
+                })
+                return True
+            return False
+        except Exception:
+            return False
+
+    async def get_nas_with_low_success_rate(
+        self, 
+        threshold: float = 0.8,
+        min_requests: int = 100
+    ) -> List[Nas]:
+        """Get NAS devices with low success rate"""
+        query = select(Nas).where(
+            and_(
+                Nas.total_requests >= min_requests,
+                (Nas.successful_requests / Nas.total_requests) < threshold
+            )
+        ).order_by((Nas.successful_requests / Nas.total_requests).asc())
+        
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_nas_utilization(self) -> List[Dict[str, Any]]:
+        """Get NAS utilization statistics"""
+        query = select(
+            Nas.id,
+            Nas.nasname,
+            Nas.shortname,
+            Nas.ports,
+            func.count(Radacct.radacctid).label('active_sessions')
+        ).outerjoin(
+            Radacct,
+            and_(
+                Nas.nasname == Radacct.nas_ip_address,
+                Radacct.acct_stop_time.is_(None)
+            )
+        ).group_by(
+            Nas.id,
+            Nas.nasname, 
+            Nas.shortname,
+            Nas.ports
+        ).order_by(Nas.shortname)
+        
+        result = await self.db.execute(query)
+        
+        return [
+            {
+                "id": row.id,
+                "nasname": row.nasname,
+                "shortname": row.shortname,
+                "ports": row.ports or 0,
+                "active_sessions": row.active_sessions or 0,
+                "utilization_percent": (
+                    (row.active_sessions or 0) / row.ports * 100 
+                    if row.ports and row.ports > 0 else 0
+                )
+            }
+            for row in result.all()
+        ]
+
 
 class RadgroupcheckRepository(BaseRepository[Radgroupcheck, RadgroupcheckCreate, None]):
     """Repository for RADIUS group check attributes"""

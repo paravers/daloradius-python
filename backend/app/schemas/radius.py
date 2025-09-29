@@ -256,6 +256,45 @@ class NasUpdate(BaseModel):
 class NasResponse(NasBase):
     """Schema for NAS responses"""
     id: int
+    is_active: Optional[bool] = True
+    last_seen: Optional[datetime] = None
+    total_requests: Optional[int] = 0
+    successful_requests: Optional[int] = 0
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class NasListResponse(BaseModel):
+    """Schema for NAS list responses"""
+    devices: List[NasResponse]
+    total: int
+    page: int = Field(1, ge=1)
+    per_page: int = Field(20, ge=1, le=100)
+    pages: int
+
+    class Config:
+        from_attributes = True
+
+
+class NasMonitoringResponse(BaseModel):
+    """Schema for NAS monitoring responses"""
+    nas_id: int
+    check_time: datetime
+    ping_success: Optional[bool] = None
+    ping_latency_ms: Optional[int] = None
+    radius_auth_success: Optional[bool] = None
+    radius_acct_success: Optional[bool] = None
+    radius_response_time_ms: Optional[int] = None
+    snmp_success: Optional[bool] = None
+    cpu_usage_percent: Optional[int] = None
+    memory_usage_percent: Optional[int] = None
+    uptime_seconds: Optional[int] = None
+    active_sessions: Optional[int] = None
+    total_ports: Optional[int] = None
+    status: str = "unknown"
 
     class Config:
         from_attributes = True
