@@ -147,6 +147,82 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
         result = await self.db.execute(query)
         return result.scalar()
 
+    async def get_paginated(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        filters: Optional[Dict[str, Any]] = None,
+        search_term: Optional[str] = None,
+        search_fields: Optional[List[str]] = None,
+        order_by: Optional[str] = None,
+        order_desc: bool = False,
+        load_relationships: bool = False
+    ) -> tuple[List[ModelType], int]:
+        """
+        Get paginated records with optional filtering and search
+        
+        Args:
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            filters: Dictionary of field filters
+            search_term: Text to search for
+            search_fields: List of field names to search in
+            order_by: Field name to order by
+            order_desc: Whether to order descending
+            load_relationships: Whether to load related objects
+            
+        Returns:
+            Tuple of (records, total_count)
+        """
+        # Build base query for records
+        query = select(self.model)
+        
+        # Build count query
+        count_query = select(func.count(self.model.id))
+        
+        # Apply filters to both queries
+        if filters:
+            query = self._apply_filters(query, filters)
+            count_query = self._apply_filters(count_query, filters)
+        
+        # Apply search to both queries
+        if search_term and search_fields:
+            search_conditions = []
+            for field_name in search_fields:
+                if hasattr(self.model, field_name):
+                    field = getattr(self.model, field_name)
+                    search_conditions.append(field.ilike(f"%{search_term}%"))
+            
+            if search_conditions:
+                search_filter = or_(*search_conditions)
+                query = query.where(search_filter)
+                count_query = count_query.where(search_filter)
+        
+        # Get total count
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar()
+        
+        # Apply ordering to records query
+        if order_by and hasattr(self.model, order_by):
+            field = getattr(self.model, order_by)
+            if order_desc:
+                query = query.order_by(field.desc())
+            else:
+                query = query.order_by(field)
+                
+        # Apply relationship loading
+        if load_relationships:
+            query = self._add_relationship_loading(query)
+            
+        # Apply pagination to records query
+        query = query.offset(skip).limit(limit)
+        
+        # Execute records query
+        result = await self.db.execute(query)
+        records = result.scalars().all()
+        
+        return records, total
+
     async def create(self, obj_in: CreateSchemaType) -> ModelType:
         """
         Create a new record

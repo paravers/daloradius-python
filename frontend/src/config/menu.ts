@@ -147,32 +147,7 @@ export const mainMenu: MenuInfo[] = [
     label: '设备管理',
     icon: 'Router',
     path: '/devices',
-    children: [
-      {
-        key: 'devices-nas',
-        label: 'NAS 设备',
-        icon: 'Router',
-        path: '/devices/nas'
-      },
-      {
-        key: 'devices-switches',
-        label: '交换机',
-        icon: 'Network',
-        path: '/devices/switches'
-      },
-      {
-        key: 'devices-access-points',
-        label: '接入点',
-        icon: 'Wifi',
-        path: '/devices/access-points'
-      },
-      {
-        key: 'devices-topology',
-        label: '网络拓扑',
-        icon: 'Sitemap',
-        path: '/devices/topology'
-      }
-    ]
+    badge: null
   },
   
   // 认证管理
@@ -182,6 +157,12 @@ export const mainMenu: MenuInfo[] = [
     icon: 'Shield',
     path: '/authentication',
     children: [
+      {
+        key: 'auth-radius-attributes',
+        label: 'RADIUS 属性管理',
+        icon: 'Settings',
+        path: '/radius-attributes'
+      },
       {
         key: 'auth-radius',
         label: 'RADIUS 配置',
@@ -212,75 +193,19 @@ export const mainMenu: MenuInfo[] = [
   // 报表分析
   {
     key: 'reports',
-    label: '报表分析',
+    label: '报表中心',
     icon: 'BarChart3',
     path: '/reports',
-    children: [
-      {
-        key: 'reports-usage',
-        label: '使用量报表',
-        icon: 'TrendingUp',
-        path: '/reports/usage'
-      },
-      {
-        key: 'reports-revenue',
-        label: '收入报表',
-        icon: 'DollarSign',
-        path: '/reports/revenue'
-      },
-      {
-        key: 'reports-performance',
-        label: '性能报表',
-        icon: 'Gauge',
-        path: '/reports/performance'
-      },
-      {
-        key: 'reports-custom',
-        label: '自定义报表',
-        icon: 'FileBarChart',
-        path: '/reports/custom'
-      }
-    ]
+    badge: null
   },
   
   // 系统配置
   {
-    key: 'system',
+    key: 'config',
     label: '系统配置',
     icon: 'Settings',
-    path: '/system',
-    children: [
-      {
-        key: 'system-general',
-        label: '基础设置',
-        icon: 'Settings',
-        path: '/system/general'
-      },
-      {
-        key: 'system-database',
-        label: '数据库配置',
-        icon: 'Database',
-        path: '/system/database'
-      },
-      {
-        key: 'system-backup',
-        label: '备份管理',
-        icon: 'HardDrive',
-        path: '/system/backup'
-      },
-      {
-        key: 'system-logs',
-        label: '系统日志',
-        icon: 'FileText',
-        path: '/system/logs'
-      },
-      {
-        key: 'system-maintenance',
-        label: '系统维护',
-        icon: 'Wrench',
-        path: '/system/maintenance'
-      }
-    ]
+    path: '/config',
+    badge: null
   },
   
   // 管理员

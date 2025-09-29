@@ -28,13 +28,13 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
     """Repository for RADIUS check attributes (authorization)"""
     
     def __init__(self, db_session: AsyncSession):
-        super().__init__(Radcheck, db_session)
+        super().__init__(RadCheck, db_session)
 
     def _add_relationship_loading(self, query):
         """Add relationship loading for radcheck queries"""
         return query
 
-    async def get_user_attributes(self, username: str) -> List[Radcheck]:
+    async def get_user_attributes(self, username: str) -> List[RadCheck]:
         """Get all check attributes for a user"""
         filters = {"username": username}
         return await self.get_multi(filters=filters, order_by="attribute")
@@ -153,17 +153,17 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
         )
 
 
-class RadreplyRepository(BaseRepository[Radreply, RadreplyCreate, RadreplyUpdate]):
+class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate]):
     """Repository for RADIUS reply attributes (authorization response)"""
     
     def __init__(self, db_session: AsyncSession):
-        super().__init__(Radreply, db_session)
+        super().__init__(RadReply, db_session)
 
     def _add_relationship_loading(self, query):
         """Add relationship loading for radreply queries"""
         return query
 
-    async def get_user_attributes(self, username: str) -> List[Radreply]:
+    async def get_user_attributes(self, username: str) -> List[RadReply]:
         """Get all reply attributes for a user"""
         filters = {"username": username}
         return await self.get_multi(filters=filters, order_by="attribute")

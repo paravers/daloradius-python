@@ -16,7 +16,7 @@ import os
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import init_db, close_db
-from app.api.v1 import auth, users, accounting, billing, nas, reports, system
+from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius
 
 
 # Setup logging
@@ -142,6 +142,13 @@ def setup_routes(app: FastAPI) -> None:
         system.router,
         prefix=settings.API_V1_STR + "/system",
         tags=["system"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        radius.router,
+        prefix=settings.API_V1_STR + "/radius",
+        tags=["radius"],
         dependencies=[Depends(security)]
     )
     

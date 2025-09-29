@@ -70,6 +70,17 @@ const routes: RouteRecordRaw[] = [
         } as RouteMeta,
       },
       {
+        path: 'radius-attributes',
+        name: 'RadiusAttributes',
+        component: () => import('@/views/radius/RadiusAttributesView.vue'),
+        meta: {
+          title: 'RADIUS 属性管理',
+          icon: 'RadiusSettingOutlined',
+          requiresAuth: true,
+          permissions: ['radius.view'],
+        } as RouteMeta,
+      },
+      {
         path: 'reports',
         name: 'Reports',
         component: () => import('@/views/reports/ReportsView.vue'),
