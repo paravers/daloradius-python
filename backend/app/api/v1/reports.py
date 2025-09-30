@@ -91,7 +91,8 @@ async def delete_ups_status(
 @router.get("/ups-status", response_model=List[UpsStatusResponse])
 async def list_ups_status(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db)
 ):
     """List all UPS status records"""
@@ -168,7 +169,8 @@ async def delete_raid_status(
 @router.get("/raid-status", response_model=List[RaidStatusResponse])
 async def list_raid_status(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db)
 ):
     """List all RAID status records"""
@@ -245,7 +247,8 @@ async def delete_heartbeat(
 @router.get("/heartbeat", response_model=List[HeartBeatResponse])
 async def list_heartbeats(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db)
 ):
     """List all heartbeat records"""
@@ -322,8 +325,10 @@ async def delete_report_template(
 @router.get("/templates", response_model=List[ReportTemplateResponse])
 async def list_report_templates(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
-    report_type: Optional[ReportType] = Query(None, description="Filter by report type"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
+    report_type: Optional[ReportType] = Query(
+        None, description="Filter by report type"),
     db: Session = Depends(get_db)
 ):
     """List report templates"""
@@ -388,7 +393,8 @@ async def get_pending_reports(db: Session = Depends(get_db)):
 async def get_online_users_report(
     nas_ip: Optional[str] = Query(None, description="Filter by NAS IP"),
     username: Optional[str] = Query(None, description="Filter by username"),
-    session_timeout_min: Optional[int] = Query(None, ge=1, description="Session timeout in minutes"),
+    session_timeout_min: Optional[int] = Query(
+        None, ge=1, description="Session timeout in minutes"),
     db: Session = Depends(get_db)
 ):
     """Get online users report"""
@@ -407,7 +413,8 @@ async def get_history_report(
     nas_ip: Optional[str] = Query(None, description="Filter by NAS IP"),
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
-    session_time_min: Optional[int] = Query(None, ge=0, description="Minimum session time in minutes"),
+    session_time_min: Optional[int] = Query(
+        None, ge=0, description="Minimum session time in minutes"),
     db: Session = Depends(get_db)
 ):
     """Get history report"""
@@ -424,7 +431,8 @@ async def get_history_report(
 
 @router.get("/data/last-connect")
 async def get_last_connect_report(
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db)
 ):
     """Get last connect report"""
@@ -454,7 +462,8 @@ async def get_top_users_report(
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
     limit: int = Query(10, ge=1, le=100, description="Number of top users"),
-    order_by: str = Query("total_traffic", regex="^(total_traffic|session_time|session_count)$", description="Order by field"),
+    order_by: str = Query(
+        "total_traffic", regex="^(total_traffic|session_time|session_count)$", description="Order by field"),
     db: Session = Depends(get_db)
 ):
     """Get top users report"""
@@ -471,11 +480,13 @@ async def get_top_users_report(
 @router.get("/data/system-logs")
 async def get_system_logs_report(
     log_level: Optional[str] = Query(None, description="Filter by log level"),
-    logger_name: Optional[str] = Query(None, description="Filter by logger name"),
+    logger_name: Optional[str] = Query(
+        None, description="Filter by logger name"),
     username: Optional[str] = Query(None, description="Filter by username"),
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
-    search_text: Optional[str] = Query(None, description="Search in log messages"),
+    search_text: Optional[str] = Query(
+        None, description="Search in log messages"),
     db: Session = Depends(get_db)
 ):
     """Get system logs report"""
@@ -493,7 +504,8 @@ async def get_system_logs_report(
 
 @router.get("/data/batch")
 async def get_batch_report(
-    batch_name: Optional[str] = Query(None, description="Filter by batch name"),
+    batch_name: Optional[str] = Query(
+        None, description="Filter by batch name"),
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
     db: Session = Depends(get_db)

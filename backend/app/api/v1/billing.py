@@ -106,10 +106,12 @@ async def get_billing_plans(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     name: Optional[str] = Query(None, description="Filter by plan name"),
-    type_filter: Optional[str] = Query(None, alias="type", description="Filter by plan type"),
+    type_filter: Optional[str] = Query(
+        None, alias="type", description="Filter by plan type"),
     active_only: bool = Query(False, description="Show only active plans"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: BillingPlanService = Depends(get_billing_plan_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -210,7 +212,8 @@ async def delete_billing_plan(
     try:
         success = await service.delete_plan(plan_id)
         if not success:
-            raise HTTPException(status_code=404, detail="Billing plan not found")
+            raise HTTPException(
+                status_code=404, detail="Billing plan not found")
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -230,7 +233,8 @@ async def get_billing_history(
     start_date: Optional[date] = Query(None, description="Start date filter"),
     end_date: Optional[date] = Query(None, description="End date filter"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: BillingHistoryService = Depends(get_billing_history_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -255,7 +259,8 @@ async def get_billing_history(
 @router.get("/history/users/{username}", response_model=List[BillingHistoryResponse], summary="Get user billing history")
 async def get_user_billing_history(
     username: str = Path(..., description="Username"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of records"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of records"),
     service: BillingHistoryService = Depends(get_billing_history_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -303,9 +308,11 @@ async def get_billing_rates(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     name: Optional[str] = Query(None, description="Filter by rate name"),
-    type_filter: Optional[str] = Query(None, alias="type", description="Filter by rate type"),
+    type_filter: Optional[str] = Query(
+        None, alias="type", description="Filter by rate type"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: BillingRateService = Depends(get_billing_rate_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -366,7 +373,8 @@ async def delete_billing_rate(
     try:
         success = await service.delete_rate(rate_id)
         if not success:
-            raise HTTPException(status_code=404, detail="Billing rate not found")
+            raise HTTPException(
+                status_code=404, detail="Billing rate not found")
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -382,9 +390,11 @@ async def get_merchant_transactions(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     username: Optional[str] = Query(None, description="Filter by username"),
-    business_id: Optional[str] = Query(None, description="Filter by business ID"),
+    business_id: Optional[str] = Query(
+        None, description="Filter by business ID"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: BillingMerchantService = Depends(get_billing_merchant_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -429,7 +439,7 @@ async def get_billing_statistics(
     """Get comprehensive billing system statistics"""
     try:
         plan_stats = await plan_service.get_plan_statistics()
-        
+
         return {
             "plans": plan_stats,
             "generated_at": "2024-01-01T00:00:00Z"  # Current timestamp
@@ -446,12 +456,15 @@ async def get_billing_statistics(
 async def get_invoices(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
-    customer: Optional[str] = Query(None, description="Filter by customer name or ID"),
-    status: Optional[str] = Query(None, description="Filter by invoice status"),
+    customer: Optional[str] = Query(
+        None, description="Filter by customer name or ID"),
+    status: Optional[str] = Query(
+        None, description="Filter by invoice status"),
     date_from: Optional[date] = Query(None, description="Start date filter"),
     date_to: Optional[date] = Query(None, description="End date filter"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: InvoiceService = Depends(get_invoice_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -549,10 +562,13 @@ async def get_payments(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     customer: Optional[str] = Query(None, description="Filter by customer ID"),
-    payment_method: Optional[str] = Query(None, description="Filter by payment method"),
-    status: Optional[str] = Query(None, description="Filter by payment status"),
+    payment_method: Optional[str] = Query(
+        None, description="Filter by payment method"),
+    status: Optional[str] = Query(
+        None, description="Filter by payment status"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: PaymentService = Depends(get_payment_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -629,9 +645,11 @@ async def get_refunds(
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     customer: Optional[str] = Query(None, description="Filter by customer ID"),
     status: Optional[str] = Query(None, description="Filter by refund status"),
-    payment_id: Optional[int] = Query(None, description="Filter by payment ID"),
+    payment_id: Optional[int] = Query(
+        None, description="Filter by payment ID"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: RefundService = Depends(get_refund_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -673,10 +691,13 @@ async def create_refund(
 async def get_payment_types(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
-    name: Optional[str] = Query(None, description="Filter by payment type name"),
-    active_only: bool = Query(False, description="Show only active payment types"),
+    name: Optional[str] = Query(
+        None, description="Filter by payment type name"),
+    active_only: bool = Query(
+        False, description="Show only active payment types"),
     sort_field: str = Query("sort_order", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: PaymentTypeService = Depends(get_payment_type_service),
     current_user: dict = Depends(get_current_user)
 ):
@@ -717,11 +738,14 @@ async def create_payment_type(
 async def get_pos_terminals(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
-    name: Optional[str] = Query(None, description="Filter by terminal name or serial"),
+    name: Optional[str] = Query(
+        None, description="Filter by terminal name or serial"),
     location: Optional[str] = Query(None, description="Filter by location"),
-    status: Optional[str] = Query(None, description="Filter by terminal status"),
+    status: Optional[str] = Query(
+        None, description="Filter by terminal status"),
     sort_field: str = Query("id", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$",
+                            description="Sort order"),
     service: POSService = Depends(get_pos_service),
     current_user: dict = Depends(get_current_user)
 ):

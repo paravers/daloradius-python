@@ -15,7 +15,7 @@ from .base import Base
 
 # Database configuration
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
+    "DATABASE_URL",
     "postgresql+asyncpg://daloradius:daloradius123@localhost:5432/daloradius"
 )
 
@@ -40,9 +40,9 @@ AsyncSessionLocal = async_sessionmaker(
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to get async database session.
-    
+
     This function is typically used with FastAPI's dependency injection system.
-    
+
     Yields:
         AsyncSession: Database session
     """
@@ -59,7 +59,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 async def create_tables():
     """
     Create all database tables.
-    
+
     This is typically done through Alembic migrations,
     but can be used for testing or initial setup.
     """
@@ -70,7 +70,7 @@ async def create_tables():
 async def drop_tables():
     """
     Drop all database tables.
-    
+
     Warning: This will delete all data!
     Should only be used in development/testing.
     """
@@ -82,23 +82,23 @@ class DatabaseManager:
     """
     Database manager for handling connections and transactions
     """
-    
+
     def __init__(self):
         self.engine = engine
         self.session_factory = AsyncSessionLocal
-    
+
     async def get_session(self) -> AsyncSession:
         """Get a new database session"""
         return self.session_factory()
-    
+
     async def close(self):
         """Close the database engine"""
         await self.engine.dispose()
-    
+
     async def health_check(self) -> bool:
         """
         Check database connectivity
-        
+
         Returns:
             bool: True if database is accessible, False otherwise
         """

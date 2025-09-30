@@ -40,13 +40,14 @@ async def get_hotspots(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     order_by: str = Query("name", description="Order by field"),
-    order_type: str = Query("asc", regex="^(asc|desc)$", description="Order direction"),
+    order_type: str = Query("asc", regex="^(asc|desc)$",
+                            description="Order direction"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get list of hotspots with optional filtering and pagination.
-    
+
     - **query**: General search term (searches name, mac, owner, company, address, manager)
     - **type**: Filter by hotspot type
     - **owner**: Filter by owner name
@@ -68,12 +69,13 @@ async def get_hotspots(
             order_by=order_by,
             order_type=order_type
         )
-        
+
         # Calculate pagination info
         pages = (total + per_page - 1) // per_page
-        
+
         return HotspotListResponse(
-            hotspots=[HotspotResponse.from_orm(hotspot) for hotspot in hotspots],
+            hotspots=[HotspotResponse.from_orm(
+                hotspot) for hotspot in hotspots],
             total=total,
             page=page,
             per_page=per_page,
@@ -94,7 +96,7 @@ async def create_hotspot(
 ):
     """
     Create a new hotspot.
-    
+
     - **name**: Hotspot name (required, unique)
     - **mac**: MAC address or IP address (required, unique)
     - **geocode**: Geographic coordinates or location code (optional)
@@ -144,7 +146,7 @@ async def get_hotspot(
 ):
     """
     Get a specific hotspot by ID.
-    
+
     - **hotspot_id**: The ID of the hotspot to retrieve
     """
     try:
@@ -172,7 +174,7 @@ async def update_hotspot(
 ):
     """
     Update an existing hotspot.
-    
+
     - **hotspot_id**: The ID of the hotspot to update
     - All fields are optional for updates
     """
@@ -214,7 +216,7 @@ async def delete_hotspot(
 ):
     """
     Delete a specific hotspot.
-    
+
     - **hotspot_id**: The ID of the hotspot to delete
     """
     try:
@@ -241,7 +243,7 @@ async def search_hotspots(
 ):
     """
     Advanced search for hotspots with POST body parameters.
-    
+
     This endpoint accepts the same parameters as GET /hotspots but via POST body,
     useful for complex search queries or when URL length limits are a concern.
     """
@@ -257,12 +259,14 @@ async def search_hotspots(
             order_by=search_request.order_by,
             order_type=search_request.order_type
         )
-        
+
         # Calculate pagination info
-        pages = (total + search_request.per_page - 1) // search_request.per_page
-        
+        pages = (total + search_request.per_page -
+                 1) // search_request.per_page
+
         return HotspotListResponse(
-            hotspots=[HotspotResponse.from_orm(hotspot) for hotspot in hotspots],
+            hotspots=[HotspotResponse.from_orm(
+                hotspot) for hotspot in hotspots],
             total=total,
             page=search_request.page,
             per_page=search_request.per_page,
@@ -283,14 +287,14 @@ async def validate_hotspot_field(
 ):
     """
     Validate hotspot field uniqueness.
-    
+
     - **name**: Name to validate (optional)
     - **mac**: MAC/IP address to validate (optional)
     - **exclude_id**: ID to exclude from validation check (optional, for updates)
     """
     try:
         service = HotspotService(db)
-        
+
         if validation_request.name:
             is_available = service.validate_name_availability(
                 validation_request.name,
@@ -300,7 +304,7 @@ async def validate_hotspot_field(
                 valid=is_available,
                 message=None if is_available else f"Name '{validation_request.name}' is already taken"
             )
-        
+
         if validation_request.mac:
             is_available = service.validate_mac_availability(
                 validation_request.mac,
@@ -310,7 +314,7 @@ async def validate_hotspot_field(
                 valid=is_available,
                 message=None if is_available else f"MAC/IP '{validation_request.mac}' is already taken"
             )
-        
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Either name or mac must be provided for validation"
@@ -330,13 +334,14 @@ async def bulk_delete_hotspots(
 ):
     """
     Delete multiple hotspots in bulk.
-    
+
     - **hotspot_ids**: List of hotspot IDs to delete
     """
     try:
         service = HotspotService(db)
-        deleted_count = service.bulk_delete_hotspots(delete_request.hotspot_ids)
-        
+        deleted_count = service.bulk_delete_hotspots(
+            delete_request.hotspot_ids)
+
         return HotspotBulkDeleteResponse(
             deleted_count=deleted_count,
             message=f"Successfully deleted {deleted_count} hotspot(s)"
@@ -355,14 +360,14 @@ async def get_hotspot_statistics(
 ):
     """
     Get hotspot management statistics.
-    
+
     Returns summary statistics including total counts, recent activity,
     and distribution by various categories.
     """
     try:
         service = HotspotService(db)
         stats = service.get_statistics()
-        
+
         return HotspotStatisticsResponse(**stats)
     except Exception as e:
         raise HTTPException(
@@ -378,13 +383,13 @@ async def get_hotspot_options(
 ):
     """
     Get options for hotspot dropdowns.
-    
+
     Returns lists of unique values for various hotspot fields,
     useful for populating dropdown menus and filters in the UI.
     """
     try:
         service = HotspotService(db)
-        
+
         return HotspotOptionsResponse(
             types=service.get_hotspot_types(),
             companies=service.get_companies(),

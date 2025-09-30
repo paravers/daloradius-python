@@ -22,7 +22,7 @@ router = APIRouter()
 class NotificationType(str, Enum):
     """Notification types"""
     EMAIL = "email"
-    SMS = "sms" 
+    SMS = "sms"
     PUSH = "push"
     SYSTEM = "system"
 
@@ -47,15 +47,21 @@ class NotificationStatus(str, Enum):
 class NotificationCreate(BaseModel):
     """Create notification request"""
     recipient_id: Optional[int] = Field(None, description="User ID recipient")
-    recipient_email: Optional[EmailStr] = Field(None, description="Email recipient")
-    recipient_phone: Optional[str] = Field(None, description="Phone number recipient")
-    notification_type: NotificationType = Field(description="Type of notification")
-    priority: NotificationPriority = Field(NotificationPriority.NORMAL, description="Priority level")
+    recipient_email: Optional[EmailStr] = Field(
+        None, description="Email recipient")
+    recipient_phone: Optional[str] = Field(
+        None, description="Phone number recipient")
+    notification_type: NotificationType = Field(
+        description="Type of notification")
+    priority: NotificationPriority = Field(
+        NotificationPriority.NORMAL, description="Priority level")
     template_id: Optional[int] = Field(None, description="Template ID to use")
     subject: Optional[str] = Field(None, description="Notification subject")
     message: str = Field(description="Notification message content")
-    variables: Optional[Dict[str, Any]] = Field(None, description="Template variables")
-    scheduled_for: Optional[datetime] = Field(None, description="Schedule delivery time")
+    variables: Optional[Dict[str, Any]] = Field(
+        None, description="Template variables")
+    scheduled_for: Optional[datetime] = Field(
+        None, description="Schedule delivery time")
 
 
 class NotificationResponse(BaseModel):
@@ -86,7 +92,8 @@ class NotificationTemplateCreate(BaseModel):
     subject: Optional[str] = Field(None, description="Email subject template")
     body_text: Optional[str] = Field(None, description="Plain text template")
     body_html: Optional[str] = Field(None, description="HTML template")
-    variables: Optional[List[str]] = Field(None, description="Available variables")
+    variables: Optional[List[str]] = Field(
+        None, description="Available variables")
     is_active: bool = Field(True, description="Template is active")
 
 
@@ -108,31 +115,35 @@ class NotificationTemplateResponse(BaseModel):
 
 @router.get("/templates", response_model=List[NotificationTemplateResponse])
 async def list_notification_templates(
-    template_type: Optional[NotificationType] = Query(None, description="Filter by template type"),
+    template_type: Optional[NotificationType] = Query(
+        None, description="Filter by template type"),
     category: Optional[str] = Query(None, description="Filter by category"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(
+        None, description="Filter by active status"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     List notification templates
-    
+
     Returns paginated list of notification templates with optional filtering.
     """
     try:
         query = db.query(NotificationTemplate)
-        
+
         if template_type:
-            query = query.filter(NotificationTemplate.template_type == template_type.value)
+            query = query.filter(
+                NotificationTemplate.template_type == template_type.value)
         if category:
             query = query.filter(NotificationTemplate.category == category)
         if is_active is not None:
             query = query.filter(NotificationTemplate.is_active == is_active)
-        
+
         templates = query.offset(skip).limit(limit).all()
-        
+
         return [
             NotificationTemplateResponse(
                 id=template.id,
@@ -142,7 +153,8 @@ async def list_notification_templates(
                 subject=template.subject,
                 body_text=template.body_text,
                 body_html=template.body_html,
-                variables=template.variables.split(',') if template.variables else None,
+                variables=template.variables.split(
+                    ',') if template.variables else None,
                 is_active=template.is_active,
                 is_system=template.is_system,
                 created_at=template.created_at,
@@ -150,7 +162,7 @@ async def list_notification_templates(
             )
             for template in templates
         ]
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -166,7 +178,7 @@ async def create_notification_template(
 ):
     """
     Create new notification template
-    
+
     Creates a new notification template for reuse across the system.
     """
     try:
@@ -174,13 +186,13 @@ async def create_notification_template(
         existing = db.query(NotificationTemplate).filter(
             NotificationTemplate.template_name == template_data.template_name
         ).first()
-        
+
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Template '{template_data.template_name}' already exists"
             )
-        
+
         template = NotificationTemplate(
             template_name=template_data.template_name,
             template_type=template_data.template_type.value,
@@ -188,16 +200,17 @@ async def create_notification_template(
             subject=template_data.subject,
             body_text=template_data.body_text,
             body_html=template_data.body_html,
-            variables=','.join(template_data.variables) if template_data.variables else None,
+            variables=','.join(
+                template_data.variables) if template_data.variables else None,
             is_active=template_data.is_active,
             is_system=False,
             updated_by=str(current_user.id)
         )
-        
+
         db.add(template)
         db.commit()
         db.refresh(template)
-        
+
         return NotificationTemplateResponse(
             id=template.id,
             template_name=template.template_name,
@@ -206,13 +219,14 @@ async def create_notification_template(
             subject=template.subject,
             body_text=template.body_text,
             body_html=template.body_html,
-            variables=template.variables.split(',') if template.variables else None,
+            variables=template.variables.split(
+                ',') if template.variables else None,
             is_active=template.is_active,
             is_system=template.is_system,
             created_at=template.created_at,
             updated_at=template.updated_at
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -231,20 +245,20 @@ async def get_notification_template(
 ):
     """
     Get notification template by ID
-    
+
     Returns detailed information about a specific notification template.
     """
     try:
         template = db.query(NotificationTemplate).filter(
             NotificationTemplate.id == template_id
         ).first()
-        
+
         if not template:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template with ID {template_id} not found"
             )
-        
+
         return NotificationTemplateResponse(
             id=template.id,
             template_name=template.template_name,
@@ -253,13 +267,14 @@ async def get_notification_template(
             subject=template.subject,
             body_text=template.body_text,
             body_html=template.body_html,
-            variables=template.variables.split(',') if template.variables else None,
+            variables=template.variables.split(
+                ',') if template.variables else None,
             is_active=template.is_active,
             is_system=template.is_system,
             created_at=template.created_at,
             updated_at=template.updated_at
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -278,7 +293,7 @@ async def send_notification(
 ):
     """
     Send notification
-    
+
     Sends a notification immediately or schedules it for later delivery.
     """
     try:
@@ -288,10 +303,10 @@ async def send_notification(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one recipient (ID, email, or phone) must be specified"
             )
-        
+
         # Create notification record (in a real implementation, this would be in a notifications table)
         notification_id = int(datetime.now().timestamp())
-        
+
         notification = {
             "id": notification_id,
             "recipient_id": notification_data.recipient_id,
@@ -310,7 +325,7 @@ async def send_notification(
             "delivered_at": None,
             "error_message": None
         }
-        
+
         # If scheduled for future, just return the notification
         if notification_data.scheduled_for and notification_data.scheduled_for > datetime.utcnow():
             return {
@@ -319,21 +334,21 @@ async def send_notification(
                 "message": f"Notification scheduled for {notification_data.scheduled_for}",
                 "notification": notification
             }
-        
+
         # Send immediately in background
         background_tasks.add_task(
             process_notification,
             notification,
             notification_data.notification_type
         )
-        
+
         return {
             "status": "queued",
             "notification_id": notification_id,
             "message": "Notification queued for immediate delivery",
             "notification": notification
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -345,24 +360,28 @@ async def send_notification(
 
 @router.get("/history")
 async def get_notification_history(
-    recipient_id: Optional[int] = Query(None, description="Filter by recipient ID"),
-    notification_type: Optional[NotificationType] = Query(None, description="Filter by type"),
-    status: Optional[NotificationStatus] = Query(None, description="Filter by status"),
+    recipient_id: Optional[int] = Query(
+        None, description="Filter by recipient ID"),
+    notification_type: Optional[NotificationType] = Query(
+        None, description="Filter by type"),
+    status: Optional[NotificationStatus] = Query(
+        None, description="Filter by status"),
     days: int = Query(7, ge=1, le=90, description="Days of history to return"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of records to return"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get notification history
-    
+
     Returns paginated history of sent notifications with filtering options.
     """
     try:
         # In a real implementation, this would query a notifications table
         # For now, return mock data structure
-        
+
         mock_notifications = []
         for i in range(min(limit, 20)):  # Return up to 20 mock records
             mock_notifications.append({
@@ -378,7 +397,7 @@ async def get_notification_history(
                 "sent_at": datetime.utcnow() - timedelta(days=i % days, hours=1),
                 "delivered_at": datetime.utcnow() - timedelta(days=i % days, hours=2) if i % 3 == 0 else None
             })
-        
+
         return {
             "notifications": mock_notifications,
             "total": len(mock_notifications),
@@ -389,7 +408,7 @@ async def get_notification_history(
                 "days": days
             }
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -405,7 +424,7 @@ async def get_notification_stats(
 ):
     """
     Get notification statistics
-    
+
     Returns delivery statistics and performance metrics.
     """
     try:
@@ -450,7 +469,7 @@ async def get_notification_stats(
                 "days": days
             }
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -461,31 +480,32 @@ async def get_notification_stats(
 async def process_notification(notification: Dict[str, Any], notification_type: NotificationType):
     """
     Background task to process notification delivery
-    
+
     This function would contain the actual notification sending logic.
     """
     try:
         # Simulate processing time
         import asyncio
         await asyncio.sleep(1)
-        
+
         # In a real implementation, this would:
         # 1. Resolve template if template_id is provided
         # 2. Apply variable substitution
         # 3. Send via appropriate channel (email, SMS, push)
         # 4. Update notification status in database
         # 5. Handle retries on failure
-        
-        print(f"Processing {notification_type} notification {notification['id']}")
+
+        print(
+            f"Processing {notification_type} notification {notification['id']}")
         print(f"Recipient: {notification.get('recipient_email', 'N/A')}")
         print(f"Message: {notification['message'][:100]}...")
-        
+
         # Mark as sent (in real implementation, update database)
         notification["status"] = NotificationStatus.SENT
         notification["sent_at"] = datetime.utcnow()
-        
+
         return True
-        
+
     except Exception as e:
         print(f"Failed to process notification {notification['id']}: {e}")
         notification["status"] = NotificationStatus.FAILED

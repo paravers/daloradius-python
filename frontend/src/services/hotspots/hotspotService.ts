@@ -5,7 +5,7 @@
  * Provides API client functions for CRUD operations and hotspot management.
  */
 
-import api from '@/services/api'
+import { apiService } from '@/services/api'
 import type { 
   Hotspot, 
   HotspotCreate, 
@@ -42,47 +42,42 @@ export class HotspotService {
     order_by?: string
     order_type?: 'asc' | 'desc'
   } = {}): Promise<HotspotListResponse> {
-    const response = await api.get(ENDPOINTS.HOTSPOTS, { params })
-    return response.data
+    return await apiService.get<HotspotListResponse>(ENDPOINTS.HOTSPOTS, { params })
   }
 
   /**
    * Get a specific hotspot by ID
    */
   static async getHotspot(id: number): Promise<Hotspot> {
-    const response = await api.get(`${ENDPOINTS.HOTSPOTS}/${id}`)
-    return response.data
+    return await apiService.get<Hotspot>(`${ENDPOINTS.HOTSPOTS}/${id}`)
   }
 
   /**
    * Create a new hotspot
    */
   static async createHotspot(hotspotData: HotspotCreate): Promise<Hotspot> {
-    const response = await api.post(ENDPOINTS.HOTSPOTS, hotspotData)
-    return response.data
+    return await apiService.post<Hotspot>(ENDPOINTS.HOTSPOTS, hotspotData)
   }
 
   /**
    * Update an existing hotspot
    */
   static async updateHotspot(id: number, hotspotData: HotspotUpdate): Promise<Hotspot> {
-    const response = await api.put(`${ENDPOINTS.HOTSPOTS}/${id}`, hotspotData)
-    return response.data
+    return await apiService.put<Hotspot>(`${ENDPOINTS.HOTSPOTS}/${id}`, hotspotData)
   }
 
   /**
    * Delete a hotspot
    */
   static async deleteHotspot(id: number): Promise<void> {
-    await api.delete(`${ENDPOINTS.HOTSPOTS}/${id}`)
+    await apiService.delete(`${ENDPOINTS.HOTSPOTS}/${id}`)
   }
 
   /**
    * Advanced search for hotspots
    */
   static async searchHotspots(searchRequest: HotspotSearchRequest): Promise<HotspotListResponse> {
-    const response = await api.post(ENDPOINTS.SEARCH, searchRequest)
-    return response.data
+    return await apiService.post<HotspotListResponse>(ENDPOINTS.SEARCH, searchRequest)
   }
 
   /**
@@ -93,8 +88,7 @@ export class HotspotService {
     mac?: string
     exclude_id?: number
   }): Promise<HotspotValidationResponse> {
-    const response = await api.post(ENDPOINTS.VALIDATE, data)
-    return response.data
+    return await apiService.post<HotspotValidationResponse>(ENDPOINTS.VALIDATE, data)
   }
 
   /**
@@ -117,26 +111,23 @@ export class HotspotService {
    * Delete multiple hotspots in bulk
    */
   static async bulkDelete(hotspotIds: number[]): Promise<HotspotBulkDeleteResponse> {
-    const response = await api.delete(ENDPOINTS.BULK_DELETE, {
+    return await apiService.delete<HotspotBulkDeleteResponse>(ENDPOINTS.BULK_DELETE, {
       data: { hotspot_ids: hotspotIds }
     })
-    return response.data
   }
 
   /**
    * Get hotspot management statistics
    */
   static async getStatistics(): Promise<HotspotStatisticsResponse> {
-    const response = await api.get(ENDPOINTS.STATISTICS)
-    return response.data
+    return await apiService.get<HotspotStatisticsResponse>(ENDPOINTS.STATISTICS)
   }
 
   /**
    * Get options for hotspot dropdowns
    */
   static async getOptions(): Promise<HotspotOptionsResponse> {
-    const response = await api.get(ENDPOINTS.OPTIONS)
-    return response.data
+    return await apiService.get<HotspotOptionsResponse>(ENDPOINTS.OPTIONS)
   }
 
   /**

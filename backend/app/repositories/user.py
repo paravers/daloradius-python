@@ -15,14 +15,14 @@ from sqlalchemy.exc import IntegrityError
 from .base import BaseRepository
 from ..models.user import User, UserInfo, UserGroup, Operator, UserBillingInfo
 from ..schemas.user import (
-    UserCreate, UserUpdate, GroupCreate, GroupUpdate, 
+    UserCreate, UserUpdate, GroupCreate, GroupUpdate,
     OperatorCreate, OperatorUpdate, UserGroupCreate
 )
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     """Repository for User model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(User, db_session)
 
@@ -43,11 +43,11 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     async def authenticate(self, username: str, password: str) -> Optional[User]:
         """
         Authenticate user with username and password
-        
+
         Args:
             username: Username to authenticate
             password: Plain text password
-            
+
         Returns:
             User instance if authenticated, None otherwise
         """
@@ -60,23 +60,23 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         return None
 
     async def create_with_info(
-        self, 
+        self,
         user_data: UserCreate,
         user_info_data: Optional[Dict[str, Any]] = None
     ) -> User:
         """
         Create user with optional user info
-        
+
         Args:
             user_data: User creation data
             user_info_data: Additional user info data
-            
+
         Returns:
             Created user instance
         """
         # Create user
         user = await self.create(user_data)
-        
+
         # Create user info if provided
         if user_info_data:
             user_info = UserInfo(
@@ -86,17 +86,17 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             self.db.add(user_info)
             await self.db.commit()
             await self.db.refresh(user)
-            
+
         return user
 
     async def update_password(self, user: User, new_password: str) -> User:
         """
         Update user password
-        
+
         Args:
             user: User instance
             new_password: New plain text password
-            
+
         Returns:
             Updated user instance
         """
@@ -106,16 +106,16 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         return user
 
     async def get_users_by_status(
-        self, 
-        status: str, 
-        skip: int = 0, 
+        self,
+        status: str,
+        skip: int = 0,
         limit: int = 100
     ) -> List[User]:
         """Get users by status"""
         filters = {"status": status}
         return await self.get_multi(
-            skip=skip, 
-            limit=limit, 
+            skip=skip,
+            limit=limit,
             filters=filters,
             load_relationships=True
         )
@@ -124,8 +124,8 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         """Get active users"""
         filters = {"is_active": True}
         return await self.get_multi(
-            skip=skip, 
-            limit=limit, 
+            skip=skip,
+            limit=limit,
             filters=filters,
             load_relationships=True
         )
@@ -139,18 +139,18 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     ) -> List[User]:
         """
         Search users across multiple fields
-        
+
         Args:
             search_term: Text to search for
             skip: Number of records to skip
             limit: Maximum number of records to return
             filters: Additional filters
-            
+
         Returns:
             List of matching users
         """
         search_fields = [
-            "username", "email", "first_name", "last_name", 
+            "username", "email", "first_name", "last_name",
             "department", "company"
         ]
         return await self.search(
@@ -162,19 +162,19 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         )
 
     async def get_users_by_group(
-        self, 
-        groupname: str, 
-        skip: int = 0, 
+        self,
+        groupname: str,
+        skip: int = 0,
         limit: int = 100
     ) -> List[User]:
         """
         Get users belonging to a specific group
-        
+
         Args:
             groupname: Group name
             skip: Number of records to skip
             limit: Maximum number of records to return
-            
+
         Returns:
             List of users in the group
         """
@@ -185,7 +185,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             .offset(skip)
             .limit(limit)
         )
-        
+
         query = self._add_relationship_loading(query)
         result = await self.db.execute(query)
         return result.scalars().all()
@@ -218,7 +218,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             select(User.status, func.count(User.id))
             .group_by(User.status)
         )
-        
+
         result = await self.db.execute(query)
         return dict(result.all())
 
@@ -244,7 +244,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
 class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
     """Repository for UserGroup model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(UserGroup, db_session)
 
@@ -267,9 +267,9 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
         return await self.get_multi(filters=filters, order_by="priority")
 
     async def add_user_to_group(
-        self, 
-        username: str, 
-        groupname: str, 
+        self,
+        username: str,
+        groupname: str,
         priority: int = 1
     ) -> UserGroup:
         """Add user to group"""
@@ -281,8 +281,8 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
         return await self.create(user_group_data)
 
     async def remove_user_from_group(
-        self, 
-        username: str, 
+        self,
+        username: str,
         groupname: str
     ) -> bool:
         """Remove user from group"""
@@ -294,7 +294,7 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
         )
         result = await self.db.execute(query)
         user_group = result.scalar_one_or_none()
-        
+
         if user_group:
             await self.delete(user_group.id)
             return True
@@ -315,12 +315,12 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
         )
         result = await self.db.execute(query)
         user_group = result.scalar_one_or_none()
-        
+
         if user_group:
             user_group.priority = priority
             await self.db.commit()
             await self.db.refresh(user_group)
-            
+
         return user_group
 
     async def get_groups_with_user_count(self) -> List[Dict[str, Any]]:
@@ -333,7 +333,7 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             .group_by(UserGroup.groupname)
             .order_by(UserGroup.groupname)
         )
-        
+
         result = await self.db.execute(query)
         return [
             {
@@ -342,29 +342,32 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             }
             for row in result.all()
         ]
-    
+
     async def get_all_groups(self) -> List[str]:
         """Get list of all unique group names"""
-        query = select(UserGroup.groupname).distinct().order_by(UserGroup.groupname)
+        query = select(UserGroup.groupname).distinct().order_by(
+            UserGroup.groupname)
         result = await self.db.execute(query)
         return [row[0] for row in result.all()]
-    
+
     async def get_user_group_statistics(self) -> Dict[str, Any]:
         """Get comprehensive user group statistics"""
         # Get basic counts
         total_associations_query = select(func.count(UserGroup.id))
-        total_groups_query = select(func.count(func.distinct(UserGroup.groupname)))
-        total_users_query = select(func.count(func.distinct(UserGroup.username)))
-        
+        total_groups_query = select(func.count(
+            func.distinct(UserGroup.groupname)))
+        total_users_query = select(func.count(
+            func.distinct(UserGroup.username)))
+
         # Execute queries
         total_associations_result = await self.db.execute(total_associations_query)
         total_groups_result = await self.db.execute(total_groups_query)
         total_users_result = await self.db.execute(total_users_query)
-        
+
         total_associations = total_associations_result.scalar()
         total_groups = total_groups_result.scalar()
         total_users = total_users_result.scalar()
-        
+
         # Get groups with most users
         top_groups_query = (
             select(
@@ -380,14 +383,14 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             {"groupname": row.groupname, "user_count": row.user_count}
             for row in top_groups_result.all()
         ]
-        
+
         return {
             "total_associations": total_associations,
             "total_groups": total_groups,
             "total_users": total_users,
             "top_groups": top_groups
         }
-    
+
     async def batch_add_users_to_group(
         self,
         usernames: List[str],
@@ -402,7 +405,7 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             "failed": 0,
             "errors": []
         }
-        
+
         for username in usernames:
             try:
                 await self.add_user_to_group(username, groupname, priority)
@@ -410,9 +413,9 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             except Exception as e:
                 results["failed"] += 1
                 results["errors"].append(f"Failed to add {username}: {str(e)}")
-        
+
         return results
-    
+
     async def batch_remove_users_from_group(
         self,
         usernames: List[str],
@@ -426,7 +429,7 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             "failed": 0,
             "errors": []
         }
-        
+
         for username in usernames:
             try:
                 success = await self.remove_user_from_group(username, groupname)
@@ -434,13 +437,15 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
                     results["removed"] += 1
                 else:
                     results["failed"] += 1
-                    results["errors"].append(f"User {username} not in group {groupname}")
+                    results["errors"].append(
+                        f"User {username} not in group {groupname}")
             except Exception as e:
                 results["failed"] += 1
-                results["errors"].append(f"Failed to remove {username}: {str(e)}")
-        
+                results["errors"].append(
+                    f"Failed to remove {username}: {str(e)}")
+
         return results
-    
+
     async def get_user_groups_with_details(self, username: str) -> List[Dict[str, Any]]:
         """Get user groups with additional details"""
         query = (
@@ -448,10 +453,10 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             .where(UserGroup.username == username)
             .order_by(UserGroup.priority)
         )
-        
+
         result = await self.db.execute(query)
         user_groups = result.scalars().all()
-        
+
         groups_with_details = []
         for ug in user_groups:
             # Get group member count
@@ -460,7 +465,7 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
             )
             count_result = await self.db.execute(group_count_query)
             member_count = count_result.scalar()
-            
+
             groups_with_details.append({
                 "id": ug.id,
                 "groupname": ug.groupname,
@@ -468,9 +473,9 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
                 "member_count": member_count,
                 "joined_at": ug.created_at
             })
-        
+
         return groups_with_details
-    
+
     async def search_user_groups(
         self,
         username_pattern: Optional[str] = None,
@@ -480,25 +485,28 @@ class UserGroupRepository(BaseRepository[UserGroup, UserGroupCreate, None]):
     ) -> List[UserGroup]:
         """Search user group associations with patterns"""
         query = select(UserGroup)
-        
+
         conditions = []
         if username_pattern:
-            conditions.append(UserGroup.username.ilike(f"%{username_pattern}%"))
+            conditions.append(UserGroup.username.ilike(
+                f"%{username_pattern}%"))
         if groupname_pattern:
-            conditions.append(UserGroup.groupname.ilike(f"%{groupname_pattern}%"))
-        
+            conditions.append(UserGroup.groupname.ilike(
+                f"%{groupname_pattern}%"))
+
         if conditions:
             query = query.where(and_(*conditions))
-        
-        query = query.offset(skip).limit(limit).order_by(UserGroup.username, UserGroup.groupname)
-        
+
+        query = query.offset(skip).limit(limit).order_by(
+            UserGroup.username, UserGroup.groupname)
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
 
 class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate]):
     """Repository for Operator model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(Operator, db_session)
 
@@ -513,11 +521,11 @@ class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate
     async def authenticate(self, username: str, password: str) -> Optional[Operator]:
         """
         Authenticate operator with username and password
-        
+
         Args:
             username: Username to authenticate
             password: Plain text password
-            
+
         Returns:
             Operator instance if authenticated, None otherwise
         """
@@ -537,8 +545,8 @@ class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate
         return operator
 
     async def get_active_operators(
-        self, 
-        skip: int = 0, 
+        self,
+        skip: int = 0,
         limit: int = 100
     ) -> List[Operator]:
         """Get active operators"""
@@ -566,8 +574,8 @@ class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate
         )
 
     async def update_permissions(
-        self, 
-        operator: Operator, 
+        self,
+        operator: Operator,
         permissions: Dict[str, Any]
     ) -> Operator:
         """Update operator permissions"""
@@ -595,7 +603,7 @@ class OperatorRepository(BaseRepository[Operator, OperatorCreate, OperatorUpdate
 
 class UserBillingInfoRepository(BaseRepository[UserBillingInfo, None, None]):
     """Repository for UserBillingInfo model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(UserBillingInfo, db_session)
 
@@ -634,12 +642,12 @@ class UserBillingInfoRepository(BaseRepository[UserBillingInfo, None, None]):
         billing_info = await self.get_by_username(username)
         if not billing_info:
             return None
-            
+
         if operation == "add":
             billing_info.account_balance += amount
         elif operation == "subtract":
             billing_info.account_balance -= amount
-            
+
         await self.db.commit()
         await self.db.refresh(billing_info)
         return billing_info
@@ -683,7 +691,7 @@ class UserBillingInfoRepository(BaseRepository[UserBillingInfo, None, None]):
     ) -> List[UserBillingInfo]:
         """Get subscriptions expiring within N days"""
         from datetime import timedelta
-        
+
         end_date = datetime.utcnow().date() + timedelta(days=days_ahead)
         filters = {
             "billing_cycle_end": {"<=": end_date},

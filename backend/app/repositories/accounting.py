@@ -22,14 +22,14 @@ from app.core.logging import logger
 
 class AccountingRepository:
     """Repository for RADIUS accounting operations"""
-    
+
     def __init__(self, session: Session):
         self.session = session
-    
+
     # =====================================================================
     # Basic CRUD Operations
     # =====================================================================
-    
+
     async def get_all_sessions(
         self,
         page: int = 1,
@@ -41,31 +41,32 @@ class AccountingRepository:
         """Get all accounting sessions with filtering and pagination"""
         try:
             query = self.session.query(RadAcct)
-            
+
             # Apply filters
             if filters:
                 query = self._apply_filters(query, filters)
-            
+
             # Get total count
             total = query.count()
-            
+
             # Apply sorting
             sort_column = getattr(RadAcct, sort_field, RadAcct.acctstarttime)
             if sort_order == "desc":
                 query = query.order_by(desc(sort_column))
             else:
                 query = query.order_by(asc(sort_column))
-            
+
             # Apply pagination
             offset = (page - 1) * page_size
             sessions = query.offset(offset).limit(page_size).all()
-            
+
             return sessions, total
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching accounting sessions: {str(e)}")
-            raise DatabaseError(f"Failed to fetch accounting sessions: {str(e)}")
-    
+            raise DatabaseError(
+                f"Failed to fetch accounting sessions: {str(e)}")
+
     async def get_session_by_id(self, radacctid: int) -> Optional[RadAcct]:
         """Get accounting session by ID"""
         try:
@@ -73,7 +74,7 @@ class AccountingRepository:
         except SQLAlchemyError as e:
             logger.error(f"Error fetching session {radacctid}: {str(e)}")
             raise DatabaseError(f"Failed to fetch session: {str(e)}")
-    
+
     async def get_active_sessions(
         self,
         page: int = 1,
@@ -83,27 +84,29 @@ class AccountingRepository:
     ) -> Tuple[List[RadAcct], int]:
         """Get active sessions (no stop time)"""
         try:
-            query = self.session.query(RadAcct).filter(RadAcct.acctstoptime.is_(None))
-            
+            query = self.session.query(RadAcct).filter(
+                RadAcct.acctstoptime.is_(None))
+
             if nas_ip:
                 query = query.filter(RadAcct.nasipaddress == nas_ip)
-            
+
             if username:
                 query = query.filter(RadAcct.username.ilike(f"%{username}%"))
-            
+
             # Get total count
             total = query.count()
-            
+
             # Apply pagination and sorting
             offset = (page - 1) * page_size
-            sessions = query.order_by(desc(RadAcct.acctstarttime)).offset(offset).limit(page_size).all()
-            
+            sessions = query.order_by(desc(RadAcct.acctstarttime)).offset(
+                offset).limit(page_size).all()
+
             return sessions, total
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching active sessions: {str(e)}")
             raise DatabaseError(f"Failed to fetch active sessions: {str(e)}")
-    
+
     async def get_user_sessions(
         self,
         username: str,
@@ -114,31 +117,34 @@ class AccountingRepository:
     ) -> Tuple[List[RadAcct], int]:
         """Get sessions for a specific user"""
         try:
-            query = self.session.query(RadAcct).filter(RadAcct.username == username)
-            
+            query = self.session.query(RadAcct).filter(
+                RadAcct.username == username)
+
             if date_from:
                 query = query.filter(RadAcct.acctstarttime >= date_from)
-            
+
             if date_to:
                 query = query.filter(RadAcct.acctstarttime <= date_to)
-            
+
             # Get total count
             total = query.count()
-            
+
             # Apply pagination and sorting
             offset = (page - 1) * page_size
-            sessions = query.order_by(desc(RadAcct.acctstarttime)).offset(offset).limit(page_size).all()
-            
+            sessions = query.order_by(desc(RadAcct.acctstarttime)).offset(
+                offset).limit(page_size).all()
+
             return sessions, total
-            
+
         except SQLAlchemyError as e:
-            logger.error(f"Error fetching user sessions for {username}: {str(e)}")
+            logger.error(
+                f"Error fetching user sessions for {username}: {str(e)}")
             raise DatabaseError(f"Failed to fetch user sessions: {str(e)}")
-    
+
     # =====================================================================
     # Statistics and Analytics
     # =====================================================================
-    
+
     async def get_session_statistics(
         self,
         date_from: Optional[datetime] = None,
@@ -148,17 +154,17 @@ class AccountingRepository:
         """Get session statistics for a time period"""
         try:
             query = self.session.query(RadAcct)
-            
+
             # Apply date filters
             if date_from:
                 query = query.filter(RadAcct.acctstarttime >= date_from)
             if date_to:
                 query = query.filter(RadAcct.acctstarttime <= date_to)
-            
+
             # Apply additional filters
             if filters:
                 query = self._apply_filters(query, filters)
-            
+
             # Calculate statistics
             stats = query.with_entities(
                 func.count(RadAcct.radacctid).label('total_sessions'),
@@ -170,12 +176,14 @@ class AccountingRepository:
                 ).label('completed_sessions'),
                 func.sum(RadAcct.acctsessiontime).label('total_session_time'),
                 func.avg(RadAcct.acctsessiontime).label('avg_session_time'),
-                func.count(func.distinct(RadAcct.username)).label('unique_users'),
-                func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets).label('total_bytes'),
+                func.count(func.distinct(RadAcct.username)
+                           ).label('unique_users'),
+                func.sum(RadAcct.acctinputoctets +
+                         RadAcct.acctoutputoctets).label('total_bytes'),
                 func.sum(RadAcct.acctinputoctets).label('total_input_octets'),
                 func.sum(RadAcct.acctoutputoctets).label('total_output_octets')
             ).first()
-            
+
             return {
                 'total_sessions': stats.total_sessions or 0,
                 'active_sessions': stats.active_sessions or 0,
@@ -187,11 +195,12 @@ class AccountingRepository:
                 'total_input_octets': stats.total_input_octets or 0,
                 'total_output_octets': stats.total_output_octets or 0
             }
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error calculating session statistics: {str(e)}")
-            raise DatabaseError(f"Failed to calculate session statistics: {str(e)}")
-    
+            raise DatabaseError(
+                f"Failed to calculate session statistics: {str(e)}")
+
     async def get_top_users_by_traffic(
         self,
         limit: int = 10,
@@ -201,23 +210,24 @@ class AccountingRepository:
         """Get top users by traffic consumption"""
         try:
             query = self.session.query(RadAcct)
-            
+
             if date_from:
                 query = query.filter(RadAcct.acctstarttime >= date_from)
             if date_to:
                 query = query.filter(RadAcct.acctstarttime <= date_to)
-            
+
             # Group by username and calculate totals
             results = query.with_entities(
                 RadAcct.username,
                 func.count(RadAcct.radacctid).label('total_sessions'),
-                func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets).label('total_bytes'),
+                func.sum(RadAcct.acctinputoctets +
+                         RadAcct.acctoutputoctets).label('total_bytes'),
                 func.sum(RadAcct.acctsessiontime).label('total_session_time'),
                 func.max(RadAcct.acctstarttime).label('last_session')
             ).group_by(RadAcct.username)\
              .order_by(desc('total_bytes'))\
              .limit(limit).all()
-            
+
             # Add ranking
             top_users = []
             for rank, result in enumerate(results, 1):
@@ -229,13 +239,13 @@ class AccountingRepository:
                     'last_session': result.last_session,
                     'rank': rank
                 })
-            
+
             return top_users
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching top users: {str(e)}")
             raise DatabaseError(f"Failed to fetch top users: {str(e)}")
-    
+
     async def get_hourly_traffic_distribution(
         self,
         date_from: Optional[datetime] = None,
@@ -244,21 +254,23 @@ class AccountingRepository:
         """Get hourly traffic distribution"""
         try:
             query = self.session.query(RadAcct)
-            
+
             if date_from:
                 query = query.filter(RadAcct.acctstarttime >= date_from)
             if date_to:
                 query = query.filter(RadAcct.acctstarttime <= date_to)
-            
+
             # Group by hour and calculate statistics
             results = query.with_entities(
                 extract('hour', RadAcct.acctstarttime).label('hour'),
                 func.count(RadAcct.radacctid).label('session_count'),
-                func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets).label('total_bytes'),
-                func.count(func.distinct(RadAcct.username)).label('unique_users')
+                func.sum(RadAcct.acctinputoctets +
+                         RadAcct.acctoutputoctets).label('total_bytes'),
+                func.count(func.distinct(RadAcct.username)
+                           ).label('unique_users')
             ).group_by('hour')\
              .order_by('hour').all()
-            
+
             # Format results
             hourly_data = []
             for result in results:
@@ -268,13 +280,14 @@ class AccountingRepository:
                     'total_bytes': result.total_bytes or 0,
                     'unique_users': result.unique_users
                 })
-            
+
             return hourly_data
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching hourly distribution: {str(e)}")
-            raise DatabaseError(f"Failed to fetch hourly distribution: {str(e)}")
-    
+            raise DatabaseError(
+                f"Failed to fetch hourly distribution: {str(e)}")
+
     async def get_nas_usage_statistics(
         self,
         date_from: Optional[datetime] = None,
@@ -283,12 +296,12 @@ class AccountingRepository:
         """Get NAS usage statistics"""
         try:
             query = self.session.query(RadAcct)
-            
+
             if date_from:
                 query = query.filter(RadAcct.acctstarttime >= date_from)
             if date_to:
                 query = query.filter(RadAcct.acctstarttime <= date_to)
-            
+
             # Group by NAS IP and calculate statistics
             results = query.with_entities(
                 RadAcct.nasipaddress,
@@ -296,10 +309,11 @@ class AccountingRepository:
                 func.count(
                     case([(RadAcct.acctstoptime.is_(None), 1)])
                 ).label('active_sessions'),
-                func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets).label('total_bytes')
+                func.sum(RadAcct.acctinputoctets +
+                         RadAcct.acctoutputoctets).label('total_bytes')
             ).group_by(RadAcct.nasipaddress)\
              .order_by(desc('total_sessions')).all()
-            
+
             # Format results
             nas_stats = []
             for result in results:
@@ -310,17 +324,17 @@ class AccountingRepository:
                     'total_bytes': result.total_bytes or 0,
                     'utilization_percentage': 0.0  # Would need NAS capacity data to calculate
                 })
-            
+
             return nas_stats
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching NAS statistics: {str(e)}")
             raise DatabaseError(f"Failed to fetch NAS statistics: {str(e)}")
-    
+
     # =====================================================================
     # Custom Queries and Reports
     # =====================================================================
-    
+
     async def execute_custom_query(
         self,
         query_sql: str,
@@ -331,44 +345,45 @@ class AccountingRepository:
         try:
             # Basic safety checks
             query_lower = query_sql.lower().strip()
-            
+
             # Only allow SELECT statements
             if not query_lower.startswith('select'):
                 raise ValueError("Only SELECT queries are allowed")
-            
+
             # Block dangerous keywords
-            dangerous_keywords = ['drop', 'delete', 'update', 'insert', 'truncate', 'alter']
+            dangerous_keywords = ['drop', 'delete',
+                                  'update', 'insert', 'truncate', 'alter']
             if any(keyword in query_lower for keyword in dangerous_keywords):
                 raise ValueError("Query contains prohibited keywords")
-            
+
             # Add limit if not present
             if 'limit' not in query_lower:
                 query_sql += f" LIMIT {limit}"
-            
+
             # Execute query
             start_time = datetime.now()
             result = self.session.execute(text(query_sql), parameters or {})
             execution_time = (datetime.now() - start_time).total_seconds()
-            
+
             # Fetch results
             columns = list(result.keys())
             rows = [list(row) for row in result.fetchall()]
-            
+
             return {
                 'columns': columns,
                 'rows': rows,
                 'total_rows': len(rows),
                 'execution_time': execution_time
             }
-            
+
         except Exception as e:
             logger.error(f"Error executing custom query: {str(e)}")
             raise DatabaseError(f"Failed to execute custom query: {str(e)}")
-    
+
     # =====================================================================
     # Maintenance Operations
     # =====================================================================
-    
+
     async def cleanup_old_sessions(
         self,
         days_old: int = 365,
@@ -377,14 +392,15 @@ class AccountingRepository:
         """Clean up old accounting sessions"""
         try:
             cutoff_date = datetime.now() - timedelta(days=days_old)
-            
+
             # Count records to be deleted
             count_query = self.session.query(func.count(RadAcct.radacctid)).filter(
                 RadAcct.acctstarttime < cutoff_date,
-                RadAcct.acctstoptime.isnot(None)  # Only delete completed sessions
+                # Only delete completed sessions
+                RadAcct.acctstoptime.isnot(None)
             )
             record_count = count_query.scalar()
-            
+
             if not dry_run and record_count > 0:
                 # Delete old records
                 delete_query = self.session.query(RadAcct).filter(
@@ -393,7 +409,7 @@ class AccountingRepository:
                 )
                 deleted_count = delete_query.delete(synchronize_session=False)
                 self.session.commit()
-                
+
                 return {
                     'operation_type': 'cleanup',
                     'affected_rows': deleted_count,
@@ -407,21 +423,21 @@ class AccountingRepository:
                     'success': True,
                     'message': f"Would delete {record_count} old session records"
                 }
-                
+
         except SQLAlchemyError as e:
             logger.error(f"Error during cleanup operation: {str(e)}")
             raise DatabaseError(f"Cleanup operation failed: {str(e)}")
-    
+
     # =====================================================================
     # Helper Methods
     # =====================================================================
-    
+
     def _apply_filters(self, query, filters: Dict[str, Any]):
         """Apply filters to query"""
         for key, value in filters.items():
             if value is None:
                 continue
-                
+
             if key == 'username':
                 query = query.filter(RadAcct.username.ilike(f"%{value}%"))
             elif key == 'groupname':
@@ -431,7 +447,8 @@ class AccountingRepository:
             elif key == 'framedipaddress':
                 query = query.filter(RadAcct.framedipaddress == value)
             elif key == 'callingstationid':
-                query = query.filter(RadAcct.callingstationid.ilike(f"%{value}%"))
+                query = query.filter(
+                    RadAcct.callingstationid.ilike(f"%{value}%"))
             elif key == 'servicetype':
                 query = query.filter(RadAcct.servicetype == value)
             elif key == 'start_date':
@@ -457,7 +474,7 @@ class AccountingRepository:
                 query = query.filter(RadAcct.acctsessiontime >= value)
             elif key == 'max_session_time':
                 query = query.filter(RadAcct.acctsessiontime <= value)
-        
+
         return query
 
 
@@ -467,10 +484,10 @@ class AccountingRepository:
 
 class UserTrafficSummaryRepository:
     """Repository for user traffic summary operations"""
-    
+
     def __init__(self, session: Session):
         self.session = session
-    
+
     async def get_user_summary(
         self,
         username: str,
@@ -482,29 +499,32 @@ class UserTrafficSummaryRepository:
             query = self.session.query(UserTrafficSummary).filter(
                 UserTrafficSummary.username == username
             )
-            
+
             if date_from:
-                query = query.filter(UserTrafficSummary.summary_date >= date_from)
+                query = query.filter(
+                    UserTrafficSummary.summary_date >= date_from)
             if date_to:
-                query = query.filter(UserTrafficSummary.summary_date <= date_to)
-            
+                query = query.filter(
+                    UserTrafficSummary.summary_date <= date_to)
+
             return query.order_by(desc(UserTrafficSummary.summary_date)).all()
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching user traffic summary: {str(e)}")
-            raise DatabaseError(f"Failed to fetch user traffic summary: {str(e)}")
+            raise DatabaseError(
+                f"Failed to fetch user traffic summary: {str(e)}")
 
 
 # =====================================================================
-# NAS Traffic Summary Repository  
+# NAS Traffic Summary Repository
 # =====================================================================
 
 class NasTrafficSummaryRepository:
     """Repository for NAS traffic summary operations"""
-    
+
     def __init__(self, session: Session):
         self.session = session
-    
+
     async def get_nas_summary(
         self,
         nasipaddress: str,
@@ -516,22 +536,24 @@ class NasTrafficSummaryRepository:
             query = self.session.query(NasTrafficSummary).filter(
                 NasTrafficSummary.nasipaddress == nasipaddress
             )
-            
+
             if date_from:
-                query = query.filter(NasTrafficSummary.summary_date >= date_from)
+                query = query.filter(
+                    NasTrafficSummary.summary_date >= date_from)
             if date_to:
                 query = query.filter(NasTrafficSummary.summary_date <= date_to)
-            
+
             return query.order_by(desc(NasTrafficSummary.summary_date)).all()
-            
+
         except SQLAlchemyError as e:
             logger.error(f"Error fetching NAS traffic summary: {str(e)}")
-            raise DatabaseError(f"Failed to fetch NAS traffic summary: {str(e)}")
+            raise DatabaseError(
+                f"Failed to fetch NAS traffic summary: {str(e)}")
 
 
 # Export repositories
 __all__ = [
     "AccountingRepository",
-    "UserTrafficSummaryRepository", 
+    "UserTrafficSummaryRepository",
     "NasTrafficSummaryRepository",
 ]

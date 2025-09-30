@@ -14,7 +14,7 @@ from ...repositories.user import UserRepository, UserGroupRepository
 from ...schemas.user import (
     UserGroupCreate, UserGroupUpdate, UserGroupResponse,
     UserGroupListResponse, UserGroupStatisticsResponse,
-    UserGroupDetailResponse, BatchUserGroupOperation, 
+    UserGroupDetailResponse, BatchUserGroupOperation,
     BatchUserGroupResult, GroupWithUserCount,
     UserGroupSearchParams
 )
@@ -33,7 +33,8 @@ router = APIRouter()
 async def list_user_groups(
     username: Optional[str] = Query(None, description="Filter by username"),
     groupname: Optional[str] = Query(None, description="Filter by groupname"),
-    search: Optional[str] = Query(None, description="Search in username or groupname"),
+    search: Optional[str] = Query(
+        None, description="Search in username or groupname"),
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -42,17 +43,17 @@ async def list_user_groups(
     Get paginated list of user group associations with filtering
     """
     repo = UserGroupRepository(db)
-    
+
     # Build filters
     filters = {}
     if username:
         filters["username"] = username
     if groupname:
         filters["groupname"] = groupname
-    
+
     # Apply search
     search_fields = ["username", "groupname"] if search else None
-    
+
     # Get paginated results
     result = await repo.get_multi_paginated(
         filters=filters,
@@ -62,7 +63,7 @@ async def list_user_groups(
         size=pagination.size,
         order_by="username"
     )
-    
+
     return result
 
 
@@ -77,7 +78,7 @@ async def create_user_group_association(
     """
     repo = UserGroupRepository(db)
     user_repo = UserRepository(db)
-    
+
     # Verify user exists
     user = await user_repo.get_by_username(association_data.username)
     if not user:
@@ -85,7 +86,7 @@ async def create_user_group_association(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{association_data.username}' not found"
         )
-    
+
     try:
         association = await repo.create(association_data)
         return association
@@ -112,13 +113,13 @@ async def get_user_group_association(
     """
     repo = UserGroupRepository(db)
     association = await repo.get(association_id)
-    
+
     if not association:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User-group association not found"
         )
-    
+
     return association
 
 
@@ -133,7 +134,7 @@ async def update_user_group_association(
     Update a user-group association (e.g., change priority or group)
     """
     repo = UserGroupRepository(db)
-    
+
     # Check if association exists
     existing_association = await repo.get(association_id)
     if not existing_association:
@@ -141,7 +142,7 @@ async def update_user_group_association(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User-group association not found"
         )
-    
+
     try:
         updated_association = await repo.update(association_id, association_data)
         return updated_association
@@ -167,7 +168,7 @@ async def delete_user_group_association(
     Delete a user-group association
     """
     repo = UserGroupRepository(db)
-    
+
     # Check if association exists
     existing_association = await repo.get(association_id)
     if not existing_association:
@@ -175,7 +176,7 @@ async def delete_user_group_association(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User-group association not found"
         )
-    
+
     await repo.delete(association_id)
     return {"message": "User-group association deleted successfully"}
 
@@ -193,7 +194,7 @@ async def get_user_groups(
     """
     repo = UserGroupRepository(db)
     user_repo = UserRepository(db)
-    
+
     # Verify user exists
     user = await user_repo.get_by_username(username)
     if not user:
@@ -201,7 +202,7 @@ async def get_user_groups(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{username}' not found"
         )
-    
+
     groups_with_details = await repo.get_user_groups_with_details(username)
     return [
         UserGroupDetailResponse(**group_detail)
@@ -221,7 +222,7 @@ async def add_user_to_group(
     """
     repo = UserGroupRepository(db)
     user_repo = UserRepository(db)
-    
+
     # Verify user exists
     user = await user_repo.get_by_username(username)
     if not user:
@@ -229,14 +230,14 @@ async def add_user_to_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{username}' not found"
         )
-    
+
     # Override username in group_data to match URL parameter
     group_data.username = username
-    
+
     try:
         association = await repo.add_user_to_group(
-            username, 
-            group_data.groupname, 
+            username,
+            group_data.groupname,
             group_data.priority
         )
         return association
@@ -263,15 +264,15 @@ async def remove_user_from_group(
     Remove a user from a group
     """
     repo = UserGroupRepository(db)
-    
+
     success = await repo.remove_user_from_group(username, groupname)
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{username}' is not in group '{groupname}'"
         )
-    
+
     return {"message": f"User '{username}' removed from group '{groupname}' successfully"}
 
 
@@ -287,7 +288,7 @@ async def list_groups(
     """
     repo = UserGroupRepository(db)
     groups = await repo.get_all_groups()
-    
+
     return UserGroupListResponse(
         groups=groups,
         total=len(groups)
@@ -305,7 +306,7 @@ async def get_group_users(
     """
     repo = UserGroupRepository(db)
     users = await repo.get_group_users(groupname)
-    
+
     return users
 
 
@@ -319,7 +320,7 @@ async def get_user_group_statistics(
     """
     repo = UserGroupRepository(db)
     stats = await repo.get_user_group_statistics()
-    
+
     return UserGroupStatisticsResponse(**stats)
 
 
@@ -333,7 +334,7 @@ async def get_groups_with_user_counts(
     """
     repo = UserGroupRepository(db)
     groups_with_counts = await repo.get_groups_with_user_count()
-    
+
     return [
         GroupWithUserCount(**group_data)
         for group_data in groups_with_counts
@@ -353,16 +354,16 @@ async def batch_add_users_to_group(
     Batch add multiple users to a group
     """
     repo = UserGroupRepository(db)
-    
+
     # Override groupname to match URL parameter
     operation_data.groupname = groupname
-    
+
     result = await repo.batch_add_users_to_group(
         operation_data.usernames,
         groupname,
         operation_data.priority
     )
-    
+
     return BatchUserGroupResult(**result)
 
 
@@ -377,12 +378,12 @@ async def batch_remove_users_from_group(
     Batch remove multiple users from a group
     """
     repo = UserGroupRepository(db)
-    
+
     result = await repo.batch_remove_users_from_group(
         operation_data.usernames,
         groupname
     )
-    
+
     return BatchUserGroupResult(**result)
 
 
@@ -390,10 +391,13 @@ async def batch_remove_users_from_group(
 
 @router.get("/user-groups/search", response_model=List[UserGroupResponse])
 async def search_user_groups(
-    username_pattern: Optional[str] = Query(None, description="Username search pattern"),
-    groupname_pattern: Optional[str] = Query(None, description="Group name search pattern"),
+    username_pattern: Optional[str] = Query(
+        None, description="Username search pattern"),
+    groupname_pattern: Optional[str] = Query(
+        None, description="Group name search pattern"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Maximum number of records to return"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -401,14 +405,14 @@ async def search_user_groups(
     Search user group associations with patterns
     """
     repo = UserGroupRepository(db)
-    
+
     associations = await repo.search_user_groups(
         username_pattern=username_pattern,
         groupname_pattern=groupname_pattern,
         skip=skip,
         limit=limit
     )
-    
+
     return associations
 
 
@@ -424,17 +428,17 @@ async def update_user_group_priority(
     Update user's priority in a specific group
     """
     repo = UserGroupRepository(db)
-    
+
     updated_association = await repo.update_user_group_priority(
         username, groupname, priority
     )
-    
+
     if not updated_association:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{username}' is not in group '{groupname}'"
         )
-    
+
     return {
         "message": f"Priority updated for user '{username}' in group '{groupname}'",
         "new_priority": priority

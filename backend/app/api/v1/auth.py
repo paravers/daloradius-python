@@ -86,14 +86,14 @@ async def get_current_user(
     """Get current authenticated user from token"""
     auth_service = AuthService(db)
     user = await auth_service.get_current_user(credentials.credentials)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return user
 
 
@@ -105,14 +105,14 @@ async def login(
 ):
     """
     User login authentication
-    
+
     Authenticates user credentials and returns JWT tokens
     """
     auth_service = AuthService(db)
-    
+
     # Try to authenticate user first, then operator
     user = await auth_service.authenticate_user(login_data.username, login_data.password)
-    
+
     if not user:
         # Try operator authentication
         operator = await auth_service.authenticate_operator(login_data.username, login_data.password)
@@ -122,7 +122,7 @@ async def login(
                 detail="Invalid username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         # Convert operator to user-like structure for token
         user_data = {
             "sub": operator.username,
@@ -139,11 +139,11 @@ async def login(
             "auth_type": user.auth_type.value if user.auth_type else "LOCAL",
             "user_type": "user"
         }
-    
+
     # Generate tokens
     access_token = auth_service.create_access_token(user_data)
     refresh_token = auth_service.create_refresh_token(user_data)
-    
+
     # Get user permissions
     if user:
         permissions = auth_service.get_user_permissions(user)
@@ -173,7 +173,7 @@ async def login(
             "last_login": operator.lastlogin,
             "permissions": ["operator.view", "operator.manage"]
         }
-    
+
     return LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -189,7 +189,7 @@ async def logout(
 ):
     """
     User logout
-    
+
     Invalidates the current session (in a full implementation,
     you would add token to a blacklist)
     """
@@ -197,7 +197,7 @@ async def logout(
     # 1. Add token to blacklist
     # 2. Log the logout event
     # 3. Clear any server-side sessions
-    
+
     return {"message": "Successfully logged out"}
 
 
@@ -208,12 +208,12 @@ async def register(
 ):
     """
     User registration
-    
+
     Creates new user account and returns authentication tokens
     """
     auth_service = AuthService(db)
     user_repo = UserRepository(db)
-    
+
     # Check if username already exists
     existing_user = await user_repo.get_by_username(register_data.username)
     if existing_user:
@@ -221,7 +221,7 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
+
     # Check if email already exists
     existing_email = await user_repo.get_by_email(register_data.email)
     if existing_email:
@@ -229,10 +229,10 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Create new user
     password_hash = auth_service.hash_password(register_data.password)
-    
+
     user_data = {
         "username": register_data.username,
         "email": register_data.email,
@@ -244,9 +244,9 @@ async def register(
         "status": UserStatus.ACTIVE,
         "created_at": datetime.utcnow()
     }
-    
+
     user = await user_repo.create(user_data)
-    
+
     # Generate tokens
     token_data = {
         "sub": user.username,
@@ -254,13 +254,13 @@ async def register(
         "email": user.email,
         "auth_type": "LOCAL"
     }
-    
+
     access_token = auth_service.create_access_token(token_data)
     refresh_token = auth_service.create_refresh_token(token_data)
-    
+
     # Get user permissions
     permissions = auth_service.get_user_permissions(user)
-    
+
     user_info = {
         "id": user.id,
         "username": user.username,
@@ -273,7 +273,7 @@ async def register(
         "last_login": user.last_login,
         "permissions": permissions
     }
-    
+
     return LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -289,19 +289,19 @@ async def refresh_token(
 ):
     """
     Refresh access token
-    
+
     Creates new access token from valid refresh token
     """
     auth_service = AuthService(db)
-    
+
     new_access_token = await auth_service.refresh_access_token(refresh_data.refresh_token)
-    
+
     if not new_access_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
         )
-    
+
     return {
         "access_token": new_access_token,
         "token_type": "bearer",
@@ -316,12 +316,12 @@ async def get_current_user_info(
 ):
     """
     Get current user information
-    
+
     Returns detailed information about the authenticated user
     """
     auth_service = AuthService(db)
     permissions = auth_service.get_user_permissions(current_user)
-    
+
     return UserResponse(
         id=current_user.id,
         username=current_user.username,
@@ -345,23 +345,23 @@ async def change_password(
 ):
     """
     Change user password
-    
+
     Changes the password for the authenticated user
     """
     auth_service = AuthService(db)
-    
+
     success = await auth_service.change_password(
         current_user.id,
         password_data.current_password,
         password_data.new_password
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect"
         )
-    
+
     return {"message": "Password changed successfully"}
 
 
@@ -372,26 +372,26 @@ async def forgot_password(
 ):
     """
     Initiate password reset
-    
+
     Sends verification code to user's email (in production)
     """
     auth_service = AuthService(db)
     user_repo = UserRepository(db)
-    
+
     user = await user_repo.get_by_email(forgot_data.email)
     if not user:
         # Don't reveal if email exists or not
         return {"message": "If the email exists, a verification code has been sent"}
-    
+
     # Generate verification code
     verification_code = auth_service.generate_verification_code()
-    
+
     # In production, you would:
     # 1. Store the verification code in database with expiration
     # 2. Send email with verification code
     # For now, we'll just log it (don't do this in production!)
     print(f"Verification code for {forgot_data.email}: {verification_code}")
-    
+
     return {"message": "If the email exists, a verification code has been sent"}
 
 
@@ -402,11 +402,11 @@ async def reset_password(
 ):
     """
     Reset password with verification code
-    
+
     Resets user password using verification code
     """
     auth_service = AuthService(db)
-    
+
     # In production, you would verify the verification code against stored value
     # For now, we'll accept any 6-digit code
     if len(reset_data.verification_code) != 6 or not reset_data.verification_code.isdigit():
@@ -414,19 +414,19 @@ async def reset_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid verification code"
         )
-    
+
     success = await auth_service.reset_password(
         reset_data.email,
         reset_data.new_password,
         reset_data.verification_code
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid email or verification code"
         )
-    
+
     return {"message": "Password reset successfully"}
 
 
@@ -436,7 +436,7 @@ async def validate_token(
 ):
     """
     Validate authentication token
-    
+
     Checks if the provided token is valid
     """
     return {

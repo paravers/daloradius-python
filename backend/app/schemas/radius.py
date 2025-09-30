@@ -30,7 +30,7 @@ class RadiusOperator(str, Enum):
 class SessionStatus(str, Enum):
     """Accounting session status"""
     START = "Start"
-    STOP = "Stop"  
+    STOP = "Stop"
     UPDATE = "Interim-Update"
 
 
@@ -60,7 +60,8 @@ class StopCause(str, Enum):
 class RadcheckBase(BaseModel):
     """Base RADIUS check schema"""
     username: str = Field(..., max_length=64, description="User or group name")
-    attribute: str = Field(..., max_length=64, description="RADIUS attribute name")
+    attribute: str = Field(..., max_length=64,
+                           description="RADIUS attribute name")
     op: RadiusOperator = Field(..., description="RADIUS operator")
     value: str = Field(..., max_length=253, description="Attribute value")
 
@@ -85,11 +86,12 @@ class RadcheckResponse(RadcheckBase):
         from_attributes = True
 
 
-# RADIUS Reply (Authorization) schemas  
+# RADIUS Reply (Authorization) schemas
 class RadreplyBase(BaseModel):
     """Base RADIUS reply schema"""
     username: str = Field(..., max_length=64, description="User or group name")
-    attribute: str = Field(..., max_length=64, description="RADIUS attribute name")
+    attribute: str = Field(..., max_length=64,
+                           description="RADIUS attribute name")
     op: RadiusOperator = Field(..., description="RADIUS operator")
     value: str = Field(..., max_length=253, description="Attribute value")
 
@@ -118,7 +120,8 @@ class RadreplyResponse(RadreplyBase):
 class RadgroupcheckBase(BaseModel):
     """Base RADIUS group check schema"""
     groupname: str = Field(..., max_length=64, description="Group name")
-    attribute: str = Field(..., max_length=64, description="RADIUS attribute name")
+    attribute: str = Field(..., max_length=64,
+                           description="RADIUS attribute name")
     op: RadiusOperator = Field(..., description="RADIUS operator")
     value: str = Field(..., max_length=253, description="Attribute value")
 
@@ -139,7 +142,8 @@ class RadgroupcheckResponse(RadgroupcheckBase):
 class RadgroupreplyBase(BaseModel):
     """Base RADIUS group reply schema"""
     groupname: str = Field(..., max_length=64, description="Group name")
-    attribute: str = Field(..., max_length=64, description="RADIUS attribute name")
+    attribute: str = Field(..., max_length=64,
+                           description="RADIUS attribute name")
     op: RadiusOperator = Field(..., description="RADIUS operator")
     value: str = Field(..., max_length=253, description="Attribute value")
 
@@ -167,48 +171,74 @@ class GroupListResponse(BaseModel):
 class GroupAttributesResponse(BaseModel):
     """Group attributes response schema"""
     groupname: str = Field(..., description="Group name")
-    check_attributes: List[RadgroupcheckResponse] = Field(..., description="Group check attributes")
-    reply_attributes: List[RadgroupreplyResponse] = Field(..., description="Group reply attributes")
-    total_attributes: int = Field(..., description="Total number of attributes")
+    check_attributes: List[RadgroupcheckResponse] = Field(
+        ..., description="Group check attributes")
+    reply_attributes: List[RadgroupreplyResponse] = Field(
+        ..., description="Group reply attributes")
+    total_attributes: int = Field(...,
+                                  description="Total number of attributes")
 
 
 class GroupStatisticsResponse(BaseModel):
     """Group statistics response schema"""
     total_groups: int = Field(..., description="Total number of groups")
-    total_check_attributes: int = Field(..., description="Total number of check attributes")
-    total_reply_attributes: int = Field(..., description="Total number of reply attributes")
-    groups_with_attributes: int = Field(..., description="Number of groups with attributes")
+    total_check_attributes: int = Field(...,
+                                        description="Total number of check attributes")
+    total_reply_attributes: int = Field(...,
+                                        description="Total number of reply attributes")
+    groups_with_attributes: int = Field(...,
+                                        description="Number of groups with attributes")
 
 
 # RADIUS Accounting schemas
 class RadacctBase(BaseModel):
     """Base RADIUS accounting schema"""
-    username: Optional[str] = Field(None, max_length=64, description="Username")
+    username: Optional[str] = Field(
+        None, max_length=64, description="Username")
     realm: Optional[str] = Field(None, max_length=64, description="Realm")
-    nas_ip_address: Optional[IPv4Address] = Field(None, description="NAS IP address")
-    nas_port_id: Optional[str] = Field(None, max_length=32, description="NAS port ID")
-    nas_port_type: Optional[str] = Field(None, max_length=32, description="NAS port type")
-    acct_start_time: Optional[datetime] = Field(None, description="Session start time")
-    acct_stop_time: Optional[datetime] = Field(None, description="Session stop time")
-    acct_session_id: Optional[str] = Field(None, max_length=64, description="Session ID")
-    acct_session_time: Optional[int] = Field(None, ge=0, description="Session duration in seconds")
-    acct_authentic: Optional[str] = Field(None, max_length=32, description="Authentication method")
-    connect_info_start: Optional[str] = Field(None, max_length=50, description="Start connection info")
-    connect_info_stop: Optional[str] = Field(None, max_length=50, description="Stop connection info")
-    acct_input_octets: Optional[int] = Field(None, ge=0, description="Input bytes")
-    acct_output_octets: Optional[int] = Field(None, ge=0, description="Output bytes")
-    called_station_id: Optional[str] = Field(None, max_length=50, description="Called station ID")
-    calling_station_id: Optional[str] = Field(None, max_length=50, description="Calling station ID")
-    acct_terminate_cause: Optional[StopCause] = Field(None, description="Termination cause")
-    service_type: Optional[str] = Field(None, max_length=32, description="Service type")
-    framed_protocol: Optional[str] = Field(None, max_length=32, description="Framed protocol")
-    framed_ip_address: Optional[IPv4Address] = Field(None, description="Framed IP address")
+    nas_ip_address: Optional[IPv4Address] = Field(
+        None, description="NAS IP address")
+    nas_port_id: Optional[str] = Field(
+        None, max_length=32, description="NAS port ID")
+    nas_port_type: Optional[str] = Field(
+        None, max_length=32, description="NAS port type")
+    acct_start_time: Optional[datetime] = Field(
+        None, description="Session start time")
+    acct_stop_time: Optional[datetime] = Field(
+        None, description="Session stop time")
+    acct_session_id: Optional[str] = Field(
+        None, max_length=64, description="Session ID")
+    acct_session_time: Optional[int] = Field(
+        None, ge=0, description="Session duration in seconds")
+    acct_authentic: Optional[str] = Field(
+        None, max_length=32, description="Authentication method")
+    connect_info_start: Optional[str] = Field(
+        None, max_length=50, description="Start connection info")
+    connect_info_stop: Optional[str] = Field(
+        None, max_length=50, description="Stop connection info")
+    acct_input_octets: Optional[int] = Field(
+        None, ge=0, description="Input bytes")
+    acct_output_octets: Optional[int] = Field(
+        None, ge=0, description="Output bytes")
+    called_station_id: Optional[str] = Field(
+        None, max_length=50, description="Called station ID")
+    calling_station_id: Optional[str] = Field(
+        None, max_length=50, description="Calling station ID")
+    acct_terminate_cause: Optional[StopCause] = Field(
+        None, description="Termination cause")
+    service_type: Optional[str] = Field(
+        None, max_length=32, description="Service type")
+    framed_protocol: Optional[str] = Field(
+        None, max_length=32, description="Framed protocol")
+    framed_ip_address: Optional[IPv4Address] = Field(
+        None, description="Framed IP address")
 
 
 class RadacctCreate(RadacctBase):
     """Schema for creating RADIUS accounting record"""
-    acct_unique_id: str = Field(..., max_length=32, description="Unique accounting ID")
-    
+    acct_unique_id: str = Field(..., max_length=32,
+                                description="Unique accounting ID")
+
 
 class RadacctUpdate(BaseModel):
     """Schema for updating RADIUS accounting record"""
@@ -230,7 +260,7 @@ class RadacctResponse(RadacctBase):
         """Format session time as HH:MM:SS"""
         if not self.acct_session_time:
             return "00:00:00"
-        
+
         hours = self.acct_session_time // 3600
         minutes = (self.acct_session_time % 3600) // 60
         seconds = self.acct_session_time % 60
@@ -250,14 +280,18 @@ class RadacctResponse(RadacctBase):
 # NAS (Network Access Server) schemas
 class NasBase(BaseModel):
     """Base NAS schema"""
-    nasname: str = Field(..., max_length=128, description="NAS name/identifier")
+    nasname: str = Field(..., max_length=128,
+                         description="NAS name/identifier")
     shortname: str = Field(..., max_length=32, description="Short name")
     type: str = Field(..., max_length=30, description="NAS type")
     ports: Optional[int] = Field(None, ge=0, description="Number of ports")
     secret: str = Field(..., max_length=60, description="Shared secret")
-    server: Optional[str] = Field(None, max_length=64, description="Server address")
-    community: Optional[str] = Field(None, max_length=50, description="SNMP community")
-    description: Optional[str] = Field(None, max_length=200, description="Description")
+    server: Optional[str] = Field(
+        None, max_length=64, description="Server address")
+    community: Optional[str] = Field(
+        None, max_length=50, description="SNMP community")
+    description: Optional[str] = Field(
+        None, max_length=200, description="Description")
 
 
 class NasCreate(NasBase):
@@ -422,12 +456,14 @@ class RadiusAttributeTemplate(BaseModel):
 class BatchRadiusAttribute(BaseModel):
     """Schema for batch RADIUS attribute operations"""
     usernames: List[str] = Field(..., description="List of usernames")
-    attributes: List[Dict[str, Any]] = Field(..., description="List of attributes to apply")
+    attributes: List[Dict[str, Any]
+                     ] = Field(..., description="List of attributes to apply")
     operation: str = Field(..., description="add, update, or delete")
 
 
 class BulkAccountingImport(BaseModel):
     """Schema for bulk accounting data import"""
     accounting_records: List[RadacctCreate] = Field(..., max_items=1000)
-    validate_only: bool = Field(False, description="Only validate, don't import")
+    validate_only: bool = Field(
+        False, description="Only validate, don't import")
     update_existing: bool = Field(False, description="Update existing records")

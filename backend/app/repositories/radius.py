@@ -26,7 +26,7 @@ from ..schemas.radius import (
 
 class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate]):
     """Repository for RADIUS check attributes (authorization)"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(RadCheck, db_session)
 
@@ -40,40 +40,42 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
         return await self.get_multi(filters=filters, order_by="attribute")
 
     async def get_user_attribute(
-        self, 
-        username: str, 
+        self,
+        username: str,
         attribute: str
-    ) -> Optional[Radcheck]:
+    ) -> Optional[RadCheck]:
         """Get specific attribute for a user"""
-        query = select(Radcheck).where(
+        query = select(RadCheck).where(
             and_(
-                Radcheck.username == username,
-                Radcheck.attribute == attribute
+                RadCheck.username == username,
+                RadCheck.attribute == attribute
             )
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def set_user_password(
-        self,
-        username: str,
-        password: str,
-        password_type: str = "Cleartext-Password"
-    ) -> Radcheck:
-        """Set or update user password in RADIUS"""
-        # Check if password attribute exists
-        existing = await self.get_user_attribute(username, password_type)
-        
+    async def set_password(
+        self, username: str, password: str, password_type: str = "Cleartext-Password"
+    ) -> RadCheck:
+        """Set user password"""
+        # Check if password attribute already exists
+        existing = await self.get_by_username_and_attribute(
+            username, password_type
+        )
+
         if existing:
             # Update existing password
-            update_data = RadcheckUpdate(value=password)
-            return await self.update(existing, update_data)
+            existing.value = password
+            existing.op = ":="
+            await self.db_session.commit()
+            await self.db_session.refresh(existing)
+            return existing
         else:
-            # Create new password attribute
+            # Create new password record
             password_data = RadcheckCreate(
                 username=username,
                 attribute=password_type,
-                op="==",
+                op=":=",
                 value=password
             )
             return await self.create(password_data)
@@ -84,10 +86,10 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
         attribute: str,
         operator: str,
         value: str
-    ) -> Radcheck:
+    ) -> RadCheck:
         """Set or update a user attribute"""
         existing = await self.get_user_attribute(username, attribute)
-        
+
         if existing:
             update_data = RadcheckUpdate(op=operator, value=value)
             return await self.update(existing, update_data)
@@ -113,10 +115,10 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
 
     async def delete_user_attributes(self, username: str) -> int:
         """Delete all attributes for a user"""
-        query = select(Radcheck).where(Radcheck.username == username)
+        query = select(RadCheck).where(RadCheck.username == username)
         result = await self.db.execute(query)
         attributes = result.scalars().all()
-        
+
         if attributes:
             ids = [attr.id for attr in attributes]
             return await self.delete_multi(ids)
@@ -127,7 +129,7 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
         attribute: str,
         skip: int = 0,
         limit: int = 100
-    ) -> List[Radcheck]:
+    ) -> List[RadCheck]:
         """Get all entries for a specific attribute type"""
         filters = {"attribute": attribute}
         return await self.get_multi(
@@ -142,7 +144,7 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
         search_term: str,
         skip: int = 0,
         limit: int = 100
-    ) -> List[Radcheck]:
+    ) -> List[RadCheck]:
         """Search attributes by username, attribute, or value"""
         search_fields = ["username", "attribute", "value"]
         return await self.search(
@@ -155,7 +157,7 @@ class RadcheckRepository(BaseRepository[RadCheck, RadcheckCreate, RadcheckUpdate
 
 class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate]):
     """Repository for RADIUS reply attributes (authorization response)"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(RadReply, db_session)
 
@@ -172,12 +174,12 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
         self,
         username: str,
         attribute: str
-    ) -> Optional[Radreply]:
+    ) -> Optional[RadReply]:
         """Get specific reply attribute for a user"""
-        query = select(Radreply).where(
+        query = select(RadReply).where(
             and_(
-                Radreply.username == username,
-                Radreply.attribute == attribute
+                RadReply.username == username,
+                RadReply.attribute == attribute
             )
         )
         result = await self.db.execute(query)
@@ -189,10 +191,10 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
         attribute: str,
         operator: str,
         value: str
-    ) -> Radreply:
+    ) -> RadReply:
         """Set or update a user reply attribute"""
         existing = await self.get_user_attribute(username, attribute)
-        
+
         if existing:
             update_data = RadreplyUpdate(op=operator, value=value)
             return await self.update(existing, update_data)
@@ -207,16 +209,16 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
 
     async def delete_user_attributes(self, username: str) -> int:
         """Delete all reply attributes for a user"""
-        query = select(Radreply).where(Radreply.username == username)
+        query = select(RadReply).where(RadReply.username == username)
         result = await self.db.execute(query)
         attributes = result.scalars().all()
-        
+
         if attributes:
             ids = [attr.id for attr in attributes]
             return await self.delete_multi(ids)
         return 0
 
-    async def set_session_timeout(self, username: str, timeout: int) -> Radreply:
+    async def set_session_timeout(self, username: str, timeout: int) -> RadReply:
         """Set session timeout for user"""
         return await self.set_user_attribute(
             username=username,
@@ -225,7 +227,7 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
             value=str(timeout)
         )
 
-    async def set_idle_timeout(self, username: str, timeout: int) -> Radreply:
+    async def set_idle_timeout(self, username: str, timeout: int) -> RadReply:
         """Set idle timeout for user"""
         return await self.set_user_attribute(
             username=username,
@@ -239,10 +241,10 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
         username: str,
         download_kbps: Optional[int] = None,
         upload_kbps: Optional[int] = None
-    ) -> List[Radreply]:
+    ) -> List[RadReply]:
         """Set bandwidth limits for user"""
         results = []
-        
+
         if download_kbps:
             result = await self.set_user_attribute(
                 username=username,
@@ -251,7 +253,7 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
                 value=str(download_kbps * 1000)  # Convert to bps
             )
             results.append(result)
-            
+
         if upload_kbps:
             result = await self.set_user_attribute(
                 username=username,
@@ -260,15 +262,15 @@ class RadreplyRepository(BaseRepository[RadReply, RadreplyCreate, RadreplyUpdate
                 value=str(upload_kbps * 1000)  # Convert to bps
             )
             results.append(result)
-            
+
         return results
 
 
-class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
+class RadacctRepository(BaseRepository[RadAcct, RadacctCreate, RadacctUpdate]):
     """Repository for RADIUS accounting records"""
-    
+
     def __init__(self, db_session: AsyncSession):
-        super().__init__(Radacct, db_session)
+        super().__init__(RadAcct, db_session)
 
     def _add_relationship_loading(self, query):
         """Add relationship loading for radacct queries"""
@@ -280,13 +282,13 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         skip: int = 0,
         limit: int = 100,
         active_only: bool = False
-    ) -> List[Radacct]:
+    ) -> List[RadAcct]:
         """Get accounting sessions for a user"""
         filters = {"username": username}
-        
+
         if active_only:
             filters["acct_stop_time"] = None
-            
+
         return await self.get_multi(
             skip=skip,
             limit=limit,
@@ -299,7 +301,7 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         self,
         skip: int = 0,
         limit: int = 100
-    ) -> List[Radacct]:
+    ) -> List[RadAcct]:
         """Get all active sessions (no stop time)"""
         filters = {"acct_stop_time": None}
         return await self.get_multi(
@@ -310,15 +312,15 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
             order_desc=True
         )
 
-    async def get_session_by_id(self, session_id: str) -> Optional[Radacct]:
+    async def get_session_by_id(self, session_id: str) -> Optional[RadAcct]:
         """Get session by accounting session ID"""
         return await self.get_by_field("acct_session_id", session_id)
 
-    async def get_session_by_unique_id(self, unique_id: str) -> Optional[Radacct]:
+    async def get_session_by_unique_id(self, unique_id: str) -> Optional[RadAcct]:
         """Get session by unique accounting ID"""
         return await self.get_by_field("acct_unique_id", unique_id)
 
-    async def start_session(self, session_data: RadacctCreate) -> Radacct:
+    async def start_session(self, session_data: RadacctCreate) -> RadAcct:
         """Start a new accounting session"""
         session_data.acct_start_time = datetime.utcnow()
         return await self.create(session_data)
@@ -327,21 +329,21 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         self,
         unique_id: str,
         stop_data: Dict[str, Any]
-    ) -> Optional[Radacct]:
+    ) -> Optional[RadAcct]:
         """Stop an accounting session"""
         session = await self.get_session_by_unique_id(unique_id)
         if not session:
             return None
-            
+
         # Calculate session time if not provided
         if "acct_session_time" not in stop_data and session.acct_start_time:
             stop_time = stop_data.get("acct_stop_time", datetime.utcnow())
             duration = (stop_time - session.acct_start_time).total_seconds()
             stop_data["acct_session_time"] = int(duration)
-            
+
         if "acct_stop_time" not in stop_data:
             stop_data["acct_stop_time"] = datetime.utcnow()
-            
+
         update_data = RadacctUpdate(**stop_data)
         return await self.update(session, update_data)
 
@@ -349,12 +351,12 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         self,
         unique_id: str,
         update_data: Dict[str, Any]
-    ) -> Optional[Radacct]:
+    ) -> Optional[RadAcct]:
         """Update an active session (interim update)"""
         session = await self.get_session_by_unique_id(unique_id)
         if not session:
             return None
-            
+
         update_obj = RadacctUpdate(**update_data)
         return await self.update(session, update_obj)
 
@@ -364,13 +366,13 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         skip: int = 0,
         limit: int = 100,
         active_only: bool = False
-    ) -> List[Radacct]:
+    ) -> List[RadAcct]:
         """Get sessions by NAS IP address"""
         filters = {"nas_ip_address": nas_ip}
-        
+
         if active_only:
             filters["acct_stop_time"] = None
-            
+
         return await self.get_multi(
             skip=skip,
             limit=limit,
@@ -386,7 +388,7 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
         username: Optional[str] = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[Radacct]:
+    ) -> List[RadAcct]:
         """Get sessions within date range"""
         filters = {
             "acct_start_time": {
@@ -394,10 +396,10 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
                 "<=": end_date
             }
         }
-        
+
         if username:
             filters["username"] = username
-            
+
         return await self.get_multi(
             skip=skip,
             limit=limit,
@@ -414,21 +416,21 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
     ) -> Dict[str, Any]:
         """Get usage statistics for a user"""
         query = select(
-            func.count(Radacct.radacctid).label('total_sessions'),
-            func.sum(Radacct.acct_session_time).label('total_time'),
-            func.sum(Radacct.acct_input_octets).label('total_input'),
-            func.sum(Radacct.acct_output_octets).label('total_output'),
-            func.max(Radacct.acct_start_time).label('last_session')
-        ).where(Radacct.username == username)
-        
+            func.count(RadAcct.radacctid).label('total_sessions'),
+            func.sum(RadAcct.acct_session_time).label('total_time'),
+            func.sum(RadAcct.acct_input_octets).label('total_input'),
+            func.sum(RadAcct.acct_output_octets).label('total_output'),
+            func.max(RadAcct.acct_start_time).label('last_session')
+        ).where(RadAcct.username == username)
+
         if start_date:
-            query = query.where(Radacct.acct_start_time >= start_date)
+            query = query.where(RadAcct.acct_start_time >= start_date)
         if end_date:
-            query = query.where(Radacct.acct_start_time <= end_date)
-            
+            query = query.where(RadAcct.acct_start_time <= end_date)
+
         result = await self.db.execute(query)
         row = result.first()
-        
+
         return {
             "total_sessions": row.total_sessions or 0,
             "total_session_time": row.total_time or 0,
@@ -446,23 +448,24 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
     ) -> List[Dict[str, Any]]:
         """Get daily usage statistics"""
         query = select(
-            func.date(Radacct.acct_start_time).label('date'),
-            func.count(Radacct.radacctid).label('sessions'),
-            func.sum(Radacct.acct_session_time).label('total_time'),
-            func.sum(Radacct.acct_input_octets + Radacct.acct_output_octets).label('total_bytes')
+            func.date(RadAcct.acct_start_time).label('date'),
+            func.count(RadAcct.radacctid).label('sessions'),
+            func.sum(RadAcct.acct_session_time).label('total_time'),
+            func.sum(RadAcct.acct_input_octets +
+                     RadAcct.acct_output_octets).label('total_bytes')
         ).where(
-            func.date(Radacct.acct_start_time).between(start_date, end_date)
+            func.date(RadAcct.acct_start_time).between(start_date, end_date)
         ).group_by(
-            func.date(Radacct.acct_start_time)
+            func.date(RadAcct.acct_start_time)
         ).order_by(
-            func.date(Radacct.acct_start_time)
+            func.date(RadAcct.acct_start_time)
         )
-        
+
         if username:
-            query = query.where(Radacct.username == username)
-            
+            query = query.where(RadAcct.username == username)
+
         result = await self.db.execute(query)
-        
+
         return [
             {
                 "date": row.date,
@@ -482,27 +485,29 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
     ) -> List[Dict[str, Any]]:
         """Get top users by usage metrics"""
         if sort_by == "data":
-            order_field = func.sum(Radacct.acct_input_octets + Radacct.acct_output_octets).desc()
+            order_field = func.sum(
+                RadAcct.acct_input_octets + RadAcct.acct_output_octets).desc()
         elif sort_by == "time":
-            order_field = func.sum(Radacct.acct_session_time).desc()
+            order_field = func.sum(RadAcct.acct_session_time).desc()
         else:  # sessions
-            order_field = func.count(Radacct.radacctid).desc()
-            
+            order_field = func.count(RadAcct.radacctid).desc()
+
         query = select(
-            Radacct.username,
-            func.count(Radacct.radacctid).label('sessions'),
-            func.sum(Radacct.acct_session_time).label('total_time'),
-            func.sum(Radacct.acct_input_octets + Radacct.acct_output_octets).label('total_bytes')
+            RadAcct.username,
+            func.count(RadAcct.radacctid).label('sessions'),
+            func.sum(RadAcct.acct_session_time).label('total_time'),
+            func.sum(RadAcct.acct_input_octets +
+                     RadAcct.acct_output_octets).label('total_bytes')
         ).where(
-            Radacct.acct_start_time.between(start_date, end_date)
+            RadAcct.acct_start_time.between(start_date, end_date)
         ).group_by(
-            Radacct.username
+            RadAcct.username
         ).order_by(
             order_field
         ).limit(limit)
-        
+
         result = await self.db.execute(query)
-        
+
         return [
             {
                 "username": row.username,
@@ -516,7 +521,7 @@ class RadacctRepository(BaseRepository[Radacct, RadacctCreate, RadacctUpdate]):
 
 class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
     """Repository for Network Access Server (NAS) management"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(Nas, db_session)
 
@@ -566,21 +571,21 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             Nas.id,
             Nas.nasname,
             Nas.shortname,
-            func.count(Radacct.radacctid).label('active_sessions')
+            func.count(RadAcct.radacctid).label('active_sessions')
         ).outerjoin(
-            Radacct,
+            RadAcct,
             and_(
-                Nas.nasname == Radacct.nas_ip_address,
-                Radacct.acct_stop_time.is_(None)
+                Nas.nasname == RadAcct.nas_ip_address,
+                RadAcct.acct_stop_time.is_(None)
             )
         ).group_by(
             Nas.id,
             Nas.nasname,
             Nas.shortname
         ).order_by(Nas.shortname)
-        
+
         result = await self.db.execute(query)
-        
+
         return [
             {
                 "id": row.id,
@@ -592,7 +597,7 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
         ]
 
     async def get_nas_by_type(
-        self, 
+        self,
         nas_type: str,
         skip: int = 0,
         limit: int = 100
@@ -624,7 +629,8 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             func.count(Nas.id).label('count')
         ).group_by(Nas.type)
         type_result = await self.db.execute(type_query)
-        nas_by_type = {row.type or 'other': row.count for row in type_result.all()}
+        nas_by_type = {
+            row.type or 'other': row.count for row in type_result.all()}
 
         return {
             "total_nas": total_nas,
@@ -650,8 +656,8 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             return False
 
     async def increment_request_counters(
-        self, 
-        nas_id: int, 
+        self,
+        nas_id: int,
         total_requests: int = 1,
         successful_requests: int = 0
     ) -> bool:
@@ -660,8 +666,9 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             nas = await self.get_by_id(nas_id)
             if nas:
                 new_total = (nas.total_requests or 0) + total_requests
-                new_successful = (nas.successful_requests or 0) + successful_requests
-                
+                new_successful = (
+                    nas.successful_requests or 0) + successful_requests
+
                 await self.update(nas_id, {
                     "total_requests": new_total,
                     "successful_requests": new_successful
@@ -672,7 +679,7 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             return False
 
     async def get_nas_with_low_success_rate(
-        self, 
+        self,
         threshold: float = 0.8,
         min_requests: int = 100
     ) -> List[Nas]:
@@ -683,7 +690,7 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
                 (Nas.successful_requests / Nas.total_requests) < threshold
             )
         ).order_by((Nas.successful_requests / Nas.total_requests).asc())
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -694,22 +701,22 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
             Nas.nasname,
             Nas.shortname,
             Nas.ports,
-            func.count(Radacct.radacctid).label('active_sessions')
+            func.count(RadAcct.radacctid).label('active_sessions')
         ).outerjoin(
-            Radacct,
+            RadAcct,
             and_(
-                Nas.nasname == Radacct.nas_ip_address,
-                Radacct.acct_stop_time.is_(None)
+                Nas.nasname == RadAcct.nas_ip_address,
+                RadAcct.acct_stop_time.is_(None)
             )
         ).group_by(
             Nas.id,
-            Nas.nasname, 
+            Nas.nasname,
             Nas.shortname,
             Nas.ports
         ).order_by(Nas.shortname)
-        
+
         result = await self.db.execute(query)
-        
+
         return [
             {
                 "id": row.id,
@@ -718,7 +725,7 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
                 "ports": row.ports or 0,
                 "active_sessions": row.active_sessions or 0,
                 "utilization_percent": (
-                    (row.active_sessions or 0) / row.ports * 100 
+                    (row.active_sessions or 0) / row.ports * 100
                     if row.ports and row.ports > 0 else 0
                 )
             }
@@ -728,7 +735,7 @@ class NasRepository(BaseRepository[Nas, NasCreate, NasUpdate]):
 
 class GroupCheckRepository(BaseRepository[GroupCheck, RadgroupcheckCreate, None]):
     """Repository for RADIUS group check attributes"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(GroupCheck, db_session)
 
@@ -740,18 +747,19 @@ class GroupCheckRepository(BaseRepository[GroupCheck, RadgroupcheckCreate, None]
         """Get all check attributes for a group"""
         filters = {"groupname": groupname}
         return await self.get_multi(filters=filters, order_by="attribute")
-    
+
     async def get_groups_list(self) -> List[str]:
         """Get list of unique group names"""
         query = select(GroupCheck.groupname).distinct()
         result = await self.db.execute(query)
         return [row[0] for row in result.all()]
-    
+
     async def get_group_statistics(self) -> Dict[str, Any]:
         """Get group statistics"""
         query = select(
             func.count(GroupCheck.id).label('total_attributes'),
-            func.count(func.distinct(GroupCheck.groupname)).label('total_groups')
+            func.count(func.distinct(GroupCheck.groupname)
+                       ).label('total_groups')
         )
         result = await self.db.execute(query)
         stats = result.first()
@@ -777,7 +785,7 @@ class GroupCheckRepository(BaseRepository[GroupCheck, RadgroupcheckCreate, None]
         )
         result = await self.db.execute(query)
         existing = result.scalar_one_or_none()
-        
+
         if existing:
             # Update existing
             existing.op = operator
@@ -794,24 +802,24 @@ class GroupCheckRepository(BaseRepository[GroupCheck, RadgroupcheckCreate, None]
                 value=value
             )
             return await self.create(attr_data)
-    
+
     async def delete_group_attributes(self, groupname: str) -> int:
         """Delete all attributes for a group"""
         query = select(GroupCheck).where(GroupCheck.groupname == groupname)
         result = await self.db.execute(query)
         attributes = result.scalars().all()
-        
+
         count = 0
         for attr in attributes:
             await self.delete(attr.id)
             count += 1
-        
+
         return count
 
 
 class GroupReplyRepository(BaseRepository[GroupReply, RadgroupreplyCreate, None]):
     """Repository for RADIUS group reply attributes"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(GroupReply, db_session)
 
@@ -823,18 +831,19 @@ class GroupReplyRepository(BaseRepository[GroupReply, RadgroupreplyCreate, None]
         """Get all reply attributes for a group"""
         filters = {"groupname": groupname}
         return await self.get_multi(filters=filters, order_by="attribute")
-    
+
     async def get_groups_list(self) -> List[str]:
         """Get list of unique group names"""
         query = select(GroupReply.groupname).distinct()
         result = await self.db.execute(query)
         return [row[0] for row in result.all()]
-    
+
     async def get_group_statistics(self) -> Dict[str, Any]:
         """Get group statistics"""
         query = select(
             func.count(GroupReply.id).label('total_attributes'),
-            func.count(func.distinct(GroupReply.groupname)).label('total_groups')
+            func.count(func.distinct(GroupReply.groupname)
+                       ).label('total_groups')
         )
         result = await self.db.execute(query)
         stats = result.first()
@@ -860,7 +869,7 @@ class GroupReplyRepository(BaseRepository[GroupReply, RadgroupreplyCreate, None]
         )
         result = await self.db.execute(query)
         existing = result.scalar_one_or_none()
-        
+
         if existing:
             # Update existing
             existing.op = operator
@@ -877,16 +886,16 @@ class GroupReplyRepository(BaseRepository[GroupReply, RadgroupreplyCreate, None]
                 value=value
             )
             return await self.create(attr_data)
-    
+
     async def delete_group_attributes(self, groupname: str) -> int:
         """Delete all attributes for a group"""
         query = select(GroupReply).where(GroupReply.groupname == groupname)
         result = await self.db.execute(query)
         attributes = result.scalars().all()
-        
+
         count = 0
         for attr in attributes:
             await self.delete(attr.id)
             count += 1
-        
+
         return count

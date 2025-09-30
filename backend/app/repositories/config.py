@@ -32,7 +32,7 @@ from ..schemas.config import (
 
 class SystemConfigRepository(BaseRepository[SystemConfig, SystemConfigCreate, SystemConfigUpdate]):
     """Repository for SystemConfig model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(SystemConfig, db_session)
 
@@ -63,14 +63,14 @@ class SystemConfigRepository(BaseRepository[SystemConfig, SystemConfigCreate, Sy
     async def bulk_update_configs(self, config_updates: Dict[str, str]) -> List[SystemConfig]:
         """Bulk update multiple configurations"""
         updated_configs = []
-        
+
         for config_key, config_value in config_updates.items():
             config = await self.get_by_key(config_key)
             if config:
                 config.config_value = config_value
                 config.updated_at = datetime.utcnow()
                 updated_configs.append(config)
-        
+
         await self.db.commit()
         return updated_configs
 
@@ -92,7 +92,7 @@ class SystemConfigRepository(BaseRepository[SystemConfig, SystemConfigCreate, Sy
 
 class MailSettingsRepository(BaseRepository[MailSettings, MailSettingsCreate, MailSettingsUpdate]):
     """Repository for MailSettings model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(MailSettings, db_session)
 
@@ -111,10 +111,10 @@ class MailSettingsRepository(BaseRepository[MailSettings, MailSettingsCreate, Ma
         query = select(MailSettings).where(MailSettings.is_default == True)
         result = await self.db.execute(query)
         existing_defaults = result.scalars().all()
-        
+
         for settings in existing_defaults:
             settings.is_default = False
-        
+
         # Set the new default
         settings = await self.get(mail_settings_id)
         if settings:
@@ -122,7 +122,7 @@ class MailSettingsRepository(BaseRepository[MailSettings, MailSettingsCreate, Ma
             settings.is_active = True
             await self.db.commit()
             await self.db.refresh(settings)
-        
+
         return settings
 
     async def test_connection(self, mail_settings: MailSettings) -> Dict[str, Any]:
@@ -137,7 +137,7 @@ class MailSettingsRepository(BaseRepository[MailSettings, MailSettingsCreate, Ma
 
 class BackupHistoryRepository(BaseRepository[BackupHistory, BackupHistoryCreate, BackupHistoryUpdate]):
     """Repository for BackupHistory model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(BackupHistory, db_session)
 
@@ -147,7 +147,7 @@ class BackupHistoryRepository(BaseRepository[BackupHistory, BackupHistoryCreate,
         query = select(BackupHistory).where(
             BackupHistory.backup_date >= since_date
         ).order_by(BackupHistory.backup_date.desc())
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -175,13 +175,13 @@ class BackupHistoryRepository(BaseRepository[BackupHistory, BackupHistoryCreate,
         query = select(BackupHistory).where(
             BackupHistory.backup_date < cutoff_date
         )
-        
+
         result = await self.db.execute(query)
         old_backups = result.scalars().all()
-        
+
         for backup in old_backups:
             await self.delete(backup.id)
-        
+
         return len(old_backups)
 
     async def get_backup_statistics(self) -> Dict[str, Any]:
@@ -216,7 +216,7 @@ class BackupHistoryRepository(BaseRepository[BackupHistory, BackupHistoryCreate,
 
 class CronJobRepository(BaseRepository[CronJob, CronJobCreate, CronJobUpdate]):
     """Repository for CronJob model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(CronJob, db_session)
 
@@ -236,9 +236,9 @@ class CronJobRepository(BaseRepository[CronJob, CronJobCreate, CronJobUpdate]):
         return await self.get_active_jobs()
 
     async def update_job_status(
-        self, 
-        job_id: int, 
-        status: str, 
+        self,
+        job_id: int,
+        status: str,
         output: Optional[str] = None
     ) -> Optional[CronJob]:
         """Update job execution status"""
@@ -267,7 +267,7 @@ class CronJobRepository(BaseRepository[CronJob, CronJobCreate, CronJobUpdate]):
 
 class MessageRepository(BaseRepository[Message, MessageCreate, MessageUpdate]):
     """Repository for Message model operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(Message, db_session)
 
@@ -291,7 +291,7 @@ class MessageRepository(BaseRepository[Message, MessageCreate, MessageUpdate]):
         query = select(Message).where(
             Message.created_on >= since_date
         ).order_by(Message.created_on.desc())
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -304,24 +304,25 @@ class MessageRepository(BaseRepository[Message, MessageCreate, MessageUpdate]):
     ) -> List[Message]:
         """Search messages by content"""
         query = select(Message)
-        
+
         # Add type filter if provided
         if message_type:
             query = query.where(Message.type == message_type)
-        
+
         # Add content search
         if search_term:
             query = query.where(Message.content.ilike(f"%{search_term}%"))
-        
-        query = query.order_by(Message.created_on.desc()).offset(skip).limit(limit)
-        
+
+        query = query.order_by(Message.created_on.desc()
+                               ).offset(skip).limit(limit)
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
 
 class SystemLogRepository(BaseRepository[SystemLog, None, None]):
     """Repository for SystemLog model operations (read-only)"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(SystemLog, db_session)
 
@@ -340,7 +341,7 @@ class SystemLogRepository(BaseRepository[SystemLog, None, None]):
         query = select(SystemLog).where(
             SystemLog.timestamp >= since_time
         ).order_by(SystemLog.timestamp.desc()).limit(limit)
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -363,7 +364,7 @@ class SystemLogRepository(BaseRepository[SystemLog, None, None]):
     ) -> List[SystemLog]:
         """Search logs with filters"""
         query = select(SystemLog)
-        
+
         # Add filters
         if log_level:
             query = query.where(SystemLog.log_level == log_level)
@@ -371,8 +372,9 @@ class SystemLogRepository(BaseRepository[SystemLog, None, None]):
             query = query.where(SystemLog.username == username)
         if search_term:
             query = query.where(SystemLog.message.ilike(f"%{search_term}%"))
-        
-        query = query.order_by(SystemLog.timestamp.desc()).offset(skip).limit(limit)
-        
+
+        query = query.order_by(SystemLog.timestamp.desc()
+                               ).offset(skip).limit(limit)
+
         result = await self.db.execute(query)
         return result.scalars().all()

@@ -37,15 +37,20 @@ router = APIRouter(
 
 @router.get("/history", response_model=BatchHistoryListResponse, summary="Get batch operation history")
 async def get_batch_history(
-    operation_type: Optional[str] = Query(None, description="Filter by operation type"),
+    operation_type: Optional[str] = Query(
+        None, description="Filter by operation type"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    hotspot_id: Optional[int] = Query(None, description="Filter by hotspot ID"),
-    created_after: Optional[datetime] = Query(None, description="Filter by creation date (after)"),
-    created_before: Optional[datetime] = Query(None, description="Filter by creation date (before)"),
+    hotspot_id: Optional[int] = Query(
+        None, description="Filter by hotspot ID"),
+    created_after: Optional[datetime] = Query(
+        None, description="Filter by creation date (after)"),
+    created_before: Optional[datetime] = Query(
+        None, description="Filter by creation date (before)"),
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
     sort_by: Optional[str] = Query("created_at", description="Sort field"),
-    sort_order: Optional[str] = Query("desc", regex=r'^(asc|desc)$', description="Sort order"),
+    sort_order: Optional[str] = Query(
+        "desc", regex=r'^(asc|desc)$', description="Sort order"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -117,13 +122,14 @@ async def get_batch_details(
     """
     Get detailed information about a specific batch operation.
     """
-    batch_history = db.query(BatchHistory).filter(BatchHistory.id == batch_id).first()
+    batch_history = db.query(BatchHistory).filter(
+        BatchHistory.id == batch_id).first()
     if not batch_history:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Batch operation not found"
         )
-    
+
     return BatchHistoryResponse.from_orm(batch_history)
 
 
@@ -148,11 +154,11 @@ async def create_batch_history(
             failure_count=batch_data.failure_count,
             status=batch_data.status,
         )
-        
+
         db.add(batch_history)
         db.commit()
         db.refresh(batch_history)
-        
+
         return BatchHistoryResponse.from_orm(batch_history)
     except Exception as e:
         db.rollback()
@@ -172,25 +178,26 @@ async def update_batch_history(
     """
     Update an existing batch history record.
     """
-    batch_history = db.query(BatchHistory).filter(BatchHistory.id == batch_id).first()
+    batch_history = db.query(BatchHistory).filter(
+        BatchHistory.id == batch_id).first()
     if not batch_history:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Batch operation not found"
         )
-    
+
     try:
         # Update fields if provided
         update_data = batch_data.dict(exclude_unset=True)
         for field, value in update_data.items():
             setattr(batch_history, field, value)
-        
+
         # Update timestamp
         batch_history.updated_at = datetime.utcnow()
-        
+
         db.commit()
         db.refresh(batch_history)
-        
+
         return BatchHistoryResponse.from_orm(batch_history)
     except Exception as e:
         db.rollback()
@@ -209,13 +216,14 @@ async def delete_batch_history(
     """
     Delete a batch history record.
     """
-    batch_history = db.query(BatchHistory).filter(BatchHistory.id == batch_id).first()
+    batch_history = db.query(BatchHistory).filter(
+        BatchHistory.id == batch_id).first()
     if not batch_history:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Batch operation not found"
         )
-    
+
     try:
         db.delete(batch_history)
         db.commit()
@@ -238,7 +246,7 @@ async def batch_user_operation(
     Execute batch operations on users.
     """
     batch_service = BatchService(db)
-    
+
     try:
         result = await batch_service.execute_user_batch_operation(
             operation_request, current_user
@@ -261,7 +269,7 @@ async def batch_nas_operation(
     Execute batch operations on NAS devices.
     """
     batch_service = BatchService(db)
-    
+
     try:
         result = await batch_service.execute_nas_batch_operation(
             operation_request, current_user
@@ -284,7 +292,7 @@ async def batch_group_operation(
     Execute batch operations on user groups.
     """
     batch_service = BatchService(db)
-    
+
     try:
         result = await batch_service.execute_group_batch_operation(
             operation_request, current_user
@@ -322,27 +330,28 @@ async def get_batch_stats(
     try:
         # Total operations
         total_operations = db.query(func.count(BatchHistory.id)).scalar()
-        
+
         # Operations by status
         status_stats = db.query(
             BatchHistory.status,
             func.count(BatchHistory.id)
         ).group_by(BatchHistory.status).all()
-        
+
         # Operations by type
         type_stats = db.query(
             BatchHistory.operation_type,
             func.count(BatchHistory.id)
         ).group_by(BatchHistory.operation_type).all()
-        
+
         # Recent operations (last 7 days)
-        seven_days_ago = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        seven_days_ago = datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0)
         seven_days_ago = seven_days_ago.replace(day=seven_days_ago.day - 7)
-        
+
         recent_operations = db.query(func.count(BatchHistory.id)).filter(
             BatchHistory.created_at >= seven_days_ago
         ).scalar()
-        
+
         return {
             "total_operations": total_operations,
             "recent_operations": recent_operations,

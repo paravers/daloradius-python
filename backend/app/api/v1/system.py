@@ -26,13 +26,14 @@ class HeartbeatData(BaseModel):
     """Device heartbeat data structure"""
     nas_mac: str = Field(..., description="NAS device MAC address")
     firmware: Optional[str] = Field("", description="Firmware version")
-    firmware_revision: Optional[str] = Field("", description="Firmware revision")
+    firmware_revision: Optional[str] = Field(
+        "", description="Firmware revision")
     wan_iface: Optional[str] = Field("", description="WAN interface name")
     wan_ip: Optional[str] = Field("", description="WAN IP address")
     wan_mac: Optional[str] = Field("", description="WAN MAC address")
     wan_gateway: Optional[str] = Field("", description="WAN gateway")
     wifi_iface: Optional[str] = Field("", description="WiFi interface name")
-    wifi_ip: Optional[str] = Field("", description="WiFi IP address") 
+    wifi_ip: Optional[str] = Field("", description="WiFi IP address")
     wifi_mac: Optional[str] = Field("", description="WiFi MAC address")
     wifi_ssid: Optional[str] = Field("", description="WiFi SSID")
     wifi_key: Optional[str] = Field("", description="WiFi key/password")
@@ -83,13 +84,13 @@ async def get_system_info(
 ):
     """
     Get comprehensive system information
-    
+
     Returns detailed system information including platform,
     hardware, and runtime details.
     """
     try:
         boot_time = datetime.fromtimestamp(psutil.boot_time())
-        
+
         return SystemInfoResponse(
             hostname=platform.node(),
             platform=f"{platform.system()} {platform.release()}",
@@ -98,7 +99,8 @@ async def get_system_info(
             uptime_seconds=int(time.time() - psutil.boot_time()),
             boot_time=boot_time,
             cpu_count=psutil.cpu_count(),
-            memory_total_gb=round(psutil.virtual_memory().total / (1024**3), 2),
+            memory_total_gb=round(
+                psutil.virtual_memory().total / (1024**3), 2),
             disk_total_gb=round(psutil.disk_usage('/').total / (1024**3), 2)
         )
     except Exception as e:
@@ -115,7 +117,7 @@ async def get_system_health(
 ):
     """
     Get system health status
-    
+
     Returns comprehensive health check including database,
     services, and resource usage.
     """
@@ -124,24 +126,24 @@ async def get_system_health(
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
-        
+
         # Calculate uptime
         uptime_hours = (time.time() - psutil.boot_time()) / 3600
-        
+
         # Check database status
         try:
             db.execute("SELECT 1")
             db_status = "healthy"
         except Exception:
             db_status = "error"
-        
+
         # Check services (simplified check)
         services_status = {
             "database": db_status,
             "web_server": "healthy",  # If we can respond, web server is working
             "api": "healthy"  # If this endpoint responds, API is working
         }
-        
+
         # Calculate health score (0-100)
         health_score = 100
         if cpu_percent > 80:
@@ -152,13 +154,13 @@ async def get_system_health(
             health_score -= 30
         if db_status != "healthy":
             health_score -= 30
-        
+
         overall_status = "healthy"
         if health_score < 70:
             overall_status = "warning"
         if health_score < 40:
             overall_status = "critical"
-        
+
         return SystemHealthResponse(
             status=overall_status,
             timestamp=datetime.utcnow(),
@@ -174,7 +176,7 @@ async def get_system_health(
             uptime_hours=round(uptime_hours, 2),
             health_score=max(0, health_score)
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -191,7 +193,7 @@ async def device_heartbeat(
 ):
     """
     Receive heartbeat from network devices
-    
+
     Accepts heartbeat data from NAS devices and updates
     device status and monitoring information.
     """
@@ -202,17 +204,17 @@ async def device_heartbeat(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid secret key"
             )
-        
+
         # Validate device MAC
         if device_mac != heartbeat_data.nas_mac:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="MAC address mismatch"
             )
-        
+
         # Create or update heartbeat record
         heartbeat_service = HeartBeatService(db)
-        
+
         # Convert heartbeat data to service format
         service_data = HeartBeatCreate(
             service_name=f"nas-{device_mac}",
@@ -220,17 +222,20 @@ async def device_heartbeat(
             host_name=heartbeat_data.wan_ip or heartbeat_data.lan_ip or device_mac,
             ip_address=heartbeat_data.wan_ip or heartbeat_data.lan_ip,
             status=SystemStatus.ONLINE,
-            uptime=int(heartbeat_data.uptime) if heartbeat_data.uptime.isdigit() else None,
-            cpu_usage=float(heartbeat_data.cpu) if heartbeat_data.cpu and heartbeat_data.cpu.replace('.', '').isdigit() else None,
-            memory_usage=float(heartbeat_data.memfree) if heartbeat_data.memfree and heartbeat_data.memfree.replace('.', '').isdigit() else None
+            uptime=int(
+                heartbeat_data.uptime) if heartbeat_data.uptime.isdigit() else None,
+            cpu_usage=float(heartbeat_data.cpu) if heartbeat_data.cpu and heartbeat_data.cpu.replace(
+                '.', '').isdigit() else None,
+            memory_usage=float(heartbeat_data.memfree) if heartbeat_data.memfree and heartbeat_data.memfree.replace(
+                '.', '').isdigit() else None
         )
-        
+
         # Check if device already exists
         existing = heartbeat_service.repository.get_by_service(
             f"nas-{device_mac}",
             heartbeat_data.wan_ip or heartbeat_data.lan_ip or device_mac
         )
-        
+
         if existing:
             # Update existing record
             updated = await heartbeat_service.update_heartbeat(
@@ -252,11 +257,11 @@ async def device_heartbeat(
             # Create new record
             created = await heartbeat_service.create_heartbeat(service_data)
             return {
-                "status": "created", 
+                "status": "created",
                 "device_id": created.id,
                 "message": f"New device {device_mac} registered"
             }
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -268,34 +273,37 @@ async def device_heartbeat(
 
 @router.get("/heartbeat/devices")
 async def get_device_heartbeats(
-    status: Optional[SystemStatus] = Query(None, description="Filter by device status"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of devices to return"),
+    status: Optional[SystemStatus] = Query(
+        None, description="Filter by device status"),
+    limit: int = Query(100, ge=1, le=1000,
+                       description="Number of devices to return"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get heartbeat status of all registered devices
-    
+
     Returns list of devices with their last heartbeat status.
     """
     try:
         heartbeat_service = HeartBeatService(db)
-        
+
         # Get devices (NAS type heartbeats)
-        devices = heartbeat_service.repository.get_services_by_type("nas_device")
-        
+        devices = heartbeat_service.repository.get_services_by_type(
+            "nas_device")
+
         if status:
             devices = [d for d in devices if d.status == status]
-        
+
         devices = devices[:limit]
-        
+
         return {
             "devices": [HeartBeatResponse.from_orm(device) for device in devices],
             "total": len(devices),
             "online_count": len([d for d in devices if d.status == SystemStatus.ONLINE]),
             "offline_count": len([d for d in devices if d.status == SystemStatus.OFFLINE])
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -310,7 +318,7 @@ async def get_system_status(
 ):
     """
     Get overall system status summary
-    
+
     Returns quick system status overview for monitoring.
     """
     try:
@@ -318,18 +326,18 @@ async def get_system_status(
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
-        
+
         # Check database
         try:
             db.execute("SELECT 1")
             db_connected = True
         except Exception:
             db_connected = False
-        
+
         # Get device count
         heartbeat_service = HeartBeatService(db)
         summary = await heartbeat_service.get_heartbeat_summary()
-        
+
         return {
             "system": {
                 "status": "healthy" if db_connected and cpu_percent < 80 else "warning",
@@ -353,7 +361,7 @@ async def get_system_status(
             },
             "timestamp": datetime.utcnow()
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

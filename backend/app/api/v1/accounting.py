@@ -64,19 +64,28 @@ def get_nas_traffic_summary_service(db: Session = Depends(get_db)) -> NasTraffic
 async def get_accounting_sessions(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    sort_field: Optional[str] = Query("acctstarttime", description="Sort field"),
-    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_field: Optional[str] = Query(
+        "acctstarttime", description="Sort field"),
+    sort_order: Optional[str] = Query(
+        "desc", regex="^(asc|desc)$", description="Sort order"),
     # Filters
     username: Optional[str] = Query(None, description="Filter by username"),
     groupname: Optional[str] = Query(None, description="Filter by group name"),
-    nasipaddress: Optional[str] = Query(None, description="Filter by NAS IP address"),
-    framedipaddress: Optional[str] = Query(None, description="Filter by framed IP address"),
-    callingstationid: Optional[str] = Query(None, description="Filter by calling station ID"),
-    servicetype: Optional[str] = Query(None, description="Filter by service type"),
-    time_range: Optional[AccountingTimeRangeEnum] = Query(None, description="Predefined time range"),
-    start_date: Optional[datetime] = Query(None, description="Start date filter"),
+    nasipaddress: Optional[str] = Query(
+        None, description="Filter by NAS IP address"),
+    framedipaddress: Optional[str] = Query(
+        None, description="Filter by framed IP address"),
+    callingstationid: Optional[str] = Query(
+        None, description="Filter by calling station ID"),
+    servicetype: Optional[str] = Query(
+        None, description="Filter by service type"),
+    time_range: Optional[AccountingTimeRangeEnum] = Query(
+        None, description="Predefined time range"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date filter"),
     end_date: Optional[datetime] = Query(None, description="End date filter"),
-    active_only: Optional[bool] = Query(None, description="Show only active sessions"),
+    active_only: Optional[bool] = Query(
+        None, description="Show only active sessions"),
     # Current user dependency
     current_user: User = Depends(get_current_user),
     service: AccountingService = Depends(get_accounting_service)
@@ -96,7 +105,7 @@ async def get_accounting_sessions(
             end_date=end_date,
             active_only=active_only
         )
-        
+
         # Create query
         query = AccountingQuery(
             page=page,
@@ -105,14 +114,16 @@ async def get_accounting_sessions(
             sort_order=sort_order,
             filters=filters
         )
-        
+
         # Get sessions
         return await service.get_accounting_sessions(query)
-        
+
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/sessions/{session_id}", response_model=RadAcctResponse)
@@ -125,9 +136,11 @@ async def get_session_by_id(
     try:
         return await service.get_session_by_id(session_id)
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/sessions/active", response_model=PaginatedAccountingResponse)
@@ -148,9 +161,11 @@ async def get_active_sessions(
             username=username
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/sessions/user/{username}", response_model=PaginatedAccountingResponse)
@@ -173,9 +188,11 @@ async def get_user_sessions(
             date_to=date_to
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # =====================================================================
@@ -203,7 +220,7 @@ async def get_accounting_overview(
                 groupname=groupname,
                 nasipaddress=nasipaddress
             )
-        
+
         return await service.get_accounting_overview(
             time_range=time_range,
             date_from=date_from,
@@ -211,9 +228,11 @@ async def get_accounting_overview(
             filters=filters
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # =====================================================================
@@ -240,7 +259,8 @@ async def get_top_users_report(
             date_to=date_to
         )
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/reports/hourly-traffic", response_model=List[HourlyTrafficReport])
@@ -257,7 +277,8 @@ async def get_hourly_traffic_report(
             date_to=date_to
         )
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/reports/nas-usage", response_model=List[NasUsageReport])
@@ -274,7 +295,8 @@ async def get_nas_usage_report(
             date_to=date_to
         )
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # =====================================================================
@@ -295,9 +317,11 @@ async def execute_custom_query(
             limit=request.limit
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.post("/maintenance/cleanup", response_model=MaintenanceResult)
@@ -313,9 +337,11 @@ async def cleanup_old_sessions(
             dry_run=request.dry_run
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # =====================================================================
@@ -328,7 +354,8 @@ async def get_user_traffic_summary(
     date_from: Optional[datetime] = Query(None),
     date_to: Optional[datetime] = Query(None),
     current_user: User = Depends(get_current_user),
-    service: UserTrafficSummaryService = Depends(get_user_traffic_summary_service)
+    service: UserTrafficSummaryService = Depends(
+        get_user_traffic_summary_service)
 ):
     """Get traffic summary for a user"""
     try:
@@ -338,7 +365,8 @@ async def get_user_traffic_summary(
             date_to=date_to.date() if date_to else None
         )
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/traffic-summary/nas/{nasipaddress}", response_model=List[NasTrafficSummaryResponse])
@@ -347,7 +375,8 @@ async def get_nas_traffic_summary(
     date_from: Optional[datetime] = Query(None),
     date_to: Optional[datetime] = Query(None),
     current_user: User = Depends(get_current_user),
-    service: NasTrafficSummaryService = Depends(get_nas_traffic_summary_service)
+    service: NasTrafficSummaryService = Depends(
+        get_nas_traffic_summary_service)
 ):
     """Get traffic summary for a NAS"""
     try:
@@ -357,7 +386,8 @@ async def get_nas_traffic_summary(
             date_to=date_to.date() if date_to else None
         )
     except BusinessLogicError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # =====================================================================

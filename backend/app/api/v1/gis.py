@@ -20,8 +20,10 @@ from app.services.gis import GisService
 # Request/Response Models
 class CoordinateValidationRequest(BaseModel):
     """Request model for coordinate validation."""
-    latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
-    longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
+    latitude: float = Field(..., ge=-90, le=90,
+                            description="Latitude coordinate")
+    longitude: float = Field(..., ge=-180, le=180,
+                             description="Longitude coordinate")
 
 
 class CoordinateValidationResponse(BaseModel):
@@ -34,15 +36,20 @@ class CoordinateValidationResponse(BaseModel):
 
 class UpdateLocationRequest(BaseModel):
     """Request model for updating hotspot location."""
-    latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
-    longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
+    latitude: float = Field(..., ge=-90, le=90,
+                            description="Latitude coordinate")
+    longitude: float = Field(..., ge=-180, le=180,
+                             description="Longitude coordinate")
 
 
 class LocationSearchRequest(BaseModel):
     """Request model for location-based search."""
-    latitude: float = Field(..., ge=-90, le=90, description="Search center latitude")
-    longitude: float = Field(..., ge=-180, le=180, description="Search center longitude")
-    radius_km: float = Field(10.0, gt=0, le=1000, description="Search radius in kilometers")
+    latitude: float = Field(..., ge=-90, le=90,
+                            description="Search center latitude")
+    longitude: float = Field(..., ge=-180, le=180,
+                             description="Search center longitude")
+    radius_km: float = Field(
+        10.0, gt=0, le=1000, description="Search radius in kilometers")
 
 
 class BoundingBoxRequest(BaseModel):
@@ -98,25 +105,30 @@ router = APIRouter(prefix="/gis", tags=["gis"])
 
 @router.get("/map-data", response_model=MapDataResponse)
 async def get_map_data(
-    north: Optional[float] = Query(None, ge=-90, le=90, description="Northern boundary for filtering"),
-    south: Optional[float] = Query(None, ge=-90, le=90, description="Southern boundary for filtering"),
-    east: Optional[float] = Query(None, ge=-180, le=180, description="Eastern boundary for filtering"),
-    west: Optional[float] = Query(None, ge=-180, le=180, description="Western boundary for filtering"),
-    include_inactive: bool = Query(True, description="Include inactive hotspots"),
+    north: Optional[float] = Query(
+        None, ge=-90, le=90, description="Northern boundary for filtering"),
+    south: Optional[float] = Query(
+        None, ge=-90, le=90, description="Southern boundary for filtering"),
+    east: Optional[float] = Query(
+        None, ge=-180, le=180, description="Eastern boundary for filtering"),
+    west: Optional[float] = Query(
+        None, ge=-180, le=180, description="Western boundary for filtering"),
+    include_inactive: bool = Query(
+        True, description="Include inactive hotspots"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get comprehensive map data for GIS visualization.
-    
+
     - **bounds**: Optional geographic bounds to filter hotspots (north, south, east, west)
     - **include_inactive**: Whether to include inactive hotspots in results
-    
+
     Returns map markers, geographic bounds, center point, and statistics.
     """
     try:
         service = GisService(db)
-        
+
         # Build bounds filter if provided
         bounds = None
         if all(coord is not None for coord in [north, south, east, west]):
@@ -125,12 +137,14 @@ async def get_map_data(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid bounding box: south must be < north, west must be < east"
                 )
-            bounds = {'north': north, 'south': south, 'east': east, 'west': west}
-        
-        map_data = service.get_map_data(bounds=bounds, include_inactive=include_inactive)
-        
+            bounds = {'north': north, 'south': south,
+                      'east': east, 'west': west}
+
+        map_data = service.get_map_data(
+            bounds=bounds, include_inactive=include_inactive)
+
         return MapDataResponse(**map_data)
-        
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -151,24 +165,24 @@ async def search_hotspots_near_location(
 ):
     """
     Search for hotspots near a specific location.
-    
+
     - **latitude**: Search center latitude coordinate
     - **longitude**: Search center longitude coordinate
     - **radius_km**: Search radius in kilometers (max 1000)
-    
+
     Returns list of hotspots with distance information, sorted by distance.
     """
     try:
         service = GisService(db)
-        
+
         results = service.search_hotspots_near_location(
             search_request.latitude,
             search_request.longitude,
             search_request.radius_km
         )
-        
+
         return [HotspotLocationResponse(**result) for result in results]
-        
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -190,25 +204,25 @@ async def update_hotspot_location(
 ):
     """
     Update the geographic location of a hotspot.
-    
+
     - **hotspot_id**: ID of the hotspot to update
     - **latitude**: New latitude coordinate
     - **longitude**: New longitude coordinate
-    
+
     Updates the hotspot's geocode field with new coordinates.
     """
     try:
         service = GisService(db)
-        
+
         result = service.update_hotspot_location(
             hotspot_id,
             location_request.latitude,
             location_request.longitude,
             current_user.username
         )
-        
+
         return HotspotLocationResponse(**result)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -234,18 +248,19 @@ async def remove_hotspot_location(
 ):
     """
     Remove geographic coordinates from a hotspot.
-    
+
     - **hotspot_id**: ID of the hotspot to update
-    
+
     Clears the hotspot's geocode field, removing location data.
     """
     try:
         service = GisService(db)
-        
-        result = service.remove_hotspot_location(hotspot_id, current_user.username)
-        
+
+        result = service.remove_hotspot_location(
+            hotspot_id, current_user.username)
+
         return HotspotLocationResponse(**result)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -267,19 +282,19 @@ async def get_hotspots_without_location(
 ):
     """
     Get hotspots that don't have geographic coordinates.
-    
+
     - **page**: Page number (starting from 1)
     - **page_size**: Number of items per page (1-100)
-    
+
     Returns paginated list of hotspots without location data.
     """
     try:
         service = GisService(db)
-        
+
         result = service.get_hotspots_without_location(page, page_size)
-        
+
         return HotspotListWithPaginationResponse(**result)
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -295,23 +310,23 @@ async def get_regional_statistics(
 ):
     """
     Get statistics for hotspots in a specific geographic region.
-    
+
     - **north, south, east, west**: Bounding box coordinates
-    
+
     Returns comprehensive statistics for the specified region.
     """
     try:
         service = GisService(db)
-        
+
         result = service.get_regional_statistics(
             bounds_request.north,
             bounds_request.south,
             bounds_request.east,
             bounds_request.west
         )
-        
+
         return RegionalStatisticsResponse(**result)
-        
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -326,26 +341,28 @@ async def get_regional_statistics(
 
 @router.get("/search/by-name", response_model=List[HotspotLocationResponse])
 async def search_hotspots_by_name(
-    q: str = Query(..., min_length=2, description="Search query (minimum 2 characters)"),
-    coordinates_only: bool = Query(False, description="Only return hotspots with coordinates"),
+    q: str = Query(..., min_length=2,
+                   description="Search query (minimum 2 characters)"),
+    coordinates_only: bool = Query(
+        False, description="Only return hotspots with coordinates"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Search hotspots by location-related name or description.
-    
+
     - **q**: Search query string (minimum 2 characters)
     - **coordinates_only**: Only return hotspots that have geographic coordinates
-    
+
     Searches hotspot names and descriptions for location-related terms.
     """
     try:
         service = GisService(db)
-        
+
         results = service.search_hotspots_by_name(q, coordinates_only)
-        
+
         return [HotspotLocationResponse(**result) for result in results]
-        
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -365,28 +382,29 @@ async def validate_coordinates(
 ):
     """
     Validate geographic coordinates.
-    
+
     - **latitude**: Latitude coordinate to validate
     - **longitude**: Longitude coordinate to validate
-    
+
     Returns validation result with details about any errors.
     """
     try:
         from app.services.gis import GisService
-        
+
         # Create a temporary service instance for validation (no DB needed)
         temp_service = type('TempService', (), {
             '_validate_coordinates': lambda self, lat, lon: -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0
         })()
-        
-        is_valid = temp_service._validate_coordinates(coordinates.latitude, coordinates.longitude)
-        
+
+        is_valid = temp_service._validate_coordinates(
+            coordinates.latitude, coordinates.longitude)
+
         result = {
             'valid': is_valid,
             'latitude': coordinates.latitude,
             'longitude': coordinates.longitude
         }
-        
+
         if not is_valid:
             errors = []
             if not (-90.0 <= coordinates.latitude <= 90.0):
@@ -394,9 +412,9 @@ async def validate_coordinates(
             if not (-180.0 <= coordinates.longitude <= 180.0):
                 errors.append("Longitude must be between -180 and 180 degrees")
             result['errors'] = errors
-        
+
         return CoordinateValidationResponse(**result)
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

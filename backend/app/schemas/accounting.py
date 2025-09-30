@@ -45,30 +45,40 @@ class RadAcctBase(BaseModel):
     nasipaddress: Optional[str] = Field(None, description="NAS IP address")
     nasportid: Optional[str] = Field(None, description="NAS port ID")
     nasporttype: Optional[str] = Field(None, description="NAS port type")
-    calledstationid: Optional[str] = Field(None, description="Called station ID")
-    callingstationid: Optional[str] = Field(None, description="Calling station ID")
-    framedipaddress: Optional[str] = Field(None, description="Framed IP address")
+    calledstationid: Optional[str] = Field(
+        None, description="Called station ID")
+    callingstationid: Optional[str] = Field(
+        None, description="Calling station ID")
+    framedipaddress: Optional[str] = Field(
+        None, description="Framed IP address")
     servicetype: Optional[str] = Field(None, description="Service type")
-    acctstarttime: Optional[datetime] = Field(None, description="Session start time")
-    acctstoptime: Optional[datetime] = Field(None, description="Session stop time")
-    acctsessiontime: Optional[int] = Field(None, description="Session duration in seconds")
+    acctstarttime: Optional[datetime] = Field(
+        None, description="Session start time")
+    acctstoptime: Optional[datetime] = Field(
+        None, description="Session stop time")
+    acctsessiontime: Optional[int] = Field(
+        None, description="Session duration in seconds")
     acctinputoctets: Optional[int] = Field(0, description="Input bytes")
     acctoutputoctets: Optional[int] = Field(0, description="Output bytes")
     acctinputpackets: Optional[int] = Field(0, description="Input packets")
     acctoutputpackets: Optional[int] = Field(0, description="Output packets")
-    acctterminatecause: Optional[str] = Field(None, description="Termination cause")
+    acctterminatecause: Optional[str] = Field(
+        None, description="Termination cause")
 
 
 class RadAcctResponse(RadAcctBase):
     """Schema for accounting record responses"""
     radacctid: int = Field(..., description="Accounting record ID")
-    
+
     # Computed properties
-    total_bytes: Optional[int] = Field(None, description="Total bytes transferred")
-    total_packets: Optional[int] = Field(None, description="Total packets transferred")
+    total_bytes: Optional[int] = Field(
+        None, description="Total bytes transferred")
+    total_packets: Optional[int] = Field(
+        None, description="Total packets transferred")
     is_active: Optional[bool] = Field(None, description="Is session active")
-    formatted_duration: Optional[str] = Field(None, description="Human readable duration")
-    
+    formatted_duration: Optional[str] = Field(
+        None, description="Human readable duration")
+
     class Config:
         from_attributes = True
 
@@ -100,36 +110,53 @@ class AccountingQueryFilters(BaseModel):
     """Filters for accounting queries"""
     username: Optional[str] = Field(None, description="Filter by username")
     groupname: Optional[str] = Field(None, description="Filter by group name")
-    nasipaddress: Optional[str] = Field(None, description="Filter by NAS IP address")
-    framedipaddress: Optional[str] = Field(None, description="Filter by framed IP address")
-    callingstationid: Optional[str] = Field(None, description="Filter by calling station ID")
-    servicetype: Optional[str] = Field(None, description="Filter by service type")
-    
+    nasipaddress: Optional[str] = Field(
+        None, description="Filter by NAS IP address")
+    framedipaddress: Optional[str] = Field(
+        None, description="Filter by framed IP address")
+    callingstationid: Optional[str] = Field(
+        None, description="Filter by calling station ID")
+    servicetype: Optional[str] = Field(
+        None, description="Filter by service type")
+
     # Time range filters
-    start_date: Optional[datetime] = Field(None, description="Start date for filtering")
-    end_date: Optional[datetime] = Field(None, description="End date for filtering")
-    time_range: Optional[AccountingTimeRangeEnum] = Field(None, description="Predefined time range")
-    
+    start_date: Optional[datetime] = Field(
+        None, description="Start date for filtering")
+    end_date: Optional[datetime] = Field(
+        None, description="End date for filtering")
+    time_range: Optional[AccountingTimeRangeEnum] = Field(
+        None, description="Predefined time range")
+
     # Session status filters
-    status: Optional[SessionStatusEnum] = Field(None, description="Session status")
-    active_only: Optional[bool] = Field(False, description="Show only active sessions")
-    
+    status: Optional[SessionStatusEnum] = Field(
+        None, description="Session status")
+    active_only: Optional[bool] = Field(
+        False, description="Show only active sessions")
+
     # Traffic filters
-    min_input_octets: Optional[int] = Field(None, description="Minimum input bytes")
-    max_input_octets: Optional[int] = Field(None, description="Maximum input bytes")
-    min_output_octets: Optional[int] = Field(None, description="Minimum output bytes")
-    max_output_octets: Optional[int] = Field(None, description="Maximum output bytes")
-    min_session_time: Optional[int] = Field(None, description="Minimum session duration")
-    max_session_time: Optional[int] = Field(None, description="Maximum session duration")
+    min_input_octets: Optional[int] = Field(
+        None, description="Minimum input bytes")
+    max_input_octets: Optional[int] = Field(
+        None, description="Maximum input bytes")
+    min_output_octets: Optional[int] = Field(
+        None, description="Minimum output bytes")
+    max_output_octets: Optional[int] = Field(
+        None, description="Maximum output bytes")
+    min_session_time: Optional[int] = Field(
+        None, description="Minimum session duration")
+    max_session_time: Optional[int] = Field(
+        None, description="Maximum session duration")
 
 
 class AccountingQuery(BaseModel):
     """Complete accounting query with filters and pagination"""
-    filters: Optional[AccountingQueryFilters] = Field(default_factory=AccountingQueryFilters)
+    filters: Optional[AccountingQueryFilters] = Field(
+        default_factory=AccountingQueryFilters)
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(20, ge=1, le=100, description="Page size")
     sort_field: str = Field("acctstarttime", description="Sort field")
-    sort_order: str = Field("desc", regex="^(asc|desc)$", description="Sort order")
+    sort_order: str = Field("desc", regex="^(asc|desc)$",
+                            description="Sort order")
 
 
 # =====================================================================
@@ -141,8 +168,10 @@ class SessionStatistics(BaseModel):
     total_sessions: int = Field(0, description="Total sessions")
     active_sessions: int = Field(0, description="Active sessions")
     completed_sessions: int = Field(0, description="Completed sessions")
-    average_session_duration: Optional[int] = Field(None, description="Average session duration in seconds")
-    total_session_time: int = Field(0, description="Total session time in seconds")
+    average_session_duration: Optional[int] = Field(
+        None, description="Average session duration in seconds")
+    total_session_time: int = Field(
+        0, description="Total session time in seconds")
     unique_users: int = Field(0, description="Number of unique users")
 
 
@@ -154,7 +183,8 @@ class TrafficStatistics(BaseModel):
     total_input_packets: int = Field(0, description="Total input packets")
     total_output_packets: int = Field(0, description="Total output packets")
     total_packets: int = Field(0, description="Total packets transferred")
-    average_throughput: Optional[float] = Field(None, description="Average throughput in bytes/second")
+    average_throughput: Optional[float] = Field(
+        None, description="Average throughput in bytes/second")
 
 
 class UserTrafficSummaryResponse(BaseModel):
@@ -167,13 +197,18 @@ class UserTrafficSummaryResponse(BaseModel):
     total_output_octets: int = Field(0, description="Total output bytes")
     total_input_packets: int = Field(0, description="Total input packets")
     total_output_packets: int = Field(0, description="Total output packets")
-    avg_session_time: Optional[int] = Field(None, description="Average session time")
-    avg_throughput: Optional[int] = Field(None, description="Average throughput")
+    avg_session_time: Optional[int] = Field(
+        None, description="Average session time")
+    avg_throughput: Optional[int] = Field(
+        None, description="Average throughput")
     peak_input_rate: Optional[int] = Field(None, description="Peak input rate")
-    peak_output_rate: Optional[int] = Field(None, description="Peak output rate")
-    first_session_start: Optional[datetime] = Field(None, description="First session start time")
-    last_session_stop: Optional[datetime] = Field(None, description="Last session stop time")
-    
+    peak_output_rate: Optional[int] = Field(
+        None, description="Peak output rate")
+    first_session_start: Optional[datetime] = Field(
+        None, description="First session start time")
+    last_session_stop: Optional[datetime] = Field(
+        None, description="Last session stop time")
+
     class Config:
         from_attributes = True
 
@@ -187,17 +222,21 @@ class NasTrafficSummaryResponse(BaseModel):
     completed_sessions: int = Field(0, description="Completed sessions")
     total_input_octets: int = Field(0, description="Total input bytes")
     total_output_octets: int = Field(0, description="Total output bytes")
-    avg_session_duration: Optional[int] = Field(None, description="Average session duration")
-    peak_concurrent_sessions: Optional[int] = Field(None, description="Peak concurrent sessions")
-    
+    avg_session_duration: Optional[int] = Field(
+        None, description="Average session duration")
+    peak_concurrent_sessions: Optional[int] = Field(
+        None, description="Peak concurrent sessions")
+
     class Config:
         from_attributes = True
 
 
 class AccountingOverview(BaseModel):
     """Comprehensive accounting overview"""
-    session_stats: SessionStatistics = Field(..., description="Session statistics")
-    traffic_stats: TrafficStatistics = Field(..., description="Traffic statistics")
+    session_stats: SessionStatistics = Field(...,
+                                             description="Session statistics")
+    traffic_stats: TrafficStatistics = Field(...,
+                                             description="Traffic statistics")
     time_period: str = Field(..., description="Time period description")
     last_updated: datetime = Field(..., description="Last update time")
 
@@ -212,7 +251,8 @@ class TopUsersReport(BaseModel):
     total_sessions: int = Field(0, description="Total sessions")
     total_bytes: int = Field(0, description="Total bytes transferred")
     total_session_time: int = Field(0, description="Total session time")
-    last_session: Optional[datetime] = Field(None, description="Last session time")
+    last_session: Optional[datetime] = Field(
+        None, description="Last session time")
     rank: int = Field(..., description="Ranking position")
 
 
@@ -230,7 +270,8 @@ class DailyTrafficReport(BaseModel):
     session_count: int = Field(0, description="Number of sessions")
     total_bytes: int = Field(0, description="Total bytes")
     unique_users: int = Field(0, description="Unique users")
-    peak_concurrent_sessions: int = Field(0, description="Peak concurrent sessions")
+    peak_concurrent_sessions: int = Field(
+        0, description="Peak concurrent sessions")
 
 
 class NasUsageReport(BaseModel):
@@ -240,7 +281,8 @@ class NasUsageReport(BaseModel):
     total_sessions: int = Field(0, description="Total sessions")
     active_sessions: int = Field(0, description="Active sessions")
     total_bytes: int = Field(0, description="Total bytes")
-    utilization_percentage: float = Field(0.0, description="Utilization percentage")
+    utilization_percentage: float = Field(
+        0.0, description="Utilization percentage")
 
 
 class CustomQueryResult(BaseModel):
@@ -248,7 +290,8 @@ class CustomQueryResult(BaseModel):
     columns: List[str] = Field(..., description="Column names")
     rows: List[List[Any]] = Field(..., description="Result rows")
     total_rows: int = Field(..., description="Total number of rows")
-    execution_time: float = Field(..., description="Query execution time in seconds")
+    execution_time: float = Field(...,
+                                  description="Query execution time in seconds")
 
 
 # =====================================================================
@@ -259,8 +302,10 @@ class MaintenanceOperation(BaseModel):
     """Maintenance operation parameters"""
     operation_type: str = Field(..., description="Operation type")
     target_table: Optional[str] = Field(None, description="Target table")
-    date_before: Optional[datetime] = Field(None, description="Delete records before this date")
-    conditions: Optional[Dict[str, Any]] = Field(None, description="Additional conditions")
+    date_before: Optional[datetime] = Field(
+        None, description="Delete records before this date")
+    conditions: Optional[Dict[str, Any]] = Field(
+        None, description="Additional conditions")
     dry_run: bool = Field(True, description="Dry run mode")
 
 
@@ -271,7 +316,8 @@ class MaintenanceResult(BaseModel):
     execution_time: float = Field(..., description="Execution time in seconds")
     success: bool = Field(..., description="Operation success status")
     message: str = Field(..., description="Result message")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional details")
+    details: Optional[Dict[str, Any]] = Field(
+        None, description="Additional details")
 
 
 # =====================================================================
@@ -303,7 +349,7 @@ __all__ = [
     "SessionStatusEnum",
     "AccountingTimeRangeEnum",
     "RadAcctBase",
-    "RadAcctResponse", 
+    "RadAcctResponse",
     "RadAcctCreate",
     "RadAcctUpdate",
     "AccountingQueryFilters",

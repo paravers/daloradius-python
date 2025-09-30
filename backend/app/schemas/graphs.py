@@ -49,15 +49,18 @@ class GraphStatisticsBase(BaseModel):
     """Graph statistics base schema"""
     graph_type: str = Field(..., description="Graph type identifier")
     metric_name: str = Field(..., description="Metric name")
-    time_period: str = Field(..., description="Time period (daily, weekly, monthly, yearly)")
+    time_period: str = Field(...,
+                             description="Time period (daily, weekly, monthly, yearly)")
     recorded_date: date = Field(..., description="Date of record")
-    recorded_hour: Optional[int] = Field(None, ge=0, le=23, description="Hour of record for hourly stats")
+    recorded_hour: Optional[int] = Field(
+        None, ge=0, le=23, description="Hour of record for hourly stats")
     value_count: int = Field(0, ge=0, description="Count of values")
     value_sum: float = Field(0.0, description="Sum of values")
     value_avg: Optional[float] = Field(None, description="Average value")
     value_min: Optional[float] = Field(None, description="Minimum value")
     value_max: Optional[float] = Field(None, description="Maximum value")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Additional metadata")
 
 
 class GraphStatisticsCreate(GraphStatisticsBase):
@@ -92,15 +95,20 @@ class GraphStatisticsResponse(GraphStatisticsBase):
 class LoginStatisticsBase(BaseModel):
     """Login statistics base schema"""
     stat_date: date = Field(..., description="Statistics date")
-    stat_hour: Optional[int] = Field(None, ge=0, le=23, description="Hour for hourly breakdown")
+    stat_hour: Optional[int] = Field(
+        None, ge=0, le=23, description="Hour for hourly breakdown")
     total_logins: int = Field(0, ge=0, description="Total login attempts")
     successful_logins: int = Field(0, ge=0, description="Successful logins")
     failed_logins: int = Field(0, ge=0, description="Failed logins")
     unique_users: int = Field(0, ge=0, description="Unique users")
-    nas_breakdown: Optional[Dict[str, int]] = Field(None, description="NAS IP breakdown")
-    user_agent_breakdown: Optional[Dict[str, int]] = Field(None, description="User agent breakdown")
-    avg_response_time: Optional[float] = Field(None, ge=0, description="Average response time in ms")
-    peak_concurrent_users: Optional[int] = Field(None, ge=0, description="Peak concurrent users")
+    nas_breakdown: Optional[Dict[str, int]] = Field(
+        None, description="NAS IP breakdown")
+    user_agent_breakdown: Optional[Dict[str, int]] = Field(
+        None, description="User agent breakdown")
+    avg_response_time: Optional[float] = Field(
+        None, ge=0, description="Average response time in ms")
+    peak_concurrent_users: Optional[int] = Field(
+        None, ge=0, description="Peak concurrent users")
 
 
 class LoginStatisticsCreate(LoginStatisticsBase):
@@ -137,18 +145,23 @@ class LoginStatisticsResponse(LoginStatisticsBase):
 class TrafficStatisticsBase(BaseModel):
     """Traffic statistics base schema"""
     stat_date: date = Field(..., description="Statistics date")
-    stat_hour: Optional[int] = Field(None, ge=0, le=23, description="Hour for hourly breakdown")
+    stat_hour: Optional[int] = Field(
+        None, ge=0, le=23, description="Hour for hourly breakdown")
     total_upload: int = Field(0, ge=0, description="Total upload bytes")
     total_download: int = Field(0, ge=0, description="Total download bytes")
     total_traffic: int = Field(0, ge=0, description="Total traffic bytes")
     total_sessions: int = Field(0, ge=0, description="Total sessions")
     active_sessions: int = Field(0, ge=0, description="Active sessions")
-    avg_session_duration: Optional[float] = Field(None, ge=0, description="Average session duration in seconds")
+    avg_session_duration: Optional[float] = Field(
+        None, ge=0, description="Average session duration in seconds")
     unique_users: int = Field(0, ge=0, description="Unique users")
     nas_device_count: int = Field(0, ge=0, description="NAS device count")
-    top_upload_users: Optional[Dict[str, Any]] = Field(None, description="Top upload users")
-    top_download_users: Optional[Dict[str, Any]] = Field(None, description="Top download users")
-    top_nas_devices: Optional[Dict[str, Any]] = Field(None, description="Top NAS devices")
+    top_upload_users: Optional[Dict[str, Any]] = Field(
+        None, description="Top upload users")
+    top_download_users: Optional[Dict[str, Any]] = Field(
+        None, description="Top download users")
+    top_nas_devices: Optional[Dict[str, Any]] = Field(
+        None, description="Top NAS devices")
 
 
 class TrafficStatisticsCreate(TrafficStatisticsBase):
@@ -188,18 +201,25 @@ class TrafficStatisticsResponse(TrafficStatisticsBase):
 class UserStatisticsBase(BaseModel):
     """User statistics base schema"""
     stat_date: date = Field(..., description="Statistics date")
-    stat_hour: Optional[int] = Field(None, ge=0, le=23, description="Hour for hourly breakdown")
+    stat_hour: Optional[int] = Field(
+        None, ge=0, le=23, description="Hour for hourly breakdown")
     total_users: int = Field(0, ge=0, description="Total users")
     active_users: int = Field(0, ge=0, description="Active users")
     new_users: int = Field(0, ge=0, description="New users")
     online_users: int = Field(0, ge=0, description="Currently online users")
-    avg_session_time: Optional[float] = Field(None, ge=0, description="Average session time")
-    avg_daily_usage: Optional[float] = Field(None, ge=0, description="Average daily usage in bytes")
-    user_retention_rate: Optional[float] = Field(None, ge=0, le=100, description="User retention rate percentage")
+    avg_session_time: Optional[float] = Field(
+        None, ge=0, description="Average session time")
+    avg_daily_usage: Optional[float] = Field(
+        None, ge=0, description="Average daily usage in bytes")
+    user_retention_rate: Optional[float] = Field(
+        None, ge=0, le=100, description="User retention rate percentage")
     power_users_count: int = Field(0, ge=0, description="Power users count")
-    occasional_users_count: int = Field(0, ge=0, description="Occasional users count")
-    inactive_users_count: int = Field(0, ge=0, description="Inactive users count")
-    geographic_distribution: Optional[Dict[str, Any]] = Field(None, description="Geographic distribution")
+    occasional_users_count: int = Field(
+        0, ge=0, description="Occasional users count")
+    inactive_users_count: int = Field(
+        0, ge=0, description="Inactive users count")
+    geographic_distribution: Optional[Dict[str, Any]] = Field(
+        None, description="Geographic distribution")
 
 
 class UserStatisticsCreate(UserStatisticsBase):
@@ -240,19 +260,32 @@ class SystemMetricsBase(BaseModel):
     """System metrics base schema"""
     recorded_at: datetime = Field(..., description="Recording timestamp")
     metric_type: str = Field(..., description="Metric type")
-    cpu_usage: Optional[float] = Field(None, ge=0, le=100, description="CPU usage percentage")
-    memory_usage: Optional[float] = Field(None, ge=0, le=100, description="Memory usage percentage")
-    disk_usage: Optional[float] = Field(None, ge=0, le=100, description="Disk usage percentage")
-    network_in: Optional[float] = Field(None, ge=0, description="Network in MB/s")
-    network_out: Optional[float] = Field(None, ge=0, description="Network out MB/s")
-    radius_requests: Optional[int] = Field(None, ge=0, description="RADIUS requests")
-    radius_accepts: Optional[int] = Field(None, ge=0, description="RADIUS accepts")
-    radius_rejects: Optional[int] = Field(None, ge=0, description="RADIUS rejects")
-    radius_response_time: Optional[float] = Field(None, ge=0, description="RADIUS response time in ms")
-    db_connections: Optional[int] = Field(None, ge=0, description="Database connections")
-    db_query_time: Optional[float] = Field(None, ge=0, description="Database query time in ms")
-    db_size: Optional[int] = Field(None, ge=0, description="Database size in bytes")
-    custom_metrics: Optional[Dict[str, Any]] = Field(None, description="Custom metrics")
+    cpu_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="CPU usage percentage")
+    memory_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="Memory usage percentage")
+    disk_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="Disk usage percentage")
+    network_in: Optional[float] = Field(
+        None, ge=0, description="Network in MB/s")
+    network_out: Optional[float] = Field(
+        None, ge=0, description="Network out MB/s")
+    radius_requests: Optional[int] = Field(
+        None, ge=0, description="RADIUS requests")
+    radius_accepts: Optional[int] = Field(
+        None, ge=0, description="RADIUS accepts")
+    radius_rejects: Optional[int] = Field(
+        None, ge=0, description="RADIUS rejects")
+    radius_response_time: Optional[float] = Field(
+        None, ge=0, description="RADIUS response time in ms")
+    db_connections: Optional[int] = Field(
+        None, ge=0, description="Database connections")
+    db_query_time: Optional[float] = Field(
+        None, ge=0, description="Database query time in ms")
+    db_size: Optional[int] = Field(
+        None, ge=0, description="Database size in bytes")
+    custom_metrics: Optional[Dict[str, Any]] = Field(
+        None, description="Custom metrics")
 
 
 class SystemMetricsCreate(SystemMetricsBase):
@@ -275,18 +308,23 @@ class SystemMetricsResponse(SystemMetricsBase):
 class GraphTemplateBase(BaseModel):
     """Graph template base schema"""
     name: str = Field(..., description="Template name")
-    description: Optional[str] = Field(None, description="Template description")
+    description: Optional[str] = Field(
+        None, description="Template description")
     category: str = Field(..., description="Template category")
     graph_type: GraphType = Field(..., description="Graph type")
     data_source: str = Field(..., description="Data source or API endpoint")
-    time_granularity: TimeGranularity = Field(..., description="Time granularity")
-    chart_config: Dict[str, Any] = Field(..., description="Chart.js configuration")
+    time_granularity: TimeGranularity = Field(...,
+                                              description="Time granularity")
+    chart_config: Dict[str,
+                       Any] = Field(..., description="Chart.js configuration")
     title: str = Field(..., description="Chart title")
     subtitle: Optional[str] = Field(None, description="Chart subtitle")
     x_axis_label: Optional[str] = Field(None, description="X-axis label")
     y_axis_label: Optional[str] = Field(None, description="Y-axis label")
-    default_filters: Optional[Dict[str, Any]] = Field(None, description="Default filters")
-    group_by_options: Optional[List[str]] = Field(None, description="Group by options")
+    default_filters: Optional[Dict[str, Any]] = Field(
+        None, description="Default filters")
+    group_by_options: Optional[List[str]] = Field(
+        None, description="Group by options")
     is_public: bool = Field(True, description="Is template public")
     is_active: bool = Field(True, description="Is template active")
     sort_order: int = Field(0, description="Sort order")
@@ -336,17 +374,21 @@ class DashboardWidgetBase(BaseModel):
     """Dashboard widget base schema"""
     widget_name: str = Field(..., description="Widget name")
     widget_type: str = Field(..., description="Widget type")
-    dashboard_id: Optional[str] = Field(None, description="Dashboard identifier")
+    dashboard_id: Optional[str] = Field(
+        None, description="Dashboard identifier")
     position_x: int = Field(0, ge=0, description="X position")
     position_y: int = Field(0, ge=0, description="Y position")
     width: int = Field(4, ge=1, le=12, description="Width in grid units")
     height: int = Field(3, ge=1, le=12, description="Height in grid units")
     data_source: str = Field(..., description="Data source")
-    refresh_interval: int = Field(300, ge=30, description="Refresh interval in seconds")
-    widget_config: Dict[str, Any] = Field(..., description="Widget configuration")
+    refresh_interval: int = Field(
+        300, ge=30, description="Refresh interval in seconds")
+    widget_config: Dict[str,
+                        Any] = Field(..., description="Widget configuration")
     title: str = Field(..., description="Widget title")
     show_title: bool = Field(True, description="Show title")
-    background_color: Optional[str] = Field(None, description="Background color")
+    background_color: Optional[str] = Field(
+        None, description="Background color")
     border_color: Optional[str] = Field(None, description="Border color")
     is_visible: bool = Field(True, description="Is widget visible")
     is_resizable: bool = Field(True, description="Is widget resizable")
@@ -400,18 +442,23 @@ class GraphQueryParams(BaseModel):
     """Graph query parameters"""
     start_date: Optional[date] = Field(None, description="Start date")
     end_date: Optional[date] = Field(None, description="End date")
-    granularity: Optional[TimeGranularity] = Field(TimeGranularity.DAY, description="Time granularity")
-    limit: Optional[int] = Field(100, ge=1, le=10000, description="Result limit")
+    granularity: Optional[TimeGranularity] = Field(
+        TimeGranularity.DAY, description="Time granularity")
+    limit: Optional[int] = Field(
+        100, ge=1, le=10000, description="Result limit")
     group_by: Optional[str] = Field(None, description="Group by field")
-    filters: Optional[Dict[str, Any]] = Field(None, description="Additional filters")
+    filters: Optional[Dict[str, Any]] = Field(
+        None, description="Additional filters")
 
 
 class GraphDataRequest(BaseModel):
     """Graph data request schema"""
     graph_type: str = Field(..., description="Graph type")
     data_source: str = Field(..., description="Data source")
-    time_range: GraphQueryParams = Field(..., description="Time range and parameters")
-    chart_config: Optional[Dict[str, Any]] = Field(None, description="Chart configuration overrides")
+    time_range: GraphQueryParams = Field(...,
+                                         description="Time range and parameters")
+    chart_config: Optional[Dict[str, Any]] = Field(
+        None, description="Chart configuration overrides")
 
 
 class GraphDataResponse(BaseModel):

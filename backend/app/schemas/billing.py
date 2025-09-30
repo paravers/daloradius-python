@@ -59,34 +59,48 @@ class RateType(str, Enum):
 class BillPlanBase(BaseModel):
     """Base billing plan schema"""
     plan_name: str = Field(..., max_length=128, description="Plan name")
-    plan_id: str = Field(..., max_length=64, description="Unique plan identifier")
+    plan_id: str = Field(..., max_length=64,
+                         description="Unique plan identifier")
     description: Optional[str] = Field(None, description="Plan description")
     plan_cost: Decimal = Field(..., ge=0, description="Plan cost")
     plan_setup_cost: Decimal = Field(0, ge=0, description="Setup cost")
     plan_type: BillingType = Field(..., description="Billing type")
     plan_tax: Decimal = Field(0, ge=0, le=100, description="Tax percentage")
     currency: str = Field("USD", max_length=3, description="Currency code")
-    
+
     # Time and data limits
-    max_all_session_time: Optional[int] = Field(None, ge=0, description="Max total session time in seconds")
-    max_daily_session_time: Optional[int] = Field(None, ge=0, description="Max daily session time in seconds")
-    max_weekly_session_time: Optional[int] = Field(None, ge=0, description="Max weekly session time in seconds")  
-    max_monthly_session_time: Optional[int] = Field(None, ge=0, description="Max monthly session time in seconds")
-    
-    max_all_session_traffic: Optional[int] = Field(None, ge=0, description="Max total traffic in MB")
-    max_daily_session_traffic: Optional[int] = Field(None, ge=0, description="Max daily traffic in MB")
-    max_weekly_session_traffic: Optional[int] = Field(None, ge=0, description="Max weekly traffic in MB")
-    max_monthly_session_traffic: Optional[int] = Field(None, ge=0, description="Max monthly traffic in MB")
-    
+    max_all_session_time: Optional[int] = Field(
+        None, ge=0, description="Max total session time in seconds")
+    max_daily_session_time: Optional[int] = Field(
+        None, ge=0, description="Max daily session time in seconds")
+    max_weekly_session_time: Optional[int] = Field(
+        None, ge=0, description="Max weekly session time in seconds")
+    max_monthly_session_time: Optional[int] = Field(
+        None, ge=0, description="Max monthly session time in seconds")
+
+    max_all_session_traffic: Optional[int] = Field(
+        None, ge=0, description="Max total traffic in MB")
+    max_daily_session_traffic: Optional[int] = Field(
+        None, ge=0, description="Max daily traffic in MB")
+    max_weekly_session_traffic: Optional[int] = Field(
+        None, ge=0, description="Max weekly traffic in MB")
+    max_monthly_session_traffic: Optional[int] = Field(
+        None, ge=0, description="Max monthly traffic in MB")
+
     # Session settings
-    simultaneous_use: int = Field(1, ge=1, description="Simultaneous sessions allowed")
-    session_timeout: Optional[int] = Field(None, ge=0, description="Session timeout in seconds")
-    idle_timeout: Optional[int] = Field(None, ge=0, description="Idle timeout in seconds")
-    
+    simultaneous_use: int = Field(
+        1, ge=1, description="Simultaneous sessions allowed")
+    session_timeout: Optional[int] = Field(
+        None, ge=0, description="Session timeout in seconds")
+    idle_timeout: Optional[int] = Field(
+        None, ge=0, description="Idle timeout in seconds")
+
     # Network settings
-    download_limit: Optional[int] = Field(None, ge=0, description="Download speed limit in Kbps")
-    upload_limit: Optional[int] = Field(None, ge=0, description="Upload speed limit in Kbps")
-    
+    download_limit: Optional[int] = Field(
+        None, ge=0, description="Download speed limit in Kbps")
+    upload_limit: Optional[int] = Field(
+        None, ge=0, description="Upload speed limit in Kbps")
+
     # Plan validity
     plan_active: bool = Field(True, description="Is plan active")
     plan_creation_date: Optional[datetime] = None
@@ -143,18 +157,24 @@ class BillRateBase(BaseModel):
     rate_type: RateType = Field(..., description="Rate type")
     rate_cost: Decimal = Field(..., ge=0, description="Rate cost per unit")
     currency: str = Field("USD", max_length=3, description="Currency code")
-    
+
     # Time-based rates
-    rate_per_minute: Optional[Decimal] = Field(None, ge=0, description="Cost per minute")
-    rate_per_hour: Optional[Decimal] = Field(None, ge=0, description="Cost per hour")
-    
-    # Data-based rates  
-    rate_per_mb: Optional[Decimal] = Field(None, ge=0, description="Cost per MB")
-    rate_per_gb: Optional[Decimal] = Field(None, ge=0, description="Cost per GB")
-    
+    rate_per_minute: Optional[Decimal] = Field(
+        None, ge=0, description="Cost per minute")
+    rate_per_hour: Optional[Decimal] = Field(
+        None, ge=0, description="Cost per hour")
+
+    # Data-based rates
+    rate_per_mb: Optional[Decimal] = Field(
+        None, ge=0, description="Cost per MB")
+    rate_per_gb: Optional[Decimal] = Field(
+        None, ge=0, description="Cost per GB")
+
     # Rate validity
-    rate_effective_date: Optional[date] = Field(None, description="Rate effective date")
-    rate_expiry_date: Optional[date] = Field(None, description="Rate expiry date")
+    rate_effective_date: Optional[date] = Field(
+        None, description="Rate effective date")
+    rate_expiry_date: Optional[date] = Field(
+        None, description="Rate expiry date")
     is_active: bool = Field(True, description="Is rate active")
 
 
@@ -189,8 +209,10 @@ class BillRateResponse(BillRateBase):
 # Payment Type schemas
 class PaymentTypeBase(BaseModel):
     """Base payment type schema"""
-    type_name: str = Field(..., max_length=128, description="Payment type name")
-    type_description: Optional[str] = Field(None, description="Payment type description")
+    type_name: str = Field(..., max_length=128,
+                           description="Payment type name")
+    type_description: Optional[str] = Field(
+        None, description="Payment type description")
     is_active: bool = Field(True, description="Is payment type active")
 
 
@@ -213,16 +235,19 @@ class PaymentBase(BaseModel):
     username: str = Field(..., max_length=64, description="Username")
     payment_amount: Decimal = Field(..., ge=0, description="Payment amount")
     payment_method: PaymentMethod = Field(..., description="Payment method")
-    payment_status: PaymentStatus = Field(PaymentStatus.PENDING, description="Payment status")
+    payment_status: PaymentStatus = Field(
+        PaymentStatus.PENDING, description="Payment status")
     currency: str = Field("USD", max_length=3, description="Currency code")
-    
+
     # Payment details
     payment_date: Optional[datetime] = None
     payment_notes: Optional[str] = Field(None, description="Payment notes")
-    transaction_id: Optional[str] = Field(None, max_length=128, description="External transaction ID")
-    
+    transaction_id: Optional[str] = Field(
+        None, max_length=128, description="External transaction ID")
+
     # Invoice association
-    invoice_id: Optional[int] = Field(None, description="Associated invoice ID")
+    invoice_id: Optional[int] = Field(
+        None, description="Associated invoice ID")
 
 
 class PaymentCreate(PaymentBase):
@@ -255,15 +280,16 @@ class InvoiceBase(BaseModel):
     username: str = Field(..., max_length=64, description="Username")
     invoice_date: date = Field(..., description="Invoice date")
     due_date: Optional[date] = Field(None, description="Due date")
-    invoice_status: InvoiceStatus = Field(InvoiceStatus.DRAFT, description="Invoice status")
-    
+    invoice_status: InvoiceStatus = Field(
+        InvoiceStatus.DRAFT, description="Invoice status")
+
     # Amounts
     subtotal: Decimal = Field(..., ge=0, description="Subtotal amount")
     tax_amount: Decimal = Field(0, ge=0, description="Tax amount")
     discount_amount: Decimal = Field(0, ge=0, description="Discount amount")
     total_amount: Decimal = Field(..., ge=0, description="Total amount")
     paid_amount: Decimal = Field(0, ge=0, description="Amount paid")
-    
+
     currency: str = Field("USD", max_length=3, description="Currency code")
     invoice_notes: Optional[str] = Field(None, description="Invoice notes")
 
@@ -308,11 +334,13 @@ class InvoiceResponse(InvoiceBase):
 # Invoice Line Item schemas
 class InvoiceLineItemBase(BaseModel):
     """Base invoice line item schema"""
-    description: str = Field(..., max_length=255, description="Item description")
+    description: str = Field(..., max_length=255,
+                             description="Item description")
     quantity: Decimal = Field(..., gt=0, description="Quantity")
     unit_price: Decimal = Field(..., ge=0, description="Unit price")
-    discount_percentage: Decimal = Field(0, ge=0, le=100, description="Discount percentage")
-    
+    discount_percentage: Decimal = Field(
+        0, ge=0, le=100, description="Discount percentage")
+
     @property
     def line_total(self) -> Decimal:
         """Calculate line total"""
@@ -339,30 +367,41 @@ class InvoiceLineItemResponse(InvoiceLineItemBase):
 class UserBillingInfoBase(BaseModel):
     """Base user billing info schema"""
     username: str = Field(..., max_length=64, description="Username")
-    plan_name: Optional[str] = Field(None, max_length=128, description="Current plan")
-    
+    plan_name: Optional[str] = Field(
+        None, max_length=128, description="Current plan")
+
     # Billing cycle
-    billing_cycle_start: Optional[date] = Field(None, description="Billing cycle start")
-    billing_cycle_end: Optional[date] = Field(None, description="Billing cycle end")
-    
+    billing_cycle_start: Optional[date] = Field(
+        None, description="Billing cycle start")
+    billing_cycle_end: Optional[date] = Field(
+        None, description="Billing cycle end")
+
     # Account balance
     account_balance: Decimal = Field(0, description="Account balance")
     credit_limit: Decimal = Field(0, ge=0, description="Credit limit")
-    
+
     # Status
-    billing_status: str = Field("active", max_length=32, description="Billing status")
+    billing_status: str = Field(
+        "active", max_length=32, description="Billing status")
     auto_renew: bool = Field(False, description="Auto-renew subscription")
-    
+
     # Contact info
-    billing_email: Optional[str] = Field(None, max_length=255, description="Billing email")
-    billing_phone: Optional[str] = Field(None, max_length=32, description="Billing phone")
-    
+    billing_email: Optional[str] = Field(
+        None, max_length=255, description="Billing email")
+    billing_phone: Optional[str] = Field(
+        None, max_length=32, description="Billing phone")
+
     # Address
-    billing_address: Optional[str] = Field(None, max_length=255, description="Billing address")
-    billing_city: Optional[str] = Field(None, max_length=100, description="Billing city")
-    billing_state: Optional[str] = Field(None, max_length=100, description="Billing state")
-    billing_zip: Optional[str] = Field(None, max_length=20, description="Billing ZIP")
-    billing_country: Optional[str] = Field(None, max_length=100, description="Billing country")
+    billing_address: Optional[str] = Field(
+        None, max_length=255, description="Billing address")
+    billing_city: Optional[str] = Field(
+        None, max_length=100, description="Billing city")
+    billing_state: Optional[str] = Field(
+        None, max_length=100, description="Billing state")
+    billing_zip: Optional[str] = Field(
+        None, max_length=20, description="Billing ZIP")
+    billing_country: Optional[str] = Field(
+        None, max_length=100, description="Billing country")
 
 
 class UserBillingInfoCreate(UserBillingInfoBase):
@@ -444,14 +483,16 @@ class BatchInvoiceGeneration(BaseModel):
     """Schema for batch invoice generation"""
     usernames: List[str] = Field(..., description="List of usernames")
     invoice_date: date = Field(..., description="Invoice date")
-    due_days: int = Field(30, ge=1, description="Due date in days from invoice date")
+    due_days: int = Field(
+        30, ge=1, description="Due date in days from invoice date")
     include_usage: bool = Field(True, description="Include usage charges")
 
 
 class BulkPaymentProcessing(BaseModel):
     """Schema for bulk payment processing"""
     payments: List[PaymentCreate] = Field(..., max_items=100)
-    auto_apply_to_invoices: bool = Field(True, description="Auto-apply to outstanding invoices")
+    auto_apply_to_invoices: bool = Field(
+        True, description="Auto-apply to outstanding invoices")
 
 
 # =====================================================================
@@ -461,26 +502,45 @@ class BulkPaymentProcessing(BaseModel):
 # Billing Plan schemas matching the database model
 class BillingPlanBase(BaseModel):
     """Base schema for BillingPlan model"""
-    planName: Optional[str] = Field(None, max_length=128, description="Plan name")
-    planId: Optional[str] = Field(None, max_length=128, description="Plan identifier")
-    planType: Optional[str] = Field(None, max_length=128, description="Plan type")
-    planTimeBank: Optional[str] = Field(None, max_length=128, description="Time bank")
-    planTimeType: Optional[str] = Field(None, max_length=128, description="Time type")
-    planTimeRefillCost: Optional[str] = Field(None, max_length=128, description="Time refill cost")
-    planBandwidthUp: Optional[str] = Field(None, max_length=128, description="Upload bandwidth")
-    planBandwidthDown: Optional[str] = Field(None, max_length=128, description="Download bandwidth")
-    planTrafficTotal: Optional[str] = Field(None, max_length=128, description="Total traffic")
-    planTrafficUp: Optional[str] = Field(None, max_length=128, description="Upload traffic")
-    planTrafficDown: Optional[str] = Field(None, max_length=128, description="Download traffic")
-    planTrafficRefillCost: Optional[str] = Field(None, max_length=128, description="Traffic refill cost")
-    planRecurring: Optional[str] = Field(None, max_length=128, description="Recurring")
-    planRecurringPeriod: Optional[str] = Field(None, max_length=128, description="Recurring period")
-    planRecurringBillingSchedule: Optional[str] = Field(None, max_length=128, description="Billing schedule")
-    planCost: Optional[str] = Field(None, max_length=128, description="Plan cost")
-    planSetupCost: Optional[str] = Field(None, max_length=128, description="Setup cost")
+    planName: Optional[str] = Field(
+        None, max_length=128, description="Plan name")
+    planId: Optional[str] = Field(
+        None, max_length=128, description="Plan identifier")
+    planType: Optional[str] = Field(
+        None, max_length=128, description="Plan type")
+    planTimeBank: Optional[str] = Field(
+        None, max_length=128, description="Time bank")
+    planTimeType: Optional[str] = Field(
+        None, max_length=128, description="Time type")
+    planTimeRefillCost: Optional[str] = Field(
+        None, max_length=128, description="Time refill cost")
+    planBandwidthUp: Optional[str] = Field(
+        None, max_length=128, description="Upload bandwidth")
+    planBandwidthDown: Optional[str] = Field(
+        None, max_length=128, description="Download bandwidth")
+    planTrafficTotal: Optional[str] = Field(
+        None, max_length=128, description="Total traffic")
+    planTrafficUp: Optional[str] = Field(
+        None, max_length=128, description="Upload traffic")
+    planTrafficDown: Optional[str] = Field(
+        None, max_length=128, description="Download traffic")
+    planTrafficRefillCost: Optional[str] = Field(
+        None, max_length=128, description="Traffic refill cost")
+    planRecurring: Optional[str] = Field(
+        None, max_length=128, description="Recurring")
+    planRecurringPeriod: Optional[str] = Field(
+        None, max_length=128, description="Recurring period")
+    planRecurringBillingSchedule: Optional[str] = Field(
+        None, max_length=128, description="Billing schedule")
+    planCost: Optional[str] = Field(
+        None, max_length=128, description="Plan cost")
+    planSetupCost: Optional[str] = Field(
+        None, max_length=128, description="Setup cost")
     planTax: Optional[str] = Field(None, max_length=128, description="Tax")
-    planCurrency: Optional[str] = Field(None, max_length=128, description="Currency")
-    planGroup: Optional[str] = Field(None, max_length=128, description="Plan group")
+    planCurrency: Optional[str] = Field(
+        None, max_length=128, description="Currency")
+    planGroup: Optional[str] = Field(
+        None, max_length=128, description="Plan group")
     planActive: Optional[bool] = Field(None, description="Is plan active")
 
 
@@ -529,19 +589,31 @@ class BillingPlanResponse(BillingPlanBase):
 # Billing History schemas
 class BillingHistoryBase(BaseModel):
     """Base schema for BillingHistory model"""
-    username: Optional[str] = Field(None, max_length=128, description="Username")
+    username: Optional[str] = Field(
+        None, max_length=128, description="Username")
     planId: Optional[int] = Field(None, description="Plan ID")
-    billAmount: Optional[str] = Field(None, max_length=200, description="Bill amount")
-    billAction: Optional[str] = Field(None, max_length=128, description="Bill action")
-    billPerformer: Optional[str] = Field(None, max_length=200, description="Bill performer")
-    billReason: Optional[str] = Field(None, max_length=200, description="Bill reason")
-    paymentmethod: Optional[str] = Field(None, max_length=200, description="Payment method")
-    cash: Optional[str] = Field(None, max_length=200, description="Cash amount")
-    creditcardname: Optional[str] = Field(None, max_length=200, description="Credit card name")
-    creditcardnumber: Optional[str] = Field(None, max_length=200, description="Credit card number")
-    creditcardverification: Optional[str] = Field(None, max_length=200, description="Credit card verification")
-    creditcardtype: Optional[str] = Field(None, max_length=200, description="Credit card type")
-    creditcardexp: Optional[str] = Field(None, max_length=200, description="Credit card expiration")
+    billAmount: Optional[str] = Field(
+        None, max_length=200, description="Bill amount")
+    billAction: Optional[str] = Field(
+        None, max_length=128, description="Bill action")
+    billPerformer: Optional[str] = Field(
+        None, max_length=200, description="Bill performer")
+    billReason: Optional[str] = Field(
+        None, max_length=200, description="Bill reason")
+    paymentmethod: Optional[str] = Field(
+        None, max_length=200, description="Payment method")
+    cash: Optional[str] = Field(
+        None, max_length=200, description="Cash amount")
+    creditcardname: Optional[str] = Field(
+        None, max_length=200, description="Credit card name")
+    creditcardnumber: Optional[str] = Field(
+        None, max_length=200, description="Credit card number")
+    creditcardverification: Optional[str] = Field(
+        None, max_length=200, description="Credit card verification")
+    creditcardtype: Optional[str] = Field(
+        None, max_length=200, description="Credit card type")
+    creditcardexp: Optional[str] = Field(
+        None, max_length=200, description="Credit card expiration")
 
 
 class BillingHistoryCreate(BillingHistoryBase):
@@ -563,8 +635,10 @@ class BillingHistoryResponse(BillingHistoryBase):
 # Billing Rate schemas
 class BillingRateBase(BaseModel):
     """Base schema for BillingRate model"""
-    rateName: Optional[str] = Field(None, max_length=128, description="Rate name")
-    rateType: Optional[str] = Field(None, max_length=128, description="Rate type")
+    rateName: Optional[str] = Field(
+        None, max_length=128, description="Rate name")
+    rateType: Optional[str] = Field(
+        None, max_length=128, description="Rate type")
     rateCost: Optional[int] = Field(None, description="Rate cost")
 
 
@@ -597,19 +671,29 @@ class BillingRateResponse(BillingRateBase):
 # Merchant Transaction schemas
 class MerchantTransactionBase(BaseModel):
     """Base schema for BillingMerchant model"""
-    username: Optional[str] = Field(None, max_length=128, description="Username")
-    password: Optional[str] = Field(None, max_length=128, description="Password")
+    username: Optional[str] = Field(
+        None, max_length=128, description="Username")
+    password: Optional[str] = Field(
+        None, max_length=128, description="Password")
     mac: Optional[str] = Field(None, max_length=200, description="MAC address")
     pin: Optional[str] = Field(None, max_length=200, description="PIN")
-    txnId: Optional[str] = Field(None, max_length=200, description="Transaction ID")
-    planName: Optional[str] = Field(None, max_length=128, description="Plan name")
+    txnId: Optional[str] = Field(
+        None, max_length=200, description="Transaction ID")
+    planName: Optional[str] = Field(
+        None, max_length=128, description="Plan name")
     planId: Optional[int] = Field(None, description="Plan ID")
-    quantity: Optional[str] = Field(None, max_length=200, description="Quantity")
-    business_email: Optional[str] = Field(None, max_length=200, description="Business email")
-    business_id: Optional[str] = Field(None, max_length=200, description="Business ID")
-    txn_type: Optional[str] = Field(None, max_length=200, description="Transaction type")
-    txn_id: Optional[str] = Field(None, max_length=200, description="Transaction ID")
-    payment_type: Optional[str] = Field(None, max_length=200, description="Payment type")
+    quantity: Optional[str] = Field(
+        None, max_length=200, description="Quantity")
+    business_email: Optional[str] = Field(
+        None, max_length=200, description="Business email")
+    business_id: Optional[str] = Field(
+        None, max_length=200, description="Business ID")
+    txn_type: Optional[str] = Field(
+        None, max_length=200, description="Transaction type")
+    txn_id: Optional[str] = Field(
+        None, max_length=200, description="Transaction ID")
+    payment_type: Optional[str] = Field(
+        None, max_length=200, description="Payment type")
 
 
 class MerchantTransactionCreate(MerchantTransactionBase):
@@ -636,29 +720,41 @@ class MerchantTransactionResponse(MerchantTransactionBase):
 
 class InvoiceBase(BaseModel):
     """Base schema for invoices"""
-    invoice_number: Optional[str] = Field(None, max_length=50, description="Invoice number")
-    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
-    customer_name: Optional[str] = Field(None, max_length=255, description="Customer name")
-    customer_email: Optional[str] = Field(None, max_length=255, description="Customer email")
-    customer_address: Optional[str] = Field(None, description="Customer address")
-    subtotal: Optional[Decimal] = Field(Decimal('0.00'), description="Subtotal amount")
-    tax_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Tax amount")
-    discount_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Discount amount")
-    total_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Total amount")
-    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
-    status: Optional[InvoiceStatus] = Field(InvoiceStatus.DRAFT, description="Invoice status")
+    invoice_number: Optional[str] = Field(
+        None, max_length=50, description="Invoice number")
+    customer_id: Optional[str] = Field(
+        None, max_length=128, description="Customer ID")
+    customer_name: Optional[str] = Field(
+        None, max_length=255, description="Customer name")
+    customer_email: Optional[str] = Field(
+        None, max_length=255, description="Customer email")
+    customer_address: Optional[str] = Field(
+        None, description="Customer address")
+    subtotal: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Subtotal amount")
+    tax_amount: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Tax amount")
+    discount_amount: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Discount amount")
+    total_amount: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Total amount")
+    currency: Optional[str] = Field(
+        "CNY", max_length=3, description="Currency code")
+    status: Optional[InvoiceStatus] = Field(
+        InvoiceStatus.DRAFT, description="Invoice status")
     issue_date: Optional[date] = Field(None, description="Issue date")
     due_date: Optional[date] = Field(None, description="Due date")
     paid_date: Optional[date] = Field(None, description="Paid date")
     description: Optional[str] = Field(None, description="Invoice description")
     notes: Optional[str] = Field(None, description="Invoice notes")
-    terms_conditions: Optional[str] = Field(None, description="Terms and conditions")
+    terms_conditions: Optional[str] = Field(
+        None, description="Terms and conditions")
 
 
 class InvoiceCreate(InvoiceBase):
     """Schema for creating invoices"""
     customer_id: str = Field(..., description="Customer ID is required")
-    customer_name: str = Field(..., description="Customer name is required") 
+    customer_name: str = Field(..., description="Customer name is required")
     due_date: date = Field(..., description="Due date is required")
 
 
@@ -685,17 +781,26 @@ class InvoiceResponse(InvoiceBase):
 
 class PaymentBase(BaseModel):
     """Base schema for payments"""
-    payment_number: Optional[str] = Field(None, max_length=50, description="Payment number")
-    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
+    payment_number: Optional[str] = Field(
+        None, max_length=50, description="Payment number")
+    customer_id: Optional[str] = Field(
+        None, max_length=128, description="Customer ID")
     invoice_id: Optional[int] = Field(None, description="Invoice ID")
-    amount: Optional[Decimal] = Field(Decimal('0.00'), description="Payment amount")
-    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
-    payment_method: Optional[str] = Field(None, max_length=50, description="Payment method")
+    amount: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Payment amount")
+    currency: Optional[str] = Field(
+        "CNY", max_length=3, description="Currency code")
+    payment_method: Optional[str] = Field(
+        None, max_length=50, description="Payment method")
     payment_date: Optional[datetime] = Field(None, description="Payment date")
-    transaction_id: Optional[str] = Field(None, max_length=255, description="Transaction ID")
-    reference_number: Optional[str] = Field(None, max_length=255, description="Reference number")
-    gateway: Optional[str] = Field(None, max_length=100, description="Payment gateway")
-    status: Optional[PaymentStatus] = Field(PaymentStatus.PENDING, description="Payment status")
+    transaction_id: Optional[str] = Field(
+        None, max_length=255, description="Transaction ID")
+    reference_number: Optional[str] = Field(
+        None, max_length=255, description="Reference number")
+    gateway: Optional[str] = Field(
+        None, max_length=100, description="Payment gateway")
+    status: Optional[PaymentStatus] = Field(
+        PaymentStatus.PENDING, description="Payment status")
     description: Optional[str] = Field(None, description="Payment description")
     notes: Optional[str] = Field(None, description="Payment notes")
 
@@ -703,7 +808,8 @@ class PaymentBase(BaseModel):
 class PaymentCreate(PaymentBase):
     """Schema for creating payments"""
     customer_id: str = Field(..., description="Customer ID is required")
-    amount: Decimal = Field(..., gt=0, description="Amount must be greater than 0")
+    amount: Decimal = Field(..., gt=0,
+                            description="Amount must be greater than 0")
     payment_method: str = Field(..., description="Payment method is required")
 
 
@@ -730,16 +836,23 @@ class PaymentResponse(PaymentBase):
 
 class RefundBase(BaseModel):
     """Base schema for refunds"""
-    refund_number: Optional[str] = Field(None, max_length=50, description="Refund number")
+    refund_number: Optional[str] = Field(
+        None, max_length=50, description="Refund number")
     payment_id: Optional[int] = Field(None, description="Payment ID")
-    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
-    amount: Optional[Decimal] = Field(Decimal('0.00'), description="Refund amount")
-    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
+    customer_id: Optional[str] = Field(
+        None, max_length=128, description="Customer ID")
+    amount: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Refund amount")
+    currency: Optional[str] = Field(
+        "CNY", max_length=3, description="Currency code")
     refund_date: Optional[datetime] = Field(None, description="Refund date")
-    reason: Optional[str] = Field(None, max_length=255, description="Refund reason")
+    reason: Optional[str] = Field(
+        None, max_length=255, description="Refund reason")
     status: Optional[str] = Field("pending", description="Refund status")
-    transaction_id: Optional[str] = Field(None, max_length=255, description="Transaction ID")
-    gateway: Optional[str] = Field(None, max_length=100, description="Payment gateway")
+    transaction_id: Optional[str] = Field(
+        None, max_length=255, description="Transaction ID")
+    gateway: Optional[str] = Field(
+        None, max_length=100, description="Payment gateway")
     notes: Optional[str] = Field(None, description="Refund notes")
 
 
@@ -747,7 +860,8 @@ class RefundCreate(RefundBase):
     """Schema for creating refunds"""
     payment_id: int = Field(..., description="Payment ID is required")
     customer_id: str = Field(..., description="Customer ID is required")
-    amount: Decimal = Field(..., gt=0, description="Amount must be greater than 0")
+    amount: Decimal = Field(..., gt=0,
+                            description="Amount must be greater than 0")
     reason: str = Field(..., description="Refund reason is required")
 
 
@@ -774,20 +888,31 @@ class RefundResponse(RefundBase):
 
 class PaymentTypeBase(BaseModel):
     """Base schema for payment types"""
-    name: Optional[str] = Field(None, max_length=100, description="Payment type name")
-    display_name: Optional[str] = Field(None, max_length=100, description="Display name")
-    code: Optional[str] = Field(None, max_length=20, description="Payment type code")
-    is_active: Optional[bool] = Field(True, description="Is payment type active")
+    name: Optional[str] = Field(
+        None, max_length=100, description="Payment type name")
+    display_name: Optional[str] = Field(
+        None, max_length=100, description="Display name")
+    code: Optional[str] = Field(
+        None, max_length=20, description="Payment type code")
+    is_active: Optional[bool] = Field(
+        True, description="Is payment type active")
     is_online: Optional[bool] = Field(False, description="Is online payment")
-    requires_gateway: Optional[bool] = Field(False, description="Requires payment gateway")
-    gateway_name: Optional[str] = Field(None, max_length=100, description="Gateway name")
-    gateway_config: Optional[str] = Field(None, description="Gateway configuration (JSON)")
-    fixed_fee: Optional[Decimal] = Field(Decimal('0.00'), description="Fixed fee")
-    percentage_fee: Optional[Decimal] = Field(Decimal('0.00'), description="Percentage fee")
+    requires_gateway: Optional[bool] = Field(
+        False, description="Requires payment gateway")
+    gateway_name: Optional[str] = Field(
+        None, max_length=100, description="Gateway name")
+    gateway_config: Optional[str] = Field(
+        None, description="Gateway configuration (JSON)")
+    fixed_fee: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Fixed fee")
+    percentage_fee: Optional[Decimal] = Field(
+        Decimal('0.00'), description="Percentage fee")
     min_amount: Optional[Decimal] = Field(None, description="Minimum amount")
     max_amount: Optional[Decimal] = Field(None, description="Maximum amount")
-    description: Optional[str] = Field(None, description="Payment type description")
-    icon: Optional[str] = Field(None, max_length=100, description="Payment type icon")
+    description: Optional[str] = Field(
+        None, description="Payment type description")
+    icon: Optional[str] = Field(
+        None, max_length=100, description="Payment type icon")
     sort_order: Optional[int] = Field(0, description="Sort order")
 
 
@@ -821,26 +946,45 @@ class PaymentTypeResponse(PaymentTypeBase):
 
 class POSBase(BaseModel):
     """Base schema for POS terminals"""
-    name: Optional[str] = Field(None, max_length=100, description="Terminal name")
-    serial_number: Optional[str] = Field(None, max_length=100, description="Serial number")
-    model: Optional[str] = Field(None, max_length=100, description="Terminal model")
-    manufacturer: Optional[str] = Field(None, max_length=100, description="Manufacturer")
-    location_id: Optional[str] = Field(None, max_length=50, description="Location ID")
-    location_name: Optional[str] = Field(None, max_length=255, description="Location name")
-    assigned_user: Optional[str] = Field(None, max_length=128, description="Assigned user")
-    ip_address: Optional[str] = Field(None, max_length=45, description="IP address")
-    mac_address: Optional[str] = Field(None, max_length=17, description="MAC address")
-    network_config: Optional[str] = Field(None, description="Network configuration (JSON)")
+    name: Optional[str] = Field(
+        None, max_length=100, description="Terminal name")
+    serial_number: Optional[str] = Field(
+        None, max_length=100, description="Serial number")
+    model: Optional[str] = Field(
+        None, max_length=100, description="Terminal model")
+    manufacturer: Optional[str] = Field(
+        None, max_length=100, description="Manufacturer")
+    location_id: Optional[str] = Field(
+        None, max_length=50, description="Location ID")
+    location_name: Optional[str] = Field(
+        None, max_length=255, description="Location name")
+    assigned_user: Optional[str] = Field(
+        None, max_length=128, description="Assigned user")
+    ip_address: Optional[str] = Field(
+        None, max_length=45, description="IP address")
+    mac_address: Optional[str] = Field(
+        None, max_length=17, description="MAC address")
+    network_config: Optional[str] = Field(
+        None, description="Network configuration (JSON)")
     status: Optional[str] = Field("active", description="Terminal status")
-    last_heartbeat: Optional[datetime] = Field(None, description="Last heartbeat")
-    last_transaction: Optional[datetime] = Field(None, description="Last transaction")
-    supports_contactless: Optional[bool] = Field(False, description="Supports contactless payments")
-    supports_chip: Optional[bool] = Field(False, description="Supports chip cards")
-    supports_pin: Optional[bool] = Field(False, description="Supports PIN entry")
-    supports_receipt_print: Optional[bool] = Field(False, description="Supports receipt printing")
-    terminal_config: Optional[str] = Field(None, description="Terminal configuration (JSON)")
-    firmware_version: Optional[str] = Field(None, max_length=50, description="Firmware version")
-    description: Optional[str] = Field(None, description="Terminal description")
+    last_heartbeat: Optional[datetime] = Field(
+        None, description="Last heartbeat")
+    last_transaction: Optional[datetime] = Field(
+        None, description="Last transaction")
+    supports_contactless: Optional[bool] = Field(
+        False, description="Supports contactless payments")
+    supports_chip: Optional[bool] = Field(
+        False, description="Supports chip cards")
+    supports_pin: Optional[bool] = Field(
+        False, description="Supports PIN entry")
+    supports_receipt_print: Optional[bool] = Field(
+        False, description="Supports receipt printing")
+    terminal_config: Optional[str] = Field(
+        None, description="Terminal configuration (JSON)")
+    firmware_version: Optional[str] = Field(
+        None, max_length=50, description="Firmware version")
+    description: Optional[str] = Field(
+        None, description="Terminal description")
     notes: Optional[str] = Field(None, description="Terminal notes")
 
 

@@ -36,9 +36,9 @@ from ..schemas.config import (
     SystemInfoResponse
 )
 from ..core.exceptions import (
-    NotFoundError as NotFoundException, 
-    ValidationError as ValidationException, 
-    BusinessLogicError as ConflictException, 
+    NotFoundError as NotFoundException,
+    ValidationError as ValidationException,
+    BusinessLogicError as ConflictException,
     DaloRadiusException as ServiceException
 )
 from ..core.security import get_password_hash
@@ -50,6 +50,7 @@ def encrypt_value(value: str) -> str:
     # This is a placeholder - implement proper encryption
     return value
 
+
 def decrypt_value(value: str) -> str:
     """Decrypt sensitive configuration values"""
     # This is a placeholder - implement proper decryption
@@ -58,13 +59,13 @@ def decrypt_value(value: str) -> str:
 
 class SystemConfigService(BaseService):
     """Service for system configuration management"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.config_repo = SystemConfigRepository(db_session)
 
     async def get_all_configs(
-        self, 
+        self,
         category: Optional[str] = None,
         include_system: bool = True,
         include_encrypted: bool = False
@@ -74,7 +75,7 @@ class SystemConfigService(BaseService):
             configs = await self.config_repo.get_by_category(category)
         else:
             configs = await self.config_repo.get_all()
-        
+
         # Apply filters
         filtered_configs = []
         for config in configs:
@@ -83,15 +84,16 @@ class SystemConfigService(BaseService):
             if not include_encrypted and config.is_encrypted:
                 continue
             filtered_configs.append(config)
-        
+
         return [SystemConfigResponse.from_orm(config) for config in filtered_configs]
 
     async def get_config_by_key(self, config_key: str) -> SystemConfigResponse:
         """Get configuration by key"""
         config = await self.config_repo.get_by_key(config_key)
         if not config:
-            raise NotFoundException(f"Configuration with key '{config_key}' not found")
-        
+            raise NotFoundException(
+                f"Configuration with key '{config_key}' not found")
+
         return SystemConfigResponse.from_orm(config)
 
     async def get_configs_by_category(self, category: str) -> List[SystemConfigResponse]:
@@ -104,29 +106,31 @@ class SystemConfigService(BaseService):
         # Check if config key already exists
         existing = await self.config_repo.get_by_key(config_data.config_key)
         if existing:
-            raise ConflictException(f"Configuration with key '{config_data.config_key}' already exists")
-        
+            raise ConflictException(
+                f"Configuration with key '{config_data.config_key}' already exists")
+
         # Encrypt value if needed
         if config_data.is_encrypted and config_data.config_value:
             config_data.config_value = encrypt_value(config_data.config_value)
-        
+
         config = await self.config_repo.create(config_data)
         return SystemConfigResponse.from_orm(config)
 
     async def update_config(
-        self, 
-        config_key: str, 
+        self,
+        config_key: str,
         config_data: SystemConfigUpdate
     ) -> SystemConfigResponse:
         """Update configuration"""
         config = await self.config_repo.get_by_key(config_key)
         if not config:
-            raise NotFoundException(f"Configuration with key '{config_key}' not found")
-        
+            raise NotFoundException(
+                f"Configuration with key '{config_key}' not found")
+
         # Encrypt value if needed
         if config.is_encrypted and config_data.config_value:
             config_data.config_value = encrypt_value(config_data.config_value)
-        
+
         updated_config = await self.config_repo.update(config.id, config_data)
         return SystemConfigResponse.from_orm(updated_config)
 
@@ -134,21 +138,23 @@ class SystemConfigService(BaseService):
         """Delete configuration"""
         config = await self.config_repo.get_by_key(config_key)
         if not config:
-            raise NotFoundException(f"Configuration with key '{config_key}' not found")
-        
+            raise NotFoundException(
+                f"Configuration with key '{config_key}' not found")
+
         if config.is_system:
-            raise ValidationException("System configurations cannot be deleted")
-        
+            raise ValidationException(
+                "System configurations cannot be deleted")
+
         return await self.config_repo.delete(config.id)
 
     async def bulk_update_configs(
-        self, 
+        self,
         request: BulkConfigUpdateRequest
     ) -> BulkConfigUpdateResponse:
         """Bulk update multiple configurations"""
         updated_configs = []
         failed_updates = []
-        
+
         for config_key, config_value in request.updates.items():
             try:
                 config = await self.config_repo.get_by_key(config_key)
@@ -156,7 +162,7 @@ class SystemConfigService(BaseService):
                     # Encrypt if needed
                     if config.is_encrypted:
                         config_value = encrypt_value(config_value)
-                    
+
                     config.config_value = config_value
                     config.updated_by = request.updated_by
                     config.updated_at = datetime.utcnow()
@@ -171,15 +177,16 @@ class SystemConfigService(BaseService):
                     "key": config_key,
                     "error": str(e)
                 })
-        
+
         # Commit all successful updates
         if updated_configs:
             await self.db.commit()
             for config in updated_configs:
                 await self.db.refresh(config)
-        
+
         return BulkConfigUpdateResponse(
-            updated_configs=[SystemConfigResponse.from_orm(c) for c in updated_configs],
+            updated_configs=[SystemConfigResponse.from_orm(
+                c) for c in updated_configs],
             failed_updates=failed_updates,
             success_count=len(updated_configs),
             error_count=len(failed_updates)
@@ -190,62 +197,63 @@ class SystemConfigService(BaseService):
         config = await self.config_repo.get_by_key(config_key)
         if not config or not config.config_value:
             return None
-        
+
         if config.is_encrypted and decrypt:
             return decrypt_value(config.config_value)
-        
+
         return config.config_value
 
     async def set_config_value(
-        self, 
-        config_key: str, 
-        value: str, 
+        self,
+        config_key: str,
+        value: str,
         updated_by: Optional[str] = None
     ) -> SystemConfigResponse:
         """Set configuration value"""
         config = await self.config_repo.get_by_key(config_key)
         if not config:
-            raise NotFoundException(f"Configuration with key '{config_key}' not found")
-        
+            raise NotFoundException(
+                f"Configuration with key '{config_key}' not found")
+
         if config.is_encrypted:
             value = encrypt_value(value)
-        
+
         config.config_value = value
         config.updated_by = updated_by
         config.updated_at = datetime.utcnow()
-        
+
         await self.db.commit()
         await self.db.refresh(config)
-        
+
         return SystemConfigResponse.from_orm(config)
 
     async def get_statistics(self) -> ConfigStatisticsResponse:
         """Get configuration statistics"""
         all_configs = await self.config_repo.get_all()
-        
+
         system_configs = [c for c in all_configs if c.is_system]
         user_configs = [c for c in all_configs if not c.is_system]
         encrypted_configs = [c for c in all_configs if c.is_encrypted]
-        
+
         # Count by category
         categories = {}
         for config in all_configs:
             if config.category not in categories:
                 categories[config.category] = 0
             categories[config.category] += 1
-        
+
         category_list = [
-            {"name": name, "count": count} 
+            {"name": name, "count": count}
             for name, count in categories.items()
         ]
-        
+
         # Recent updates (last 7 days)
         recent_date = datetime.utcnow() - timedelta(days=7)
         recent_updates = len([
-            c for c in all_configs 
+            c for c in all_configs
             if c.updated_at >= recent_date
         ])
-        
+
         return ConfigStatisticsResponse(
             total_configs=len(all_configs),
             system_configs=len(system_configs),
@@ -258,7 +266,7 @@ class SystemConfigService(BaseService):
 
 class MailService(BaseService):
     """Service for mail configuration and operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.mail_repo = MailSettingsRepository(db_session)
@@ -276,25 +284,28 @@ class MailService(BaseService):
     async def create_settings(self, settings_data: MailSettingsCreate) -> MailSettingsResponse:
         """Create new mail settings"""
         # Encrypt password
-        settings_data.smtp_password = encrypt_value(settings_data.smtp_password)
-        
+        settings_data.smtp_password = encrypt_value(
+            settings_data.smtp_password)
+
         settings = await self.mail_repo.create(settings_data)
         return MailSettingsResponse.from_orm(settings)
 
     async def update_settings(
-        self, 
-        settings_id: int, 
+        self,
+        settings_id: int,
         settings_data: MailSettingsUpdate
     ) -> MailSettingsResponse:
         """Update mail settings"""
         settings = await self.mail_repo.get(settings_id)
         if not settings:
-            raise NotFoundException(f"Mail settings with ID {settings_id} not found")
-        
+            raise NotFoundException(
+                f"Mail settings with ID {settings_id} not found")
+
         # Encrypt password if provided
         if settings_data.smtp_password:
-            settings_data.smtp_password = encrypt_value(settings_data.smtp_password)
-        
+            settings_data.smtp_password = encrypt_value(
+                settings_data.smtp_password)
+
         updated_settings = await self.mail_repo.update(settings_id, settings_data)
         return MailSettingsResponse.from_orm(updated_settings)
 
@@ -302,11 +313,12 @@ class MailService(BaseService):
         """Delete mail settings"""
         settings = await self.mail_repo.get(settings_id)
         if not settings:
-            raise NotFoundException(f"Mail settings with ID {settings_id} not found")
-        
+            raise NotFoundException(
+                f"Mail settings with ID {settings_id} not found")
+
         if settings.is_default:
             raise ValidationException("Cannot delete default mail settings")
-        
+
         return await self.mail_repo.delete(settings_id)
 
     async def set_default_settings(self, settings_id: int) -> MailSettingsResponse:
@@ -315,7 +327,7 @@ class MailService(BaseService):
         return MailSettingsResponse.from_orm(settings)
 
     async def test_mail_settings(
-        self, 
+        self,
         test_request: MailTestRequest
     ) -> MailTestResponse:
         """Test mail settings by sending a test email"""
@@ -324,22 +336,22 @@ class MailService(BaseService):
             settings = await self.mail_repo.get(test_request.mail_settings_id)
         else:
             settings = await self.mail_repo.get_default_settings()
-        
+
         if not settings:
             raise NotFoundException("No mail settings found")
-        
+
         try:
             # TODO: Implement actual SMTP test
             # This is a placeholder for the actual email sending logic
             success = await self._send_test_email(settings, test_request)
-            
+
             return MailTestResponse(
                 success=success,
                 message="Test email sent successfully" if success else "Test email failed",
                 tested_at=datetime.utcnow(),
                 details={"recipient": test_request.recipient}
             )
-            
+
         except Exception as e:
             return MailTestResponse(
                 success=False,
@@ -349,8 +361,8 @@ class MailService(BaseService):
             )
 
     async def _send_test_email(
-        self, 
-        settings: MailSettings, 
+        self,
+        settings: MailSettings,
         test_request: MailTestRequest
     ) -> bool:
         """Send test email (placeholder implementation)"""
@@ -362,7 +374,7 @@ class MailService(BaseService):
 
 class BackupService(BaseService):
     """Service for backup management operations"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.backup_repo = BackupHistoryRepository(db_session)
@@ -383,15 +395,15 @@ class BackupService(BaseService):
         return BackupHistoryResponse.from_orm(backup)
 
     async def update_backup_status(
-        self, 
-        backup_id: int, 
+        self,
+        backup_id: int,
         backup_data: BackupHistoryUpdate
     ) -> BackupHistoryResponse:
         """Update backup status"""
         backup = await self.backup_repo.get(backup_id)
         if not backup:
             raise NotFoundException(f"Backup with ID {backup_id} not found")
-        
+
         updated_backup = await self.backup_repo.update(backup_id, backup_data)
         return BackupHistoryResponse.from_orm(updated_backup)
 
@@ -400,7 +412,7 @@ class BackupService(BaseService):
         backup = await self.backup_repo.get(backup_id)
         if not backup:
             raise NotFoundException(f"Backup with ID {backup_id} not found")
-        
+
         return await self.backup_repo.delete(backup_id)
 
     async def cleanup_old_backups(self, keep_days: int = 90) -> Dict[str, int]:
@@ -411,23 +423,24 @@ class BackupService(BaseService):
     async def get_backup_statistics(self) -> BackupStatisticsResponse:
         """Get backup statistics"""
         stats = await self.backup_repo.get_backup_statistics()
-        
+
         # Get latest backup
         recent_backups = await self.backup_repo.get_recent_backups(days=1)
         latest_backup = recent_backups[0] if recent_backups else None
-        
+
         return BackupStatisticsResponse(
             total_backups=stats["total_backups"],
             successful_backups=stats["successful_backups"],
             recent_backups=stats["recent_backups"],
             success_rate=stats["success_rate"],
-            latest_backup=BackupHistoryResponse.from_orm(latest_backup) if latest_backup else None
+            latest_backup=BackupHistoryResponse.from_orm(
+                latest_backup) if latest_backup else None
         )
 
 
 class CronJobService(BaseService):
     """Service for cron job management"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.cron_repo = CronJobRepository(db_session)
@@ -447,7 +460,7 @@ class CronJobService(BaseService):
         job = await self.cron_repo.get_by_name(name)
         if not job:
             raise NotFoundException(f"Cron job with name '{name}' not found")
-        
+
         return CronJobResponse.from_orm(job)
 
     async def create_job(self, job_data: CronJobCreate) -> CronJobResponse:
@@ -455,8 +468,9 @@ class CronJobService(BaseService):
         # Check if job name already exists
         existing = await self.cron_repo.get_by_name(job_data.name)
         if existing:
-            raise ConflictException(f"Cron job with name '{job_data.name}' already exists")
-        
+            raise ConflictException(
+                f"Cron job with name '{job_data.name}' already exists")
+
         job = await self.cron_repo.create(job_data)
         return CronJobResponse.from_orm(job)
 
@@ -465,7 +479,7 @@ class CronJobService(BaseService):
         job = await self.cron_repo.get(job_id)
         if not job:
             raise NotFoundException(f"Cron job with ID {job_id} not found")
-        
+
         updated_job = await self.cron_repo.update(job_id, job_data)
         return CronJobResponse.from_orm(updated_job)
 
@@ -474,7 +488,7 @@ class CronJobService(BaseService):
         job = await self.cron_repo.get(job_id)
         if not job:
             raise NotFoundException(f"Cron job with ID {job_id} not found")
-        
+
         return await self.cron_repo.delete(job_id)
 
     async def toggle_job(self, job_id: int) -> CronJobResponse:
@@ -482,30 +496,30 @@ class CronJobService(BaseService):
         job = await self.cron_repo.get(job_id)
         if not job:
             raise NotFoundException(f"Cron job with ID {job_id} not found")
-        
+
         job.is_enabled = not job.is_enabled
         await self.db.commit()
         await self.db.refresh(job)
-        
+
         return CronJobResponse.from_orm(job)
 
     async def update_job_status(
-        self, 
-        job_id: int, 
-        status: str, 
+        self,
+        job_id: int,
+        status: str,
         output: Optional[str] = None
     ) -> CronJobResponse:
         """Update job execution status"""
         job = await self.cron_repo.update_job_status(job_id, status, output)
         if not job:
             raise NotFoundException(f"Cron job with ID {job_id} not found")
-        
+
         return CronJobResponse.from_orm(job)
 
 
 class MessageService(BaseService):
     """Service for system message management"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.message_repo = MessageRepository(db_session)
@@ -526,15 +540,15 @@ class MessageService(BaseService):
         return MessageResponse.from_orm(message)
 
     async def update_message(
-        self, 
-        message_id: int, 
+        self,
+        message_id: int,
         message_data: MessageUpdate
     ) -> MessageResponse:
         """Update system message"""
         message = await self.message_repo.get(message_id)
         if not message:
             raise NotFoundException(f"Message with ID {message_id} not found")
-        
+
         updated_message = await self.message_repo.update(message_id, message_data)
         return MessageResponse.from_orm(updated_message)
 
@@ -543,7 +557,7 @@ class MessageService(BaseService):
         message = await self.message_repo.get(message_id)
         if not message:
             raise NotFoundException(f"Message with ID {message_id} not found")
-        
+
         return await self.message_repo.delete(message_id)
 
     async def get_recent_messages(self, days: int = 7) -> List[MessageResponse]:
@@ -554,7 +568,7 @@ class MessageService(BaseService):
 
 class SystemInfoService(BaseService):
     """Service for system information and health checks"""
-    
+
     def __init__(self, db_session: AsyncSession):
         super().__init__(db_session)
         self.config_repo = SystemConfigRepository(db_session)
@@ -567,15 +581,15 @@ class SystemInfoService(BaseService):
         # Get basic system info
         version = await self._get_system_version()
         uptime = await self._get_system_uptime()
-        
+
         # Check component statuses
         database_status = await self._check_database_status()
         mail_status = await self._check_mail_status()
         backup_status = await self._check_backup_status()
-        
+
         # Get active cron jobs count
         active_jobs = await self.cron_repo.get_active_jobs()
-        
+
         return SystemInfoResponse(
             version=version,
             uptime=uptime,
@@ -616,8 +630,9 @@ class SystemInfoService(BaseService):
         """Check backup status"""
         try:
             recent_backups = await self.backup_repo.get_recent_backups(days=7)
-            successful_backups = [b for b in recent_backups if b.status == "completed"]
-            
+            successful_backups = [
+                b for b in recent_backups if b.status == "completed"]
+
             if not recent_backups:
                 return "no_recent_backups"
             elif len(successful_backups) == len(recent_backups):

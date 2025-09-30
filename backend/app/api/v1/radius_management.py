@@ -43,7 +43,8 @@ async def list_ip_pool_entries(
     pagination: PaginationParams = Depends(),
     pool_name: Optional[str] = Query(None, description="Filter by pool name"),
     nas_ip: Optional[str] = Query(None, description="Filter by NAS IP"),
-    status: Optional[str] = Query(None, description="Filter by status: available, assigned"),
+    status: Optional[str] = Query(
+        None, description="Filter by status: available, assigned"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -57,10 +58,11 @@ async def list_ip_pool_entries(
             nas_ip=nas_ip,
             status=status
         )
-        
+
         # Get total count (simplified for now)
-        total = len(entries) if len(entries) < pagination.limit else pagination.skip + len(entries) + 1
-        
+        total = len(entries) if len(
+            entries) < pagination.limit else pagination.skip + len(entries) + 1
+
         return PaginatedResponse(
             items=entries,
             total=total,
@@ -68,7 +70,7 @@ async def list_ip_pool_entries(
             size=pagination.size,
             pages=(total + pagination.size - 1) // pagination.size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -86,7 +88,7 @@ async def create_ip_pool_entry(
     try:
         service = RadIpPoolService(db)
         return await service.create_ip_pool_entry(data)
-        
+
     except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -109,7 +111,7 @@ async def get_ip_pool_entry(
     try:
         service = RadIpPoolService(db)
         return await service.get_ip_pool_entry(entry_id)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -128,7 +130,7 @@ async def update_ip_pool_entry(
     try:
         service = RadIpPoolService(db)
         return await service.update_ip_pool_entry(entry_id, data)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -151,7 +153,7 @@ async def delete_ip_pool_entry(
     try:
         service = RadIpPoolService(db)
         success = await service.delete_ip_pool_entry(entry_id)
-        
+
         if success:
             return {"message": "IP pool entry deleted successfully"}
         else:
@@ -159,7 +161,7 @@ async def delete_ip_pool_entry(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete IP pool entry"
             )
-            
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -172,7 +174,8 @@ async def assign_ip_to_user(
     pool_name: str = Query(..., description="Pool name"),
     username: str = Query(..., description="Username"),
     nas_ip: str = Query(..., description="NAS IP address"),
-    duration_hours: Optional[int] = Query(None, description="Assignment duration in hours"),
+    duration_hours: Optional[int] = Query(
+        None, description="Assignment duration in hours"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -180,12 +183,12 @@ async def assign_ip_to_user(
     try:
         service = RadIpPoolService(db)
         result = await service.assign_ip_to_user(pool_name, username, nas_ip, duration_hours)
-        
+
         if result:
             return {"message": "IP assigned successfully", "ip_entry": result}
         else:
             return {"message": "No available IP addresses in the specified pool"}
-            
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -203,12 +206,12 @@ async def release_ip_from_user(
     try:
         service = RadIpPoolService(db)
         success = await service.release_user_ip(ip_address)
-        
+
         if success:
             return {"message": f"IP address {ip_address} released successfully"}
         else:
             return {"message": f"IP address {ip_address} not found or not assigned"}
-            
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -226,7 +229,7 @@ async def list_pool_names(
         service = RadIpPoolService(db)
         pools = await service.get_pool_names()
         return IpPoolListResponse(pools=pools, total=len(pools))
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -243,7 +246,7 @@ async def get_ip_pool_statistics(
     try:
         service = RadIpPoolService(db)
         return await service.get_statistics()
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -256,7 +259,8 @@ async def get_ip_pool_statistics(
 @router.get("/profiles", response_model=PaginatedResponse[ProfileResponse])
 async def list_profiles(
     pagination: PaginationParams = Depends(),
-    include_attributes: bool = Query(False, description="Include attribute details"),
+    include_attributes: bool = Query(
+        False, description="Include attribute details"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -268,9 +272,10 @@ async def list_profiles(
             limit=pagination.limit,
             include_attributes=include_attributes
         )
-        
-        total = len(profiles) if len(profiles) < pagination.limit else pagination.skip + len(profiles) + 1
-        
+
+        total = len(profiles) if len(
+            profiles) < pagination.limit else pagination.skip + len(profiles) + 1
+
         return PaginatedResponse(
             items=profiles,
             total=total,
@@ -278,7 +283,7 @@ async def list_profiles(
             size=pagination.size,
             pages=(total + pagination.size - 1) // pagination.size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -296,7 +301,7 @@ async def create_profile(
     try:
         service = RadiusProfileService(db)
         return await service.create_profile(data)
-        
+
     except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -319,7 +324,7 @@ async def get_profile(
     try:
         service = RadiusProfileService(db)
         return await service.get_profile(profile_id)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -337,7 +342,7 @@ async def get_profile_by_name(
     try:
         service = RadiusProfileService(db)
         return await service.get_profile_by_name(profile_name)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -356,7 +361,7 @@ async def update_profile(
     try:
         service = RadiusProfileService(db)
         return await service.update_profile(profile_id, data)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -368,7 +373,8 @@ async def update_profile(
 async def duplicate_profile(
     source_profile: str = Query(..., description="Source profile name"),
     new_profile: str = Query(..., description="New profile name"),
-    description: Optional[str] = Query(None, description="New profile description"),
+    description: Optional[str] = Query(
+        None, description="New profile description"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -376,7 +382,7 @@ async def duplicate_profile(
     try:
         service = RadiusProfileService(db)
         return await service.duplicate_profile(source_profile, new_profile, description)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -399,7 +405,7 @@ async def delete_profile(
     try:
         service = RadiusProfileService(db)
         success = await service.delete_profile(profile_id)
-        
+
         if success:
             return {"message": "Profile deleted successfully"}
         else:
@@ -407,7 +413,7 @@ async def delete_profile(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete profile"
             )
-            
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -425,7 +431,7 @@ async def list_profile_names(
         service = RadiusProfileService(db)
         profiles = await service.get_profile_names()
         return ProfileListResponse(profiles=profiles, total=len(profiles))
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -450,9 +456,10 @@ async def list_realms(
             limit=pagination.limit,
             active_only=active_only
         )
-        
-        total = len(realms) if len(realms) < pagination.limit else pagination.skip + len(realms) + 1
-        
+
+        total = len(realms) if len(
+            realms) < pagination.limit else pagination.skip + len(realms) + 1
+
         return PaginatedResponse(
             items=realms,
             total=total,
@@ -460,7 +467,7 @@ async def list_realms(
             size=pagination.size,
             pages=(total + pagination.size - 1) // pagination.size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -478,7 +485,7 @@ async def create_realm(
     try:
         service = RealmService(db)
         return await service.create_realm(data)
-        
+
     except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -496,7 +503,7 @@ async def get_realm(
     try:
         service = RealmService(db)
         return await service.get_realm(realm_id)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -514,7 +521,7 @@ async def get_realm_by_name(
     try:
         service = RealmService(db)
         return await service.get_realm_by_name(realmname)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -533,7 +540,7 @@ async def update_realm(
     try:
         service = RealmService(db)
         return await service.update_realm(realm_id, data)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -551,7 +558,7 @@ async def delete_realm(
     try:
         service = RealmService(db)
         success = await service.delete_realm(realm_id)
-        
+
         if success:
             return {"message": "Realm deleted successfully"}
         else:
@@ -559,7 +566,7 @@ async def delete_realm(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete realm"
             )
-            
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -577,7 +584,7 @@ async def list_realm_names(
         service = RealmService(db)
         realms = await service.get_realm_names()
         return RealmListResponse(realms=realms, total=len(realms))
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -602,9 +609,10 @@ async def list_proxies(
             limit=pagination.limit,
             active_only=active_only
         )
-        
-        total = len(proxies) if len(proxies) < pagination.limit else pagination.skip + len(proxies) + 1
-        
+
+        total = len(proxies) if len(
+            proxies) < pagination.limit else pagination.skip + len(proxies) + 1
+
         return PaginatedResponse(
             items=proxies,
             total=total,
@@ -612,7 +620,7 @@ async def list_proxies(
             size=pagination.size,
             pages=(total + pagination.size - 1) // pagination.size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -630,7 +638,7 @@ async def create_proxy(
     try:
         service = ProxyService(db)
         return await service.create_proxy(data)
-        
+
     except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -648,7 +656,7 @@ async def get_proxy(
     try:
         service = ProxyService(db)
         return await service.get_proxy(proxy_id)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -667,7 +675,7 @@ async def update_proxy(
     try:
         service = ProxyService(db)
         return await service.update_proxy(proxy_id, data)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -685,7 +693,7 @@ async def delete_proxy(
     try:
         service = ProxyService(db)
         success = await service.delete_proxy(proxy_id)
-        
+
         if success:
             return {"message": "Proxy deleted successfully"}
         else:
@@ -693,7 +701,7 @@ async def delete_proxy(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete proxy"
             )
-            
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -711,7 +719,7 @@ async def list_proxy_names(
         service = ProxyService(db)
         proxies = await service.get_proxy_names()
         return ProxyListResponse(proxies=proxies, total=len(proxies))
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -738,9 +746,10 @@ async def list_hunt_groups(
             groupname=groupname,
             nas_ip=nas_ip
         )
-        
-        total = len(groups) if len(groups) < pagination.limit else pagination.skip + len(groups) + 1
-        
+
+        total = len(groups) if len(
+            groups) < pagination.limit else pagination.skip + len(groups) + 1
+
         return PaginatedResponse(
             items=groups,
             total=total,
@@ -748,7 +757,7 @@ async def list_hunt_groups(
             size=pagination.size,
             pages=(total + pagination.size - 1) // pagination.size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -766,7 +775,7 @@ async def create_hunt_group(
     try:
         service = HuntGroupService(db)
         return await service.create_hunt_group(data)
-        
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -784,7 +793,7 @@ async def get_hunt_group(
     try:
         service = HuntGroupService(db)
         return await service.get_hunt_group(group_id)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -803,7 +812,7 @@ async def update_hunt_group(
     try:
         service = HuntGroupService(db)
         return await service.update_hunt_group(group_id, data)
-        
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -821,7 +830,7 @@ async def delete_hunt_group(
     try:
         service = HuntGroupService(db)
         success = await service.delete_hunt_group(group_id)
-        
+
         if success:
             return {"message": "Hunt group deleted successfully"}
         else:
@@ -829,7 +838,7 @@ async def delete_hunt_group(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete hunt group"
             )
-            
+
     except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -847,7 +856,7 @@ async def list_hunt_group_names(
         service = HuntGroupService(db)
         groups = await service.get_group_names()
         return HuntGroupListResponse(groups=groups, total=len(groups))
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -866,7 +875,7 @@ async def get_nas_ips_for_hunt_group(
         service = HuntGroupService(db)
         nas_ips = await service.get_nas_ips_for_group(groupname)
         return {"groupname": groupname, "nas_ips": nas_ips, "total": len(nas_ips)}
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -883,7 +892,7 @@ async def get_hunt_group_statistics(
     try:
         service = HuntGroupService(db)
         return await service.get_statistics()
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

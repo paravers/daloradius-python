@@ -29,19 +29,20 @@ from ..schemas.radius_management import (
 
 class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUpdate]):
     """Repository for RADIUS IP Pool management"""
-    
+
     async def get_by_pool_name(self, pool_name: str) -> Optional[RadIpPool]:
         """Get IP pool entries by pool name"""
         query = select(RadIpPool).where(RadIpPool.pool_name == pool_name)
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_by_ip_address(self, ip_address: str) -> Optional[RadIpPool]:
         """Get IP pool entry by IP address"""
-        query = select(RadIpPool).where(RadIpPool.framedipaddress == ip_address)
+        query = select(RadIpPool).where(
+            RadIpPool.framedipaddress == ip_address)
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_available_ips(
         self,
         pool_name: Optional[str] = None,
@@ -58,15 +59,15 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
                 )
             )
         )
-        
+
         if pool_name:
             query = query.where(RadIpPool.pool_name == pool_name)
         if nas_ip:
             query = query.where(RadIpPool.nasipaddress == nas_ip)
-            
+
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_assigned_ips(
         self,
         pool_name: Optional[str] = None,
@@ -83,15 +84,15 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
                 )
             )
         )
-        
+
         if pool_name:
             query = query.where(RadIpPool.pool_name == pool_name)
         if nas_ip:
             query = query.where(RadIpPool.nasipaddress == nas_ip)
-            
+
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def assign_ip(
         self,
         pool_name: str,
@@ -101,18 +102,18 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
     ) -> Optional[RadIpPool]:
         """Assign an available IP to a user"""
         available_ips = await self.get_available_ips(pool_name=pool_name, nas_ip=nas_ip)
-        
+
         if not available_ips:
             return None
-            
+
         ip_entry = available_ips[0]
         ip_entry.username = username
         ip_entry.expiry_time = expiry_time
         ip_entry.updated_at = datetime.utcnow()
-        
+
         await self.db.commit()
         return ip_entry
-    
+
     async def release_ip(self, ip_address: str) -> bool:
         """Release an IP address"""
         ip_entry = await self.get_by_ip_address(ip_address)
@@ -124,20 +125,21 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
             await self.db.commit()
             return True
         return False
-    
+
     async def get_pool_names(self) -> List[str]:
         """Get all unique pool names"""
-        query = select(RadIpPool.pool_name).distinct().order_by(RadIpPool.pool_name)
+        query = select(RadIpPool.pool_name).distinct().order_by(
+            RadIpPool.pool_name)
         result = await self.db.execute(query)
         return [name for name, in result.all()]
-    
+
     async def get_pool_statistics(self) -> Dict[str, Any]:
         """Get IP pool statistics"""
         # Total IPs
         total_query = select(func.count(RadIpPool.id))
         total_result = await self.db.execute(total_query)
         total_ips = total_result.scalar()
-        
+
         # Assigned IPs
         assigned_query = select(func.count(RadIpPool.id)).where(
             and_(
@@ -147,7 +149,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
         )
         assigned_result = await self.db.execute(assigned_query)
         assigned_ips = assigned_result.scalar()
-        
+
         # Expired IPs
         expired_query = select(func.count(RadIpPool.id)).where(
             and_(
@@ -157,7 +159,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
         )
         expired_result = await self.db.execute(expired_query)
         expired_ips = expired_result.scalar()
-        
+
         # Pools by NAS
         pools_by_nas_query = select(
             RadIpPool.nasipaddress,
@@ -168,7 +170,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
             {"nas_ip": row.nasipaddress, "ip_count": row.ip_count}
             for row in pools_by_nas_result.all()
         ]
-        
+
         return {
             "total_ips": total_ips,
             "assigned_ips": assigned_ips,
@@ -180,27 +182,30 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
 
 class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, ProfileUpdate]):
     """Repository for RADIUS Profile management"""
-    
+
     async def get_by_name(self, profile_name: str) -> Optional[RadiusProfile]:
         """Get profile by name"""
-        query = select(RadiusProfile).where(RadiusProfile.profile_name == profile_name)
+        query = select(RadiusProfile).where(
+            RadiusProfile.profile_name == profile_name)
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_profile_attributes(self, profile_name: str) -> Tuple[List[GroupCheck], List[GroupReply]]:
         """Get all attributes for a profile"""
         # Get check attributes
-        check_query = select(GroupCheck).where(GroupCheck.groupname == profile_name)
+        check_query = select(GroupCheck).where(
+            GroupCheck.groupname == profile_name)
         check_result = await self.db.execute(check_query)
         check_attributes = check_result.scalars().all()
-        
-        # Get reply attributes  
-        reply_query = select(GroupReply).where(GroupReply.groupname == profile_name)
+
+        # Get reply attributes
+        reply_query = select(GroupReply).where(
+            GroupReply.groupname == profile_name)
         reply_result = await self.db.execute(reply_query)
         reply_attributes = reply_result.scalars().all()
-        
+
         return check_attributes, reply_attributes
-    
+
     async def create_with_attributes(
         self,
         profile_data: ProfileCreate
@@ -213,7 +218,7 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
         )
         self.db.add(profile)
         await self.db.flush()
-        
+
         # Add check attributes
         for attr in profile_data.check_attributes:
             check_attr = GroupCheck(
@@ -223,7 +228,7 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
                 value=attr.value
             )
             self.db.add(check_attr)
-        
+
         # Add reply attributes
         for attr in profile_data.reply_attributes:
             reply_attr = GroupReply(
@@ -233,10 +238,10 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
                 value=attr.value
             )
             self.db.add(reply_attr)
-        
+
         await self.db.commit()
         return profile
-    
+
     async def duplicate_profile(
         self,
         source_profile: str,
@@ -248,10 +253,10 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
         source = await self.get_by_name(source_profile)
         if not source:
             return None
-        
+
         # Get source attributes
         check_attrs, reply_attrs = await self.get_profile_attributes(source_profile)
-        
+
         # Create new profile
         new_prof = RadiusProfile(
             profile_name=new_profile,
@@ -259,7 +264,7 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
         )
         self.db.add(new_prof)
         await self.db.flush()
-        
+
         # Copy check attributes
         for attr in check_attrs:
             new_check = GroupCheck(
@@ -269,7 +274,7 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
                 value=attr.value
             )
             self.db.add(new_check)
-        
+
         # Copy reply attributes
         for attr in reply_attrs:
             new_reply = GroupReply(
@@ -279,57 +284,61 @@ class RadiusProfileRepository(BaseRepository[RadiusProfile, ProfileCreate, Profi
                 value=attr.value
             )
             self.db.add(new_reply)
-        
+
         await self.db.commit()
         return new_prof
-    
+
     async def delete_with_attributes(self, profile_id: int) -> bool:
         """Delete profile and all its attributes"""
         profile = await self.get(profile_id)
         if not profile:
             return False
-        
+
         profile_name = profile.profile_name
-        
+
         # Delete check attributes
-        check_delete = select(GroupCheck).where(GroupCheck.groupname == profile_name)
+        check_delete = select(GroupCheck).where(
+            GroupCheck.groupname == profile_name)
         check_result = await self.db.execute(check_delete)
         for attr in check_result.scalars().all():
             await self.db.delete(attr)
-        
+
         # Delete reply attributes
-        reply_delete = select(GroupReply).where(GroupReply.groupname == profile_name)
+        reply_delete = select(GroupReply).where(
+            GroupReply.groupname == profile_name)
         reply_result = await self.db.execute(reply_delete)
         for attr in reply_result.scalars().all():
             await self.db.delete(attr)
-        
+
         # Delete profile
         await self.db.delete(profile)
         await self.db.commit()
         return True
-    
+
     async def get_profile_names(self) -> List[str]:
         """Get all profile names"""
-        query = select(RadiusProfile.profile_name).order_by(RadiusProfile.profile_name)
+        query = select(RadiusProfile.profile_name).order_by(
+            RadiusProfile.profile_name)
         result = await self.db.execute(query)
         return [name for name, in result.all()]
 
 
 class RealmRepository(BaseRepository[Realm, RealmCreate, RealmUpdate]):
     """Repository for RADIUS Realm management"""
-    
+
     async def get_by_name(self, realmname: str) -> Optional[Realm]:
         """Get realm by name"""
         query = select(Realm).where(Realm.realmname == realmname)
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_active_realms(self) -> List[Realm]:
         """Get all active realms"""
-        query = select(Realm).where(Realm.is_active == True).order_by(Realm.realmname)
+        query = select(Realm).where(Realm.is_active ==
+                                    True).order_by(Realm.realmname)
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_realm_names(self) -> List[str]:
         """Get all realm names"""
         query = select(Realm.realmname).order_by(Realm.realmname)
@@ -339,19 +348,20 @@ class RealmRepository(BaseRepository[Realm, RealmCreate, RealmUpdate]):
 
 class ProxyRepository(BaseRepository[Proxy, ProxyCreate, ProxyUpdate]):
     """Repository for RADIUS Proxy management"""
-    
+
     async def get_by_name(self, proxyname: str) -> Optional[Proxy]:
         """Get proxy by name"""
         query = select(Proxy).where(Proxy.proxyname == proxyname)
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_active_proxies(self) -> List[Proxy]:
         """Get all active proxies"""
-        query = select(Proxy).where(Proxy.is_active == True).order_by(Proxy.proxyname)
+        query = select(Proxy).where(Proxy.is_active ==
+                                    True).order_by(Proxy.proxyname)
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_default_fallback_proxies(self) -> List[Proxy]:
         """Get default fallback proxies"""
         query = select(Proxy).where(
@@ -362,7 +372,7 @@ class ProxyRepository(BaseRepository[Proxy, ProxyCreate, ProxyUpdate]):
         ).order_by(Proxy.proxyname)
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_proxy_names(self) -> List[str]:
         """Get all proxy names"""
         query = select(Proxy.proxyname).order_by(Proxy.proxyname)
@@ -372,25 +382,26 @@ class ProxyRepository(BaseRepository[Proxy, ProxyCreate, ProxyUpdate]):
 
 class HuntGroupRepository(BaseRepository[RadHuntGroup, HuntGroupCreate, HuntGroupUpdate]):
     """Repository for RADIUS Hunt Group management"""
-    
+
     async def get_by_group_name(self, groupname: str) -> List[RadHuntGroup]:
         """Get hunt group entries by group name"""
         query = select(RadHuntGroup).where(RadHuntGroup.groupname == groupname)
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_by_nas_ip(self, nas_ip: str) -> List[RadHuntGroup]:
         """Get hunt group entries by NAS IP"""
         query = select(RadHuntGroup).where(RadHuntGroup.nasipaddress == nas_ip)
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def get_group_names(self) -> List[str]:
         """Get all unique group names"""
-        query = select(RadHuntGroup.groupname).distinct().order_by(RadHuntGroup.groupname)
+        query = select(RadHuntGroup.groupname).distinct().order_by(
+            RadHuntGroup.groupname)
         result = await self.db.execute(query)
         return [name for name, in result.all()]
-    
+
     async def get_nas_ips_for_group(self, groupname: str) -> List[str]:
         """Get all NAS IPs for a hunt group"""
         query = select(RadHuntGroup.nasipaddress).where(
@@ -398,35 +409,38 @@ class HuntGroupRepository(BaseRepository[RadHuntGroup, HuntGroupCreate, HuntGrou
         ).distinct().order_by(RadHuntGroup.nasipaddress)
         result = await self.db.execute(query)
         return [ip for ip, in result.all()]
-    
+
     async def get_hunt_group_statistics(self) -> Dict[str, Any]:
         """Get hunt group statistics"""
         # Total groups
         total_query = select(func.count(RadHuntGroup.id))
         total_result = await self.db.execute(total_query)
         total_groups = total_result.scalar()
-        
+
         # Unique group names
-        unique_groups_query = select(func.count(func.distinct(RadHuntGroup.groupname)))
+        unique_groups_query = select(func.count(
+            func.distinct(RadHuntGroup.groupname)))
         unique_groups_result = await self.db.execute(unique_groups_query)
         unique_groups = unique_groups_result.scalar()
-        
+
         # Unique NAS IPs
-        unique_nas_query = select(func.count(func.distinct(RadHuntGroup.nasipaddress)))
+        unique_nas_query = select(func.count(
+            func.distinct(RadHuntGroup.nasipaddress)))
         unique_nas_result = await self.db.execute(unique_nas_query)
         unique_nas = unique_nas_result.scalar()
-        
+
         # Groups by NAS
         groups_by_nas_query = select(
             RadHuntGroup.nasipaddress,
-            func.count(func.distinct(RadHuntGroup.groupname)).label('group_count')
+            func.count(func.distinct(RadHuntGroup.groupname)
+                       ).label('group_count')
         ).group_by(RadHuntGroup.nasipaddress)
         groups_by_nas_result = await self.db.execute(groups_by_nas_query)
         groups_by_nas = {
             row.nasipaddress: row.group_count
             for row in groups_by_nas_result.all()
         }
-        
+
         return {
             "total_hunt_groups": total_groups,
             "unique_group_names": unique_groups,

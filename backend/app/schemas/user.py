@@ -15,7 +15,7 @@ class UserStatus(str, Enum):
     """User account status"""
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
-    SUSPENDED = "SUSPENDED" 
+    SUSPENDED = "SUSPENDED"
     EXPIRED = "EXPIRED"
 
 
@@ -30,26 +30,36 @@ class AuthType(str, Enum):
 # Base schemas
 class UserBase(BaseModel):
     """Base user schema with common fields"""
-    username: str = Field(..., min_length=1, max_length=64, description="Unique username")
+    username: str = Field(..., min_length=1, max_length=64,
+                          description="Unique username")
     email: Optional[EmailStr] = Field(None, description="User email address")
-    first_name: Optional[str] = Field(None, max_length=200, description="First name")
-    last_name: Optional[str] = Field(None, max_length=200, description="Last name")
-    department: Optional[str] = Field(None, max_length=200, description="Department")
+    first_name: Optional[str] = Field(
+        None, max_length=200, description="First name")
+    last_name: Optional[str] = Field(
+        None, max_length=200, description="Last name")
+    department: Optional[str] = Field(
+        None, max_length=200, description="Department")
     company: Optional[str] = Field(None, max_length=200, description="Company")
-    work_phone: Optional[str] = Field(None, max_length=200, description="Work phone")
-    home_phone: Optional[str] = Field(None, max_length=200, description="Home phone")
-    mobile_phone: Optional[str] = Field(None, max_length=200, description="Mobile phone")
+    work_phone: Optional[str] = Field(
+        None, max_length=200, description="Work phone")
+    home_phone: Optional[str] = Field(
+        None, max_length=200, description="Home phone")
+    mobile_phone: Optional[str] = Field(
+        None, max_length=200, description="Mobile phone")
     address: Optional[str] = Field(None, max_length=200, description="Address")
     city: Optional[str] = Field(None, max_length=200, description="City")
-    state: Optional[str] = Field(None, max_length=200, description="State/Province")
+    state: Optional[str] = Field(
+        None, max_length=200, description="State/Province")
     country: Optional[str] = Field(None, max_length=100, description="Country")
-    zip_code: Optional[str] = Field(None, max_length=200, description="ZIP/Postal code")
+    zip_code: Optional[str] = Field(
+        None, max_length=200, description="ZIP/Postal code")
     notes: Optional[str] = Field(None, description="User notes")
 
     @validator('username')
     def validate_username(cls, v):
         if not v.replace('_', '').replace('-', '').replace('.', '').replace('@', '').isalnum():
-            raise ValueError('Username can only contain letters, numbers, underscore, hyphen, dot, and @')
+            raise ValueError(
+                'Username can only contain letters, numbers, underscore, hyphen, dot, and @')
         return v
 
 
@@ -57,14 +67,19 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a new user"""
     password: str = Field(..., min_length=6, description="User password")
-    auth_type: AuthType = Field(AuthType.LOCAL, description="Authentication type")
+    auth_type: AuthType = Field(
+        AuthType.LOCAL, description="Authentication type")
     is_active: bool = Field(True, description="Is user active")
     status: UserStatus = Field(UserStatus.ACTIVE, description="User status")
-    mac_address: Optional[str] = Field(None, max_length=17, description="MAC address")
-    pin_code: Optional[str] = Field(None, max_length=32, description="PIN code")
+    mac_address: Optional[str] = Field(
+        None, max_length=17, description="MAC address")
+    pin_code: Optional[str] = Field(
+        None, max_length=32, description="PIN code")
     enable_portal_login: bool = Field(False, description="Enable portal login")
-    portal_login_password: Optional[str] = Field(None, max_length=128, description="Portal password")
-    change_user_info: bool = Field(False, description="Allow user to change info")
+    portal_login_password: Optional[str] = Field(
+        None, max_length=128, description="Portal password")
+    change_user_info: bool = Field(
+        False, description="Allow user to change info")
 
     @validator('mac_address')
     def validate_mac_address(cls, v):
@@ -149,7 +164,8 @@ class UserListResponse(BaseModel):
 # Group schemas
 class GroupBase(BaseModel):
     """Base group schema"""
-    groupname: str = Field(..., min_length=1, max_length=64, description="Group name")
+    groupname: str = Field(..., min_length=1,
+                           max_length=64, description="Group name")
     description: Optional[str] = Field(None, description="Group description")
     priority: int = Field(1, ge=0, description="Group priority")
     is_active: bool = Field(True, description="Is group active")
@@ -217,10 +233,12 @@ class UserGroupListResponse(BaseModel):
 
 class UserGroupStatisticsResponse(BaseModel):
     """Schema for user group statistics responses"""
-    total_associations: int = Field(..., description="Total user-group associations")
+    total_associations: int = Field(...,
+                                    description="Total user-group associations")
     total_groups: int = Field(..., description="Total number of groups")
     total_users: int = Field(..., description="Total users with groups")
-    top_groups: List[Dict[str, Any]] = Field(..., description="Groups with most users")
+    top_groups: List[Dict[str, Any]
+                     ] = Field(..., description="Groups with most users")
 
 
 class UserGroupDetailResponse(BaseModel):
@@ -317,17 +335,21 @@ class ErrorResponse(BaseModel):
 # Batch operation schemas
 class BatchUserCreate(BaseModel):
     """Schema for batch user creation"""
-    count: int = Field(..., ge=1, le=1000, description="Number of users to create")
-    username_prefix: str = Field(..., min_length=1, max_length=32, description="Username prefix")
+    count: int = Field(..., ge=1, le=1000,
+                       description="Number of users to create")
+    username_prefix: str = Field(..., min_length=1,
+                                 max_length=32, description="Username prefix")
     password_length: int = Field(8, ge=6, le=32, description="Password length")
-    group: Optional[str] = Field(None, max_length=64, description="Default group")
-    
+    group: Optional[str] = Field(
+        None, max_length=64, description="Default group")
+
     # User info template
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     department: Optional[str] = None
     company: Optional[str] = None
-    email_domain: Optional[str] = Field(None, description="Email domain for generated emails")
+    email_domain: Optional[str] = Field(
+        None, description="Email domain for generated emails")
 
 
 class BatchOperationResult(BaseModel):

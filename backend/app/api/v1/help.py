@@ -22,7 +22,7 @@ router = APIRouter()
 async def get_help_resources():
     """
     Get help resources and external links
-    
+
     Returns static help resources including documentation links,
     support contacts, and community resources.
     """
@@ -61,17 +61,17 @@ async def get_help_content(
 ):
     """
     Get help content from the system message database
-    
+
     Returns help content for specific categories or pages.
     """
     try:
         message_service = MessageService(db)
-        
+
         if category:
             # Get help messages for specific category
             messages = await message_service.get_messages_by_type(MessageType.SUPPORT)
             help_content = []
-            
+
             for message in messages:
                 help_content.append({
                     "id": message.id,
@@ -80,22 +80,23 @@ async def get_help_content(
                     "created_on": message.created_on,
                     "modified_on": message.modified_on
                 })
-            
+
             return {
                 "category": category,
                 "content": help_content,
                 "total": len(help_content)
             }
-        
+
         # Get all help content
         all_messages = await message_service.get_all_messages()
-        help_messages = [msg for msg in all_messages if "help" in msg.content.lower()]
-        
+        help_messages = [
+            msg for msg in all_messages if "help" in msg.content.lower()]
+
         return {
             "general_help": help_messages,
             "total": len(help_messages)
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -109,7 +110,7 @@ async def get_system_info(
 ):
     """
     Get system information for help and support
-    
+
     Returns system version, environment details, and configuration info
     useful for support and troubleshooting.
     """
@@ -128,7 +129,7 @@ async def get_system_info(
         },
         "modules": {
             "user_management": "enabled",
-            "accounting": "enabled", 
+            "accounting": "enabled",
             "billing": "enabled",
             "nas_management": "enabled",
             "reports": "enabled",
@@ -148,7 +149,7 @@ async def get_system_info(
 async def get_troubleshooting_guide():
     """
     Get troubleshooting guide and common solutions
-    
+
     Returns structured troubleshooting information for common issues.
     """
     return {
@@ -196,7 +197,7 @@ async def get_troubleshooting_guide():
         ],
         "diagnostic_tools": {
             "database_check": "/api/v1/system/database-status",
-            "radius_check": "/api/v1/system/radius-status", 
+            "radius_check": "/api/v1/system/radius-status",
             "api_health": "/health",
             "system_logs": "/api/v1/logs/system"
         },
@@ -221,7 +222,7 @@ async def get_troubleshooting_guide():
 async def get_tutorials():
     """
     Get interactive tutorials and getting started guides
-    
+
     Returns structured tutorial content for common tasks.
     """
     return {
@@ -270,7 +271,7 @@ async def get_tutorials():
                     "Configure parameters",
                     "Generate and export"
                 ],
-                "estimated_time": "15 minutes", 
+                "estimated_time": "15 minutes",
                 "difficulty": "intermediate"
             }
         ],
@@ -290,13 +291,13 @@ async def submit_feedback(
 ):
     """
     Submit user feedback about the help system
-    
+
     Allows users to provide feedback on help content and suggestions.
     """
     try:
         # In a real implementation, this would save to a feedback table
         # For now, we'll return a success response
-        
+
         feedback_entry = {
             "user_id": current_user.id,
             "category": feedback_data.get("category", "general"),
@@ -307,14 +308,14 @@ async def submit_feedback(
             "user_agent": feedback_data.get("user_agent", ""),
             "page_url": feedback_data.get("page_url", "")
         }
-        
+
         return {
             "status": "success",
             "message": "Thank you for your feedback!",
             "feedback_id": f"fb_{datetime.now().timestamp()}",
             "follow_up": "Your feedback helps us improve the system."
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

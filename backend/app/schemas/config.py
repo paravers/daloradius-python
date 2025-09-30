@@ -16,7 +16,7 @@ from ..models.access_control import MessageType
 # Base schemas
 class BaseConfigSchema(BaseModel):
     """Base configuration schema"""
-    
+
     class Config:
         from_attributes = True
         use_enum_values = True
@@ -43,7 +43,8 @@ class SystemConfigCreate(SystemConfigBase):
 class SystemConfigUpdate(BaseConfigSchema):
     """Schema for updating system configuration"""
     config_value: Optional[str] = Field(None)
-    config_type: Optional[str] = Field(None, regex="^(string|integer|boolean|json)$")
+    config_type: Optional[str] = Field(
+        None, regex="^(string|integer|boolean|json)$")
     category: Optional[str] = Field(None, min_length=1, max_length=64)
     description: Optional[str] = Field(None)
     is_encrypted: Optional[bool] = Field(None)
@@ -108,7 +109,8 @@ class MailTestRequest(BaseConfigSchema):
     recipient: EmailStr
     subject: str = Field(..., min_length=1, max_length=200)
     message: str = Field(..., min_length=1, max_length=5000)
-    mail_settings_id: Optional[int] = Field(None, description="Use specific mail settings, or default if not provided")
+    mail_settings_id: Optional[int] = Field(
+        None, description="Use specific mail settings, or default if not provided")
 
 
 class MailTestResponse(BaseConfigSchema):
@@ -126,20 +128,23 @@ class BackupHistoryBase(BaseConfigSchema):
     backup_type: str = Field(..., regex="^(full|incremental|differential)$")
     backup_path: str = Field(..., min_length=1, max_length=500)
     file_size: Optional[int] = Field(None, ge=0)
-    compression_type: Optional[str] = Field(None, regex="^(none|gzip|bzip2|xz)$")
+    compression_type: Optional[str] = Field(
+        None, regex="^(none|gzip|bzip2|xz)$")
     description: Optional[str] = Field(None)
 
 
 class BackupHistoryCreate(BackupHistoryBase):
     """Schema for creating backup history record"""
     backup_date: Optional[datetime] = Field(None)
-    status: str = Field("pending", regex="^(pending|running|completed|failed)$")
+    status: str = Field(
+        "pending", regex="^(pending|running|completed|failed)$")
     created_by: Optional[str] = Field(None, max_length=64)
 
 
 class BackupHistoryUpdate(BaseConfigSchema):
     """Schema for updating backup history"""
-    status: Optional[str] = Field(None, regex="^(pending|running|completed|failed)$")
+    status: Optional[str] = Field(
+        None, regex="^(pending|running|completed|failed)$")
     error_message: Optional[str] = Field(None)
     file_size: Optional[int] = Field(None, ge=0)
     completion_time: Optional[datetime] = Field(None)
@@ -366,65 +371,65 @@ class ConfigErrorResponse(BaseConfigSchema):
 __all__ = [
     # Base
     "BaseConfigSchema",
-    
+
     # System Configuration
     "SystemConfigBase",
-    "SystemConfigCreate", 
+    "SystemConfigCreate",
     "SystemConfigUpdate",
     "SystemConfigResponse",
-    
+
     # Mail Settings
     "MailSettingsBase",
     "MailSettingsCreate",
-    "MailSettingsUpdate", 
+    "MailSettingsUpdate",
     "MailSettingsResponse",
     "MailTestRequest",
     "MailTestResponse",
-    
+
     # Backup History
     "BackupHistoryBase",
     "BackupHistoryCreate",
     "BackupHistoryUpdate",
     "BackupHistoryResponse",
-    
+
     # Cron Jobs
-    "CronJobBase", 
+    "CronJobBase",
     "CronJobCreate",
     "CronJobUpdate",
     "CronJobResponse",
-    
+
     # Messages
     "MessageBase",
     "MessageCreate",
-    "MessageUpdate", 
+    "MessageUpdate",
     "MessageResponse",
-    
+
     # System Logs
     "SystemLogResponse",
-    
+
     # Configuration Groups
     "ConfigurationGroupRequest",
     "ConfigurationGroupResponse",
-    
+
     # Bulk Operations
     "BulkConfigUpdateRequest",
     "BulkConfigUpdateResponse",
-    
+
     # Backup/Restore
     "ConfigBackupRequest",
-    "ConfigBackupResponse", 
+    "ConfigBackupResponse",
     "ConfigRestoreRequest",
     "ConfigRestoreResponse",
-    
+
     # Search/Filter
     "ConfigSearchParams",
     "ConfigSearchResponse",
-    
+
     # Statistics
     "ConfigStatisticsResponse",
     "BackupStatisticsResponse",
     "SystemInfoResponse",
-    
+
     # Error
     "ConfigErrorResponse"
 ]

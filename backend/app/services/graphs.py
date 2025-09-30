@@ -84,7 +84,7 @@ class GraphDataService:
                 labels.append(f"{trend['date']} {trend['hour']:02d}:00")
             else:
                 labels.append(trend['date'].strftime('%Y-%m-%d'))
-            
+
             successful_data.append(trend['successful_logins'])
             failed_data.append(trend['failed_logins'])
             unique_users_data.append(trend['unique_users'])
@@ -183,7 +183,7 @@ class GraphDataService:
                 labels.append(f"{trend['date']} {trend['hour']:02d}:00")
             else:
                 labels.append(trend['date'].strftime('%Y-%m-%d'))
-            
+
             upload_data.append(trend['upload_gb'])
             download_data.append(trend['download_gb'])
 
@@ -344,7 +344,8 @@ class GraphDataService:
         system_health = await self.system_metrics_repo.calculate_system_health_score()
 
         # Create summary chart data
-        categories = ['Total Users', 'Active Users', 'Today Logins', 'Active Sessions']
+        categories = ['Total Users', 'Active Users',
+                      'Today Logins', 'Active Sessions']
         values = [
             user_stats['total_users'],
             user_stats['active_users'],
@@ -411,7 +412,8 @@ class GraphDataService:
         end_date = request.time_range.end_date or date.today()
         limit = request.time_range.limit or 10
 
-        traffic_type = request.time_range.filters.get('traffic_type', 'total') if request.time_range.filters else 'total'
+        traffic_type = request.time_range.filters.get(
+            'traffic_type', 'total') if request.time_range.filters else 'total'
         top_users = await self.traffic_stats_repo.get_top_users_by_traffic(
             start_date, end_date, limit, traffic_type
         )
@@ -559,9 +561,11 @@ class GraphDataService:
 
         performance_data = await self.system_metrics_repo.get_performance_trends(hours)
 
-        labels = [metric['timestamp'].strftime('%H:%M') for metric in performance_data]
+        labels = [metric['timestamp'].strftime(
+            '%H:%M') for metric in performance_data]
         cpu_data = [metric['cpu_usage'] or 0 for metric in performance_data]
-        memory_data = [metric['memory_usage'] or 0 for metric in performance_data]
+        memory_data = [metric['memory_usage']
+                       or 0 for metric in performance_data]
         disk_data = [metric['disk_usage'] or 0 for metric in performance_data]
 
         chart_data = {
@@ -685,7 +689,7 @@ class DashboardService:
         for widget in widgets:
             # Get widget data based on data source
             data = await self._get_widget_data(widget.data_source, widget.widget_config)
-            
+
             widget_data.append({
                 'id': widget.id,
                 'name': widget.widget_name,
@@ -720,7 +724,8 @@ class DashboardService:
                 time_range=GraphQueryParams(
                     start_date=config.get('start_date'),
                     end_date=config.get('end_date'),
-                    granularity=TimeGranularity(config.get('granularity', 'day')),
+                    granularity=TimeGranularity(
+                        config.get('granularity', 'day')),
                     limit=config.get('limit', 100)
                 )
             )
@@ -771,7 +776,8 @@ class GraphTemplateService:
             category=config.get('category', 'custom'),
             graph_type=GraphType(config['graph_type']),
             data_source=config['data_source'],
-            time_granularity=TimeGranularity(config.get('time_granularity', 'day')),
+            time_granularity=TimeGranularity(
+                config.get('time_granularity', 'day')),
             chart_config=config.get('chart_config', {}),
             title=config['title'],
             subtitle=config.get('subtitle'),

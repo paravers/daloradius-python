@@ -23,7 +23,7 @@ class RadGroupCheck(RadiusBaseModel):
     """
     __tablename__ = "radgroupcheck"
     __table_args__ = {'extend_existing': True}
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     groupname = Column(String(64), nullable=False, index=True)
     attribute = Column(String(64), nullable=False)
@@ -38,7 +38,7 @@ class RadGroupReply(RadiusBaseModel):
     """
     __tablename__ = "radgroupreply"
     __table_args__ = {'extend_existing': True}
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     groupname = Column(String(64), nullable=False, index=True)
     attribute = Column(String(64), nullable=False)
@@ -53,7 +53,7 @@ class RadPostAuth(RadiusBaseModel):
     """
     __tablename__ = "radpostauth"
     __table_args__ = {'extend_existing': True}
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(64), nullable=False, index=True)
     pass_field = Column('pass', String(64), nullable=False)
@@ -69,7 +69,7 @@ class NasReload(RadiusBaseModel):
     """
     __tablename__ = "nasreload"
     __table_args__ = {'extend_existing': True}
-    
+
     nasipaddress = Column(INET, primary_key=True)
     reloadtime = Column(DateTime(timezone=True), nullable=False)
 
@@ -81,7 +81,7 @@ class RadIpPool(RadiusBaseModel):
     """
     __tablename__ = "radippool"
     __table_args__ = {'extend_existing': True}
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     pool_name = Column(String(30), nullable=False, index=True)
     framedipaddress = Column(INET, nullable=False, index=True)
@@ -96,7 +96,7 @@ class RadIpPool(RadiusBaseModel):
 # Export all models
 __all__ = [
     "RadGroupCheck",
-    "RadGroupReply", 
+    "RadGroupReply",
     "RadPostAuth",
     "NasReload",
     "RadIpPool"

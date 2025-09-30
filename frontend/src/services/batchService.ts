@@ -4,7 +4,7 @@
  * Service for managing batch operations and history
  */
 
-import { ApiClient } from '@/services/apiClient'
+import { apiService } from '@/services/api'
 import type { 
   BatchHistoryResponse,
   BatchHistoryListResponse,
@@ -16,16 +16,10 @@ import type {
 } from '@/types/batch'
 
 class BatchService {
-  private api: ApiClient
-
-  constructor() {
-    this.api = new ApiClient()
-  }
-
   /**
    * Get batch operation history with filtering and pagination
    */
-  async getBatchHistory(query: BatchHistoryQuery): Promise<BatchHistoryListResponse> {
+  static async getBatchHistory(query: BatchHistoryQuery): Promise<BatchHistoryListResponse> {
     const params = new URLSearchParams()
     
     if (query.operation_type) params.append('operation_type', query.operation_type)
@@ -38,94 +32,103 @@ class BatchService {
     if (query.sort_by) params.append('sort_by', query.sort_by)
     if (query.sort_order) params.append('sort_order', query.sort_order)
 
-    const response = await this.api.get(`/batch/history?${params.toString()}`)
-    return response.data
+    const response = await apiService.get<BatchHistoryListResponse>(`/batch/history?${params.toString()}`)
+    return response
   }
 
   /**
    * Get batch operation details by ID
    */
-  async getBatchDetails(batchId: number): Promise<BatchHistoryResponse> {
-    const response = await this.api.get(`/batch/history/${batchId}`)
-    return response.data
+  static async getBatchDetails(batchId: number): Promise<BatchHistoryResponse> {
+    const response = await apiService.get<BatchHistoryResponse>(`/batch/history/${batchId}`)
+    return response
   }
 
   /**
    * Create a batch history record
    */
-  async createBatchHistory(data: BatchHistoryCreate): Promise<BatchHistoryResponse> {
-    const response = await this.api.post('/batch/history', data)
-    return response.data
+  static async createBatchHistory(data: BatchHistoryCreate): Promise<BatchHistoryResponse> {
+    const response = await apiService.post<BatchHistoryResponse>('/batch/history', data)
+    return response
   }
 
   /**
    * Update a batch history record
    */
-  async updateBatchHistory(batchId: number, data: BatchHistoryUpdate): Promise<BatchHistoryResponse> {
-    const response = await this.api.put(`/batch/history/${batchId}`, data)
-    return response.data
+  static async updateBatchHistory(batchId: number, data: BatchHistoryUpdate): Promise<BatchHistoryResponse> {
+    const response = await apiService.put<BatchHistoryResponse>(`/batch/history/${batchId}`, data)
+    return response
   }
 
   /**
    * Delete a batch history record
    */
-  async deleteBatchHistory(batchId: number): Promise<void> {
-    await this.api.delete(`/batch/history/${batchId}`)
+  static async deleteBatchHistory(batchId: number): Promise<void> {
+    await apiService.delete(`/batch/history/${batchId}`)
   }
 
   /**
    * Execute batch user operations
    */
-  async executeBatchUserOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
-    const response = await this.api.post('/batch/users', request)
-    return response.data
+  static async executeBatchUserOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
+    const response = await apiService.post<BatchOperationResult>('/batch/users', request)
+    return response
   }
 
   /**
    * Execute batch NAS operations
    */
-  async executeBatchNasOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
-    const response = await this.api.post('/batch/nas', request)
-    return response.data
+  static async executeBatchNasOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
+    const response = await apiService.post<BatchOperationResult>('/batch/nas', request)
+    return response
   }
 
   /**
    * Execute batch group operations
    */
-  async executeBatchGroupOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
-    const response = await this.api.post('/batch/groups', request)
-    return response.data
+  static async executeBatchGroupOperation(request: BatchOperationRequest): Promise<BatchOperationResult> {
+    const response = await apiService.post<BatchOperationResult>('/batch/groups', request)
+    return response
   }
 
   /**
    * Get available operation types
    */
-  async getOperationTypes(): Promise<{
+  static async getOperationTypes(): Promise<{
     user_operations: string[]
     nas_operations: string[]
     group_operations: string[]
   }> {
-    const response = await this.api.get('/batch/operations/types')
-    return response.data
+    const response = await apiService.get<{
+      user_operations: string[]
+      nas_operations: string[]
+      group_operations: string[]
+    }>('/batch/operations/types')
+    return response
   }
 
   /**
    * Get batch operations statistics
    */
-  async getBatchStats(): Promise<{
+  static async getBatchStats(): Promise<{
     total_operations: number
     recent_operations: number
     status_distribution: Record<string, number>
     operation_type_distribution: Record<string, number>
   }> {
-    const response = await this.api.get('/batch/stats')
-    return response.data
+    const response = await apiService.get<{
+      total_operations: number
+      recent_operations: number
+      status_distribution: Record<string, number>
+      operation_type_distribution: Record<string, number>
+    }>('/batch/stats')
+    return response
   }
 
   /**
    * Helper method to execute batch user deletion with history tracking
    */
-  async batchDeleteUsersWithHistory(
+  static async batchDeleteUsersWithHistory(
     userIds: number[],
     options?: {
       batchName?: string
@@ -142,13 +145,13 @@ class BatchService {
       hotspot_id: options?.hotspotId
     }
 
-    return this.executeBatchUserOperation(request)
+    return BatchService.executeBatchUserOperation(request)
   }
 
   /**
    * Helper method to execute batch user status update with history tracking
    */
-  async batchUpdateUserStatusWithHistory(
+  static async batchUpdateUserStatusWithHistory(
     userIds: number[],
     status: 'active' | 'inactive',
     options?: {
@@ -167,13 +170,13 @@ class BatchService {
       hotspot_id: options?.hotspotId
     }
 
-    return this.executeBatchUserOperation(request)
+    return BatchService.executeBatchUserOperation(request)
   }
 
   /**
    * Helper method to execute batch NAS deletion with history tracking
    */
-  async batchDeleteNasWithHistory(
+  static async batchDeleteNasWithHistory(
     nasIds: number[],
     options?: {
       batchName?: string
@@ -190,13 +193,13 @@ class BatchService {
       hotspot_id: options?.hotspotId
     }
 
-    return this.executeBatchNasOperation(request)
+    return BatchService.executeBatchNasOperation(request)
   }
 
   /**
    * Helper method to execute batch group deletion with history tracking
    */
-  async batchDeleteGroupsWithHistory(
+  static async batchDeleteGroupsWithHistory(
     groupIds: number[],
     options?: {
       batchName?: string
@@ -213,9 +216,27 @@ class BatchService {
       hotspot_id: options?.hotspotId
     }
 
-    return this.executeBatchGroupOperation(request)
+    return BatchService.executeBatchGroupOperation(request)
   }
 }
 
-// Export singleton instance
-export const batchService = new BatchService()
+// Export class for static access
+export { BatchService }
+
+// For backward compatibility, export a singleton instance
+export const batchService = {
+  getBatchHistory: BatchService.getBatchHistory,
+  getBatchDetails: BatchService.getBatchDetails,
+  createBatchHistory: BatchService.createBatchHistory,
+  updateBatchHistory: BatchService.updateBatchHistory,
+  deleteBatchHistory: BatchService.deleteBatchHistory,
+  executeBatchUserOperation: BatchService.executeBatchUserOperation,
+  executeBatchNasOperation: BatchService.executeBatchNasOperation,
+  executeBatchGroupOperation: BatchService.executeBatchGroupOperation,
+  getOperationTypes: BatchService.getOperationTypes,
+  getBatchStats: BatchService.getBatchStats,
+  batchDeleteUsersWithHistory: BatchService.batchDeleteUsersWithHistory,
+  batchUpdateUserStatusWithHistory: BatchService.batchUpdateUserStatusWithHistory,
+  batchDeleteNasWithHistory: BatchService.batchDeleteNasWithHistory,
+  batchDeleteGroupsWithHistory: BatchService.batchDeleteGroupsWithHistory
+}

@@ -119,7 +119,7 @@ class GraphStatisticsRepository:
             .group_by(GraphStatistics.recorded_date, GraphStatistics.recorded_hour)
             .order_by(GraphStatistics.recorded_date, GraphStatistics.recorded_hour)
         )
-        
+
         return [
             {
                 'date': row.recorded_date,
@@ -158,7 +158,7 @@ class GraphStatisticsRepository:
             .group_by(GraphStatistics.recorded_date)
             .order_by(GraphStatistics.recorded_date)
         )
-        
+
         return [
             {
                 'date': row.recorded_date,
@@ -199,7 +199,7 @@ class GraphStatisticsRepository:
                 'end_date': end_date
             }
         )
-        
+
         return [
             {
                 'week_start': row.week_start,
@@ -240,7 +240,7 @@ class GraphStatisticsRepository:
                 'end_date': end_date
             }
         )
-        
+
         return [
             {
                 'month_start': row.month_start,
@@ -281,7 +281,7 @@ class GraphStatisticsRepository:
                 'end_date': end_date
             }
         )
-        
+
         return [
             {
                 'year_start': row.year_start,
@@ -319,14 +319,15 @@ class LoginStatisticsRepository:
                 LoginStatistics.stat_date <= end_date
             )
         )
-        
+
         if granularity == TimeGranularity.HOUR:
             query = query.where(LoginStatistics.stat_hour.isnot(None))
         else:
             query = query.where(LoginStatistics.stat_hour.is_(None))
-            
-        query = query.order_by(LoginStatistics.stat_date, LoginStatistics.stat_hour)
-        
+
+        query = query.order_by(LoginStatistics.stat_date,
+                               LoginStatistics.stat_hour)
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -335,7 +336,7 @@ class LoginStatisticsRepository:
     ) -> List[Dict[str, Any]]:
         """Get login trends data"""
         stats = await self.get_by_date_range(start_date, end_date, granularity)
-        
+
         return [
             {
                 'date': stat.stat_date,
@@ -365,19 +366,20 @@ class LoginStatisticsRepository:
                 )
             )
         )
-        
+
         combined_breakdown = {}
         for row in result.scalars():
             if row:
                 for nas_ip, count in row.items():
-                    combined_breakdown[nas_ip] = combined_breakdown.get(nas_ip, 0) + count
-                    
+                    combined_breakdown[nas_ip] = combined_breakdown.get(
+                        nas_ip, 0) + count
+
         return combined_breakdown
 
     async def calculate_real_time_stats(self) -> Dict[str, Any]:
         """Calculate real-time login statistics"""
         today = date.today()
-        
+
         # Get today's stats
         result = await self.db.execute(
             select(LoginStatistics)
@@ -385,7 +387,7 @@ class LoginStatisticsRepository:
             .order_by(desc(LoginStatistics.stat_hour))
         )
         today_stats = result.scalars().all()
-        
+
         # Calculate current online users from RadAcct
         online_users_result = await self.db.execute(
             select(func.count(RadAcct.username.distinct()))
@@ -397,13 +399,14 @@ class LoginStatisticsRepository:
             )
         )
         current_online = online_users_result.scalar() or 0
-        
+
         # Aggregate today's data
         total_logins = sum(stat.total_logins for stat in today_stats)
         successful_logins = sum(stat.successful_logins for stat in today_stats)
         failed_logins = sum(stat.failed_logins for stat in today_stats)
-        unique_users = max((stat.unique_users for stat in today_stats), default=0)
-        
+        unique_users = max(
+            (stat.unique_users for stat in today_stats), default=0)
+
         return {
             'current_online_users': current_online,
             'today_total_logins': total_logins,
@@ -439,14 +442,15 @@ class TrafficStatisticsRepository:
                 TrafficStatistics.stat_date <= end_date
             )
         )
-        
+
         if granularity == TimeGranularity.HOUR:
             query = query.where(TrafficStatistics.stat_hour.isnot(None))
         else:
             query = query.where(TrafficStatistics.stat_hour.is_(None))
-            
-        query = query.order_by(TrafficStatistics.stat_date, TrafficStatistics.stat_hour)
-        
+
+        query = query.order_by(TrafficStatistics.stat_date,
+                               TrafficStatistics.stat_hour)
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -455,7 +459,7 @@ class TrafficStatisticsRepository:
     ) -> List[Dict[str, Any]]:
         """Get traffic trends data"""
         stats = await self.get_by_date_range(start_date, end_date, granularity)
-        
+
         return [
             {
                 'date': stat.stat_date,
@@ -485,7 +489,8 @@ class TrafficStatisticsRepository:
             order_field = desc(RadAcct.acctinputoctets)
             traffic_field = RadAcct.acctinputoctets
         else:
-            order_field = desc(RadAcct.acctinputoctets + RadAcct.acctoutputoctets)
+            order_field = desc(RadAcct.acctinputoctets +
+                               RadAcct.acctoutputoctets)
             traffic_field = RadAcct.acctinputoctets + RadAcct.acctoutputoctets
 
         result = await self.db.execute(
@@ -493,21 +498,24 @@ class TrafficStatisticsRepository:
                 RadAcct.username,
                 func.sum(RadAcct.acctinputoctets).label('total_download'),
                 func.sum(RadAcct.acctoutputoctets).label('total_upload'),
-                func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets).label('total_traffic'),
+                func.sum(RadAcct.acctinputoctets +
+                         RadAcct.acctoutputoctets).label('total_traffic'),
                 func.count(RadAcct.radacctid).label('session_count'),
                 func.sum(RadAcct.acctsessiontime).label('total_time')
             )
             .where(
                 and_(
-                    RadAcct.acctstarttime >= datetime.combine(start_date, datetime.min.time()),
-                    RadAcct.acctstarttime <= datetime.combine(end_date, datetime.max.time())
+                    RadAcct.acctstarttime >= datetime.combine(
+                        start_date, datetime.min.time()),
+                    RadAcct.acctstarttime <= datetime.combine(
+                        end_date, datetime.max.time())
                 )
             )
             .group_by(RadAcct.username)
             .order_by(order_field)
             .limit(limit)
         )
-        
+
         return [
             {
                 'username': row.username,
@@ -529,19 +537,21 @@ class TrafficStatisticsRepository:
     ) -> Dict[str, Any]:
         """Get traffic comparison data"""
         stats = await self.get_by_date_range(start_date, end_date)
-        
+
         if not stats:
             return {'upload': [], 'download': [], 'dates': []}
-        
+
         upload_data = []
         download_data = []
         dates = []
-        
+
         for stat in stats:
             dates.append(stat.stat_date.strftime('%Y-%m-%d'))
-            upload_data.append(round(stat.total_upload / (1024**3), 2))  # Convert to GB
-            download_data.append(round(stat.total_download / (1024**3), 2))  # Convert to GB
-        
+            upload_data.append(
+                round(stat.total_upload / (1024**3), 2))  # Convert to GB
+            download_data.append(
+                round(stat.total_download / (1024**3), 2))  # Convert to GB
+
         return {
             'dates': dates,
             'upload': upload_data,
@@ -555,13 +565,14 @@ class TrafficStatisticsRepository:
     async def calculate_real_time_stats(self) -> Dict[str, Any]:
         """Calculate real-time traffic statistics"""
         today = date.today()
-        
+
         # Get today's traffic from RadAcct
         result = await self.db.execute(
             select(
                 func.sum(RadAcct.acctinputoctets).label('total_download'),
                 func.sum(RadAcct.acctoutputoctets).label('total_upload'),
-                func.count(RadAcct.radacctid.distinct()).label('total_sessions'),
+                func.count(RadAcct.radacctid.distinct()
+                           ).label('total_sessions'),
                 func.count(
                     func.case(
                         (RadAcct.acctstoptime.is_(None), RadAcct.radacctid)
@@ -569,12 +580,13 @@ class TrafficStatisticsRepository:
                 ).label('active_sessions')
             )
             .where(
-                RadAcct.acctstarttime >= datetime.combine(today, datetime.min.time())
+                RadAcct.acctstarttime >= datetime.combine(
+                    today, datetime.min.time())
             )
         )
-        
+
         row = result.first()
-        
+
         return {
             'today_download': row.total_download or 0,
             'today_upload': row.total_upload or 0,
@@ -623,7 +635,7 @@ class UserStatisticsRepository:
     ) -> List[Dict[str, Any]]:
         """Get user growth trends"""
         stats = await self.get_by_date_range(start_date, end_date)
-        
+
         return [
             {
                 'date': stat.stat_date,
@@ -645,7 +657,7 @@ class UserStatisticsRepository:
             .where(UserStatistics.stat_date == target_date)
         )
         stat = result.scalar_one_or_none()
-        
+
         if not stat:
             return {
                 'power_users': 0,
@@ -653,7 +665,7 @@ class UserStatisticsRepository:
                 'inactive_users': 0,
                 'total_users': 0
             }
-        
+
         return {
             'power_users': stat.power_users_count,
             'occasional_users': stat.occasional_users_count,
@@ -671,7 +683,7 @@ class UserStatisticsRepository:
             select(func.count(RadCheck.username.distinct()))
         )
         total_users = total_users_result.scalar() or 0
-        
+
         # Active users (logged in within last 30 days)
         thirty_days_ago = datetime.now() - timedelta(days=30)
         active_users_result = await self.db.execute(
@@ -679,21 +691,21 @@ class UserStatisticsRepository:
             .where(RadAcct.acctstarttime >= thirty_days_ago)
         )
         active_users = active_users_result.scalar() or 0
-        
+
         # Online users
         online_users_result = await self.db.execute(
             select(func.count(RadAcct.username.distinct()))
             .where(RadAcct.acctstoptime.is_(None))
         )
         online_users = online_users_result.scalar() or 0
-        
+
         # New users (created in last 30 days)
         new_users_result = await self.db.execute(
             select(func.count(User.id))
             .where(User.created_at >= thirty_days_ago)
         )
         new_users = new_users_result.scalar() or 0
-        
+
         return {
             'total_users': total_users,
             'active_users': active_users,
@@ -721,8 +733,8 @@ class SystemMetricsRepository:
         return metric
 
     async def get_by_time_range(
-        self, 
-        start_time: datetime, 
+        self,
+        start_time: datetime,
         end_time: datetime,
         metric_type: Optional[str] = None
     ) -> List[SystemMetrics]:
@@ -733,12 +745,12 @@ class SystemMetricsRepository:
                 SystemMetrics.recorded_at <= end_time
             )
         )
-        
+
         if metric_type:
             query = query.where(SystemMetrics.metric_type == metric_type)
-            
+
         query = query.order_by(SystemMetrics.recorded_at)
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -748,9 +760,9 @@ class SystemMetricsRepository:
         """Get system performance trends"""
         end_time = datetime.now()
         start_time = end_time - timedelta(hours=hours)
-        
+
         metrics = await self.get_by_time_range(start_time, end_time)
-        
+
         return [
             {
                 'timestamp': metric.recorded_at,
@@ -775,10 +787,10 @@ class SystemMetricsRepository:
             .limit(1)
         )
         metric = result.scalar_one_or_none()
-        
+
         if not metric:
             return None
-        
+
         return {
             'timestamp': metric.recorded_at,
             'cpu_usage': metric.cpu_usage,
@@ -798,15 +810,15 @@ class SystemMetricsRepository:
     async def calculate_system_health_score(self) -> float:
         """Calculate overall system health score"""
         latest = await self.get_latest_metrics()
-        
+
         if not latest:
             return 0.0
-        
+
         # Weight different metrics
         cpu_score = max(0, 100 - (latest.get('cpu_usage', 0)))
         memory_score = max(0, 100 - (latest.get('memory_usage', 0)))
         disk_score = max(0, 100 - (latest.get('disk_usage', 0)))
-        
+
         # Response time score (assume good < 100ms, bad > 1000ms)
         response_time = latest.get('radius_response_time', 0)
         if response_time < 100:
@@ -815,7 +827,7 @@ class SystemMetricsRepository:
             response_score = 0
         else:
             response_score = 100 - ((response_time - 100) / 9)
-        
+
         # Calculate weighted average
         total_score = (
             cpu_score * 0.3 +
@@ -823,7 +835,7 @@ class SystemMetricsRepository:
             disk_score * 0.2 +
             response_score * 0.2
         )
-        
+
         return round(total_score, 1)
 
 
@@ -851,12 +863,12 @@ class GraphTemplateRepository:
     async def get_by_category(self, category: str, is_active: bool = True) -> List[GraphTemplate]:
         """Get templates by category"""
         query = select(GraphTemplate).where(GraphTemplate.category == category)
-        
+
         if is_active:
             query = query.where(GraphTemplate.is_active == True)
-            
+
         query = query.order_by(GraphTemplate.sort_order, GraphTemplate.name)
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -879,11 +891,11 @@ class GraphTemplateRepository:
         template = await self.get_by_id(template_id)
         if not template:
             return None
-        
+
         for key, value in kwargs.items():
             if hasattr(template, key):
                 setattr(template, key, value)
-        
+
         await self.db.commit()
         await self.db.refresh(template)
         return template
@@ -920,7 +932,7 @@ class DashboardWidgetRepository:
                 DashboardWidget.is_visible == True
             )
         )
-        
+
         if include_shared:
             query = query.where(
                 or_(
@@ -930,9 +942,10 @@ class DashboardWidgetRepository:
             )
         else:
             query = query.where(DashboardWidget.created_by == user)
-        
-        query = query.order_by(DashboardWidget.position_y, DashboardWidget.position_x)
-        
+
+        query = query.order_by(DashboardWidget.position_y,
+                               DashboardWidget.position_x)
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -943,10 +956,10 @@ class DashboardWidgetRepository:
         widget = await self.get_by_id(widget_id)
         if not widget:
             return None
-        
+
         widget.position_x = position_x
         widget.position_y = position_y
-        
+
         await self.db.commit()
         await self.db.refresh(widget)
         return widget
@@ -958,10 +971,10 @@ class DashboardWidgetRepository:
         widget = await self.get_by_id(widget_id)
         if not widget:
             return None
-        
+
         widget.width = width
         widget.height = height
-        
+
         await self.db.commit()
         await self.db.refresh(widget)
         return widget
@@ -971,7 +984,7 @@ class DashboardWidgetRepository:
         widget = await self.get_by_id(widget_id)
         if not widget:
             return False
-        
+
         await self.db.delete(widget)
         await self.db.commit()
         return True

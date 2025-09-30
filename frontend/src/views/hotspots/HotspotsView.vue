@@ -396,7 +396,10 @@ import type {
   HotspotPagination,
   HotspotFormMode,
   HotspotStatisticsResponse,
-  HotspotOptionsResponse,
+  HotspotOptionsResponse
+} from '@/types/hotspot'
+
+import {
   HOTSPOT_TABLE_COLUMNS,
   DEFAULT_HOTSPOT_FILTERS,
   DEFAULT_HOTSPOT_SORT,
@@ -1063,6 +1066,7 @@ watch(filters, () => {
   max-width: 200px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

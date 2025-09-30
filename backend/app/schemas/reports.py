@@ -35,18 +35,26 @@ class UpsStatusBase(BaseModel):
     ups_model: Optional[str] = Field(None, description="UPS model")
     ups_serial: Optional[str] = Field(None, description="UPS serial number")
     location: Optional[str] = Field(None, description="Physical location")
-    battery_charge: Optional[float] = Field(None, ge=0, le=100, description="Battery charge percentage")
-    battery_runtime: Optional[int] = Field(None, ge=0, description="Battery runtime in minutes")
-    input_voltage: Optional[float] = Field(None, ge=0, description="Input voltage")
-    output_voltage: Optional[float] = Field(None, ge=0, description="Output voltage")
-    load_percentage: Optional[float] = Field(None, ge=0, le=100, description="Load percentage")
-    temperature: Optional[float] = Field(None, description="Temperature in Celsius")
-    humidity: Optional[float] = Field(None, ge=0, le=100, description="Humidity percentage")
+    battery_charge: Optional[float] = Field(
+        None, ge=0, le=100, description="Battery charge percentage")
+    battery_runtime: Optional[int] = Field(
+        None, ge=0, description="Battery runtime in minutes")
+    input_voltage: Optional[float] = Field(
+        None, ge=0, description="Input voltage")
+    output_voltage: Optional[float] = Field(
+        None, ge=0, description="Output voltage")
+    load_percentage: Optional[float] = Field(
+        None, ge=0, le=100, description="Load percentage")
+    temperature: Optional[float] = Field(
+        None, description="Temperature in Celsius")
+    humidity: Optional[float] = Field(
+        None, ge=0, le=100, description="Humidity percentage")
 
 
 class UpsStatusCreate(UpsStatusBase):
     """UPS status creation schema"""
-    status: SystemStatus = Field(SystemStatus.OFFLINE, description="UPS status")
+    status: SystemStatus = Field(
+        SystemStatus.OFFLINE, description="UPS status")
 
 
 class UpsStatusUpdate(BaseModel):
@@ -86,21 +94,28 @@ class RaidStatusBase(BaseModel):
     """RAID status base schema"""
     array_name: str = Field(..., description="RAID array name")
     raid_level: str = Field(..., description="RAID level (RAID0, RAID1, etc.)")
-    controller_name: Optional[str] = Field(None, description="RAID controller name")
+    controller_name: Optional[str] = Field(
+        None, description="RAID controller name")
     total_disks: int = Field(..., ge=1, description="Total number of disks")
     active_disks: int = Field(..., ge=0, description="Number of active disks")
     failed_disks: int = Field(0, ge=0, description="Number of failed disks")
     spare_disks: int = Field(0, ge=0, description="Number of spare disks")
-    total_size: Optional[int] = Field(None, ge=0, description="Total size in bytes")
-    used_size: Optional[int] = Field(None, ge=0, description="Used size in bytes")
-    available_size: Optional[int] = Field(None, ge=0, description="Available size in bytes")
-    read_rate: Optional[float] = Field(None, ge=0, description="Read rate in MB/s")
-    write_rate: Optional[float] = Field(None, ge=0, description="Write rate in MB/s")
+    total_size: Optional[int] = Field(
+        None, ge=0, description="Total size in bytes")
+    used_size: Optional[int] = Field(
+        None, ge=0, description="Used size in bytes")
+    available_size: Optional[int] = Field(
+        None, ge=0, description="Available size in bytes")
+    read_rate: Optional[float] = Field(
+        None, ge=0, description="Read rate in MB/s")
+    write_rate: Optional[float] = Field(
+        None, ge=0, description="Write rate in MB/s")
 
 
 class RaidStatusCreate(RaidStatusBase):
     """RAID status creation schema"""
-    status: SystemStatus = Field(SystemStatus.OFFLINE, description="RAID status")
+    status: SystemStatus = Field(
+        SystemStatus.OFFLINE, description="RAID status")
 
 
 class RaidStatusUpdate(BaseModel):
@@ -144,17 +159,23 @@ class HeartBeatBase(BaseModel):
     service_type: str = Field(..., description="Service type")
     host_name: str = Field(..., description="Host name")
     ip_address: Optional[str] = Field(None, description="IP address")
-    port: Optional[int] = Field(None, ge=1, le=65535, description="Port number")
-    response_time: Optional[float] = Field(None, ge=0, description="Response time in milliseconds")
+    port: Optional[int] = Field(
+        None, ge=1, le=65535, description="Port number")
+    response_time: Optional[float] = Field(
+        None, ge=0, description="Response time in milliseconds")
     uptime: Optional[int] = Field(None, ge=0, description="Uptime in seconds")
-    cpu_usage: Optional[float] = Field(None, ge=0, le=100, description="CPU usage percentage")
-    memory_usage: Optional[float] = Field(None, ge=0, le=100, description="Memory usage percentage")
-    disk_usage: Optional[float] = Field(None, ge=0, le=100, description="Disk usage percentage")
+    cpu_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="CPU usage percentage")
+    memory_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="Memory usage percentage")
+    disk_usage: Optional[float] = Field(
+        None, ge=0, le=100, description="Disk usage percentage")
 
 
 class HeartBeatCreate(HeartBeatBase):
     """HeartBeat creation schema"""
-    status: SystemStatus = Field(SystemStatus.OFFLINE, description="Service status")
+    status: SystemStatus = Field(
+        SystemStatus.OFFLINE, description="Service status")
 
 
 class HeartBeatUpdate(BaseModel):
@@ -191,11 +212,15 @@ class HeartBeatResponse(HeartBeatBase):
 class ReportTemplateBase(BaseModel):
     """Report template base schema"""
     name: str = Field(..., description="Template name")
-    description: Optional[str] = Field(None, description="Template description")
+    description: Optional[str] = Field(
+        None, description="Template description")
     report_type: ReportType = Field(..., description="Report type")
-    query_config: Optional[Dict[str, Any]] = Field(None, description="Query configuration")
-    display_config: Optional[Dict[str, Any]] = Field(None, description="Display configuration")
-    filter_config: Optional[Dict[str, Any]] = Field(None, description="Filter configuration")
+    query_config: Optional[Dict[str, Any]] = Field(
+        None, description="Query configuration")
+    display_config: Optional[Dict[str, Any]] = Field(
+        None, description="Display configuration")
+    filter_config: Optional[Dict[str, Any]] = Field(
+        None, description="Filter configuration")
     is_public: bool = Field(False, description="Is template public")
     is_active: bool = Field(True, description="Is template active")
 
@@ -236,9 +261,12 @@ class ReportGenerationBase(BaseModel):
     report_name: str = Field(..., description="Report name")
     report_type: ReportType = Field(..., description="Report type")
     template_id: Optional[int] = Field(None, description="Template ID")
-    parameters: Optional[Dict[str, Any]] = Field(None, description="Generation parameters")
-    date_range_start: Optional[datetime] = Field(None, description="Date range start")
-    date_range_end: Optional[datetime] = Field(None, description="Date range end")
+    parameters: Optional[Dict[str, Any]] = Field(
+        None, description="Generation parameters")
+    date_range_start: Optional[datetime] = Field(
+        None, description="Date range start")
+    date_range_end: Optional[datetime] = Field(
+        None, description="Date range end")
 
 
 class ReportGenerationCreate(ReportGenerationBase):
@@ -284,15 +312,22 @@ class ServerMonitoringBase(BaseModel):
     server_name: str = Field(..., description="Server name")
     ip_address: str = Field(..., description="IP address")
     server_type: str = Field(..., description="Server type")
-    cpu_usage: float = Field(..., ge=0, le=100, description="CPU usage percentage")
-    memory_usage: float = Field(..., ge=0, le=100, description="Memory usage percentage")
-    disk_usage: float = Field(..., ge=0, le=100, description="Disk usage percentage")
-    network_in: Optional[float] = Field(None, ge=0, description="Network in MB/s")
-    network_out: Optional[float] = Field(None, ge=0, description="Network out MB/s")
+    cpu_usage: float = Field(..., ge=0, le=100,
+                             description="CPU usage percentage")
+    memory_usage: float = Field(..., ge=0, le=100,
+                                description="Memory usage percentage")
+    disk_usage: float = Field(..., ge=0, le=100,
+                              description="Disk usage percentage")
+    network_in: Optional[float] = Field(
+        None, ge=0, description="Network in MB/s")
+    network_out: Optional[float] = Field(
+        None, ge=0, description="Network out MB/s")
     uptime: Optional[int] = Field(None, ge=0, description="Uptime in seconds")
     load_average: Optional[str] = Field(None, description="Load average")
-    active_connections: Optional[int] = Field(None, ge=0, description="Active connections")
-    services_status: Optional[Dict[str, Any]] = Field(None, description="Services status")
+    active_connections: Optional[int] = Field(
+        None, ge=0, description="Active connections")
+    services_status: Optional[Dict[str, Any]] = Field(
+        None, description="Services status")
 
 
 class ServerMonitoringCreate(ServerMonitoringBase):
@@ -341,7 +376,8 @@ class TopUsersReportQuery(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     limit: int = Field(10, ge=1, le=100)
-    order_by: str = Field("total_traffic", regex="^(total_traffic|session_time|session_count)$")
+    order_by: str = Field(
+        "total_traffic", regex="^(total_traffic|session_time|session_count)$")
 
 
 class SystemLogQuery(BaseModel):

@@ -41,7 +41,8 @@ class DashboardStats(BaseModel):
     today_sessions: int = Field(description="Sessions today")
     today_traffic_gb: float = Field(description="Traffic today in GB")
     monthly_revenue: float = Field(description="Monthly revenue")
-    system_health_score: float = Field(description="System health score (0-100)")
+    system_health_score: float = Field(
+        description="System health score (0-100)")
     last_updated: datetime = Field(description="Last update timestamp")
 
 
@@ -89,13 +90,14 @@ class DashboardOverview(BaseModel):
     system_alerts: List[SystemAlert]
     top_users: List[TopUser]
     quick_stats: QuickStats
-    charts_data: Optional[Dict[str, Any]] = Field(description="Chart data for dashboard widgets")
+    charts_data: Optional[Dict[str, Any]] = Field(
+        description="Chart data for dashboard widgets")
 
 
 class SystemStatus(BaseModel):
     """System status information"""
     database_status: str = Field(description="Database connection status")
-    radius_status: str = Field(description="RADIUS server status") 
+    radius_status: str = Field(description="RADIUS server status")
     cache_status: str = Field(description="Cache system status")
     disk_usage_percent: float = Field(description="Disk usage percentage")
     memory_usage_percent: float = Field(description="Memory usage percentage")
@@ -110,7 +112,7 @@ async def get_dashboard_stats(
 ):
     """
     Get comprehensive dashboard statistics
-    
+
     Returns key metrics and statistics for the dashboard overview
     """
     try:
@@ -119,51 +121,54 @@ async def get_dashboard_stats(
         accounting_repo = AccountingRepository(db)
         nas_repo = NasRepository(db)
         billing_repo = BillingRepository(db)
-        
+
         user_service = UserService(user_repo, accounting_repo)
         accounting_service = AccountingService(accounting_repo)
         nas_service = NasService(nas_repo)
         billing_service = BillingService(billing_repo)
-        
+
         # Calculate statistics
         today = datetime.utcnow().date()
         today_start = datetime.combine(today, datetime.min.time())
-        
+
         # User statistics
         total_users = await user_repo.count()
         active_users = await user_repo.count_active()
-        
+
         # Session statistics
         total_sessions = await accounting_repo.count_total_sessions()
         active_sessions = await accounting_repo.count_active_sessions()
         today_sessions = await accounting_repo.count_sessions_by_date(today_start)
-        
+
         # Login statistics
         today_logins = await accounting_repo.count_logins_by_date(today_start)
-        
+
         # Traffic statistics
         today_traffic = await accounting_repo.get_traffic_by_date(today_start)
-        today_traffic_gb = (today_traffic.get('input_octets', 0) + today_traffic.get('output_octets', 0)) / (1024**3)
-        
+        today_traffic_gb = (today_traffic.get(
+            'input_octets', 0) + today_traffic.get('output_octets', 0)) / (1024**3)
+
         # NAS statistics
         total_nas = await nas_repo.count()
         active_nas = await nas_repo.count_active()
-        
+
         # Hotspot count (estimated from NAS if no dedicated hotspot table)
         total_hotspots = total_nas  # Placeholder
-        
+
         # Revenue statistics (monthly)
         month_start = datetime(today.year, today.month, 1)
         monthly_revenue = await billing_service.get_monthly_revenue(month_start)
-        
+
         # System health score (basic calculation)
         health_factors = [
-            100 if active_sessions < 1000 else max(0, 100 - (active_sessions - 1000) / 10),
-            100 if active_nas == total_nas else (active_nas / max(total_nas, 1)) * 100,
+            100 if active_sessions < 1000 else max(
+                0, 100 - (active_sessions - 1000) / 10),
+            100 if active_nas == total_nas else (
+                active_nas / max(total_nas, 1)) * 100,
             90  # Placeholder for other health factors
         ]
         system_health_score = sum(health_factors) / len(health_factors)
-        
+
         return DashboardStats(
             total_users=total_users,
             active_users=active_users,
@@ -179,7 +184,7 @@ async def get_dashboard_stats(
             system_health_score=round(system_health_score, 1),
             last_updated=datetime.utcnow()
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -189,22 +194,23 @@ async def get_dashboard_stats(
 
 @router.get("/overview", response_model=DashboardOverview)
 async def get_dashboard_overview(
-    include_charts: bool = Query(False, description="Include chart data in response"),
+    include_charts: bool = Query(
+        False, description="Include chart data in response"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get complete dashboard overview including stats, activities, and alerts
-    
+
     Provides all data needed for the main dashboard page
     """
     try:
         # Get main statistics
         stats = await get_dashboard_stats(db, current_user)
-        
+
         # Initialize repositories
         accounting_repo = AccountingRepository(db)
-        
+
         # Get recent activity (last 10 activities)
         recent_activities = await accounting_repo.get_recent_activities(limit=10)
         recent_activity = [
@@ -212,13 +218,14 @@ async def get_dashboard_overview(
                 id=i + 1,
                 timestamp=activity.get('timestamp', datetime.utcnow()),
                 activity_type=activity.get('type', 'login'),
-                description=activity.get('description', f"User {activity.get('username', 'unknown')} logged in"),
+                description=activity.get(
+                    'description', f"User {activity.get('username', 'unknown')} logged in"),
                 username=activity.get('username'),
                 status=activity.get('status', 'success')
             )
             for i, activity in enumerate(recent_activities)
         ]
-        
+
         # Get system alerts (mock data for now)
         system_alerts = [
             SystemAlert(
@@ -230,14 +237,14 @@ async def get_dashboard_overview(
                 acknowledged=False
             )
         ] if stats.active_sessions > 500 else []
-        
+
         # Get top users by traffic (last 7 days)
         week_ago = datetime.utcnow() - timedelta(days=7)
         top_users_data = await accounting_repo.get_top_users_by_traffic(
             start_date=week_ago,
             limit=5
         )
-        
+
         top_users = [
             TopUser(
                 username=user.get('username', 'unknown'),
@@ -247,20 +254,20 @@ async def get_dashboard_overview(
             )
             for user in top_users_data
         ]
-        
+
         # Calculate quick stats
         hour_ago = datetime.utcnow() - timedelta(hours=1)
         quick_stats = QuickStats(
             online_users_now=await accounting_repo.count_active_sessions(),
             sessions_last_hour=await accounting_repo.count_sessions_since(hour_ago),
             traffic_last_hour_gb=round(
-                (await accounting_repo.get_traffic_since(hour_ago)).get('total', 0) / (1024**3), 
+                (await accounting_repo.get_traffic_since(hour_ago)).get('total', 0) / (1024**3),
                 2
             ),
             failed_logins_today=await accounting_repo.count_failed_logins_today(),
             nas_response_time_ms=50.0  # Placeholder
         )
-        
+
         # Optional chart data
         charts_data = None
         if include_charts:
@@ -269,7 +276,7 @@ async def get_dashboard_overview(
                 "traffic_trend": await accounting_repo.get_traffic_trend(days=7),
                 "user_activity": await accounting_repo.get_user_activity_trend(days=30)
             }
-        
+
         return DashboardOverview(
             stats=stats,
             recent_activity=recent_activity,
@@ -278,7 +285,7 @@ async def get_dashboard_overview(
             quick_stats=quick_stats,
             charts_data=charts_data
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -293,7 +300,7 @@ async def get_system_status(
 ):
     """
     Get comprehensive system status information
-    
+
     Returns system health metrics and status indicators
     """
     try:
@@ -303,7 +310,7 @@ async def get_system_status(
             database_status = "healthy"
         except Exception:
             database_status = "error"
-        
+
         # Basic system metrics (mock data - in production, integrate with system monitoring)
         system_status = SystemStatus(
             database_status=database_status,
@@ -314,9 +321,9 @@ async def get_system_status(
             cpu_usage_percent=45.8,
             uptime_hours=168.5  # Would get actual system uptime
         )
-        
+
         return system_status
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -326,30 +333,32 @@ async def get_system_status(
 
 @router.get("/recent-activities")
 async def get_recent_activities(
-    limit: int = Query(20, ge=1, le=100, description="Number of activities to return"),
-    activity_type: Optional[str] = Query(None, description="Filter by activity type"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Number of activities to return"),
+    activity_type: Optional[str] = Query(
+        None, description="Filter by activity type"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get recent system activities with pagination
-    
+
     Returns recent user activities, logins, and system events
     """
     try:
         accounting_repo = AccountingRepository(db)
-        
+
         activities = await accounting_repo.get_recent_activities(
             limit=limit,
             activity_type=activity_type
         )
-        
+
         return {
             "activities": activities,
             "total": len(activities),
             "limit": limit
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -359,14 +368,16 @@ async def get_recent_activities(
 
 @router.get("/alerts")
 async def get_system_alerts(
-    severity: Optional[str] = Query(None, description="Filter by severity level"),
-    acknowledged: Optional[bool] = Query(None, description="Filter by acknowledgment status"),
+    severity: Optional[str] = Query(
+        None, description="Filter by severity level"),
+    acknowledged: Optional[bool] = Query(
+        None, description="Filter by acknowledgment status"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Get system alerts and notifications
-    
+
     Returns system alerts based on various criteria
     """
     try:
@@ -389,20 +400,22 @@ async def get_system_alerts(
                 acknowledged=True
             )
         ]
-        
+
         # Apply filters
         filtered_alerts = all_alerts
         if severity:
-            filtered_alerts = [alert for alert in filtered_alerts if alert.severity == severity]
+            filtered_alerts = [
+                alert for alert in filtered_alerts if alert.severity == severity]
         if acknowledged is not None:
-            filtered_alerts = [alert for alert in filtered_alerts if alert.acknowledged == acknowledged]
-        
+            filtered_alerts = [
+                alert for alert in filtered_alerts if alert.acknowledged == acknowledged]
+
         return {
             "alerts": filtered_alerts,
             "total": len(filtered_alerts),
             "unacknowledged_count": len([a for a in all_alerts if not a.acknowledged])
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

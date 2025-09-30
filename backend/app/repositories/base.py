@@ -23,11 +23,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     """
     Base repository class providing common CRUD operations
     """
-    
+
     def __init__(self, model: Type[ModelType], db_session: AsyncSession):
         """
         Initialize repository with model and database session
-        
+
         Args:
             model: SQLAlchemy model class
             db_session: Async database session
@@ -38,47 +38,49 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     async def get(self, id: int, load_relationships: bool = False) -> Optional[ModelType]:
         """
         Get a single record by ID
-        
+
         Args:
             id: Record ID
             load_relationships: Whether to load related objects
-            
+
         Returns:
             Model instance or None if not found
         """
         query = select(self.model).where(self.model.id == id)
-        
+
         if load_relationships:
             query = self._add_relationship_loading(query)
-            
+
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_by_field(
-        self, 
-        field_name: str, 
-        field_value: Any, 
+        self,
+        field_name: str,
+        field_value: Any,
         load_relationships: bool = False
     ) -> Optional[ModelType]:
         """
         Get a single record by any field
-        
+
         Args:
             field_name: Field name to search by
             field_value: Field value to match
             load_relationships: Whether to load related objects
-            
+
         Returns:
             Model instance or None if not found
         """
         if not hasattr(self.model, field_name):
-            raise ValueError(f"Model {self.model.__name__} has no field {field_name}")
-            
-        query = select(self.model).where(getattr(self.model, field_name) == field_value)
-        
+            raise ValueError(
+                f"Model {self.model.__name__} has no field {field_name}")
+
+        query = select(self.model).where(
+            getattr(self.model, field_name) == field_value)
+
         if load_relationships:
             query = self._add_relationship_loading(query)
-            
+
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
@@ -93,7 +95,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     ) -> List[ModelType]:
         """
         Get multiple records with pagination and filtering
-        
+
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
@@ -101,16 +103,16 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
             order_by: Field name to order by
             order_desc: Whether to order descending
             load_relationships: Whether to load related objects
-            
+
         Returns:
             List of model instances
         """
         query = select(self.model)
-        
+
         # Apply filters
         if filters:
             query = self._apply_filters(query, filters)
-            
+
         # Apply ordering
         if order_by and hasattr(self.model, order_by):
             field = getattr(self.model, order_by)
@@ -118,32 +120,32 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
                 query = query.order_by(field.desc())
             else:
                 query = query.order_by(field)
-                
+
         # Apply relationship loading
         if load_relationships:
             query = self._add_relationship_loading(query)
-            
+
         # Apply pagination
         query = query.offset(skip).limit(limit)
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()
 
     async def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
         """
         Count records with optional filtering
-        
+
         Args:
             filters: Dictionary of field filters
-            
+
         Returns:
             Number of matching records
         """
         query = select(func.count(self.model.id))
-        
+
         if filters:
             query = self._apply_filters(query, filters)
-            
+
         result = await self.db.execute(query)
         return result.scalar()
 
@@ -160,7 +162,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     ) -> tuple[List[ModelType], int]:
         """
         Get paginated records with optional filtering and search
-        
+
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
@@ -170,21 +172,21 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
             order_by: Field name to order by
             order_desc: Whether to order descending
             load_relationships: Whether to load related objects
-            
+
         Returns:
             Tuple of (records, total_count)
         """
         # Build base query for records
         query = select(self.model)
-        
+
         # Build count query
         count_query = select(func.count(self.model.id))
-        
+
         # Apply filters to both queries
         if filters:
             query = self._apply_filters(query, filters)
             count_query = self._apply_filters(count_query, filters)
-        
+
         # Apply search to both queries
         if search_term and search_fields:
             search_conditions = []
@@ -192,16 +194,16 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
                 if hasattr(self.model, field_name):
                     field = getattr(self.model, field_name)
                     search_conditions.append(field.ilike(f"%{search_term}%"))
-            
+
             if search_conditions:
                 search_filter = or_(*search_conditions)
                 query = query.where(search_filter)
                 count_query = count_query.where(search_filter)
-        
+
         # Get total count
         count_result = await self.db.execute(count_query)
         total = count_result.scalar()
-        
+
         # Apply ordering to records query
         if order_by and hasattr(self.model, order_by):
             field = getattr(self.model, order_by)
@@ -209,30 +211,30 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
                 query = query.order_by(field.desc())
             else:
                 query = query.order_by(field)
-                
+
         # Apply relationship loading
         if load_relationships:
             query = self._add_relationship_loading(query)
-            
+
         # Apply pagination to records query
         query = query.offset(skip).limit(limit)
-        
+
         # Execute records query
         result = await self.db.execute(query)
         records = result.scalars().all()
-        
+
         return records, total
 
     async def create(self, obj_in: CreateSchemaType) -> ModelType:
         """
         Create a new record
-        
+
         Args:
             obj_in: Pydantic schema with creation data
-            
+
         Returns:
             Created model instance
-            
+
         Raises:
             IntegrityError: If unique constraints are violated
         """
@@ -240,10 +242,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
             obj_data = obj_in.dict()
         else:
             obj_data = dict(obj_in)
-            
+
         db_obj = self.model(**obj_data)
         self.db.add(db_obj)
-        
+
         try:
             await self.db.commit()
             await self.db.refresh(db_obj)
@@ -255,49 +257,49 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     async def create_multi(self, objects_in: List[CreateSchemaType]) -> List[ModelType]:
         """
         Create multiple records in a single transaction
-        
+
         Args:
             objects_in: List of Pydantic schemas with creation data
-            
+
         Returns:
             List of created model instances
         """
         db_objects = []
-        
+
         for obj_in in objects_in:
             if hasattr(obj_in, 'dict'):
                 obj_data = obj_in.dict()
             else:
                 obj_data = dict(obj_in)
-                
+
             db_obj = self.model(**obj_data)
             db_objects.append(db_obj)
             self.db.add(db_obj)
-            
+
         try:
             await self.db.commit()
-            
+
             # Refresh all objects
             for db_obj in db_objects:
                 await self.db.refresh(db_obj)
-                
+
             return db_objects
         except IntegrityError as e:
             await self.db.rollback()
             raise e
 
     async def update(
-        self, 
-        db_obj: ModelType, 
+        self,
+        db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
         """
         Update an existing record
-        
+
         Args:
             db_obj: Existing model instance
             obj_in: Pydantic schema or dict with update data
-            
+
         Returns:
             Updated model instance
         """
@@ -305,11 +307,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
             update_data = obj_in.dict(exclude_unset=True)
         else:
             update_data = obj_in
-            
+
         for field, value in update_data.items():
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
-                
+
         try:
             await self.db.commit()
             await self.db.refresh(db_obj)
@@ -321,42 +323,42 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     async def delete(self, id: int) -> bool:
         """
         Delete a record by ID
-        
+
         Args:
             id: Record ID to delete
-            
+
         Returns:
             True if deleted, False if not found
         """
         query = delete(self.model).where(self.model.id == id)
         result = await self.db.execute(query)
         await self.db.commit()
-        
+
         return result.rowcount > 0
 
     async def delete_multi(self, ids: List[int]) -> int:
         """
         Delete multiple records by IDs
-        
+
         Args:
             ids: List of record IDs to delete
-            
+
         Returns:
             Number of deleted records
         """
         query = delete(self.model).where(self.model.id.in_(ids))
         result = await self.db.execute(query)
         await self.db.commit()
-        
+
         return result.rowcount
 
     async def exists(self, id: int) -> bool:
         """
         Check if a record exists by ID
-        
+
         Args:
             id: Record ID to check
-            
+
         Returns:
             True if exists, False otherwise
         """
@@ -368,17 +370,18 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     async def exists_by_field(self, field_name: str, field_value: Any) -> bool:
         """
         Check if a record exists by any field
-        
+
         Args:
             field_name: Field name to check
             field_value: Field value to match
-            
+
         Returns:
             True if exists, False otherwise
         """
         if not hasattr(self.model, field_name):
-            raise ValueError(f"Model {self.model.__name__} has no field {field_name}")
-            
+            raise ValueError(
+                f"Model {self.model.__name__} has no field {field_name}")
+
         query = select(func.count(self.model.id)).where(
             getattr(self.model, field_name) == field_value
         )
@@ -389,18 +392,18 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     def _apply_filters(self, query, filters: Dict[str, Any]):
         """
         Apply filters to query
-        
+
         Args:
             query: SQLAlchemy query
             filters: Dictionary of field filters
-            
+
         Returns:
             Filtered query
         """
         for field_name, field_value in filters.items():
             if hasattr(self.model, field_name):
                 field = getattr(self.model, field_name)
-                
+
                 if isinstance(field_value, dict):
                     # Handle operators like {'>=': 100}
                     for op, value in field_value.items():
@@ -428,39 +431,39 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
                 else:
                     # Direct equality
                     query = query.where(field == field_value)
-                    
+
         return query
 
     @abstractmethod
     def _add_relationship_loading(self, query):
         """
         Add relationship loading to query - must be implemented by subclasses
-        
+
         Args:
             query: SQLAlchemy query
-            
+
         Returns:
             Query with relationship loading
         """
         return query
 
     async def bulk_update(
-        self, 
-        filters: Dict[str, Any], 
+        self,
+        filters: Dict[str, Any],
         update_data: Dict[str, Any]
     ) -> int:
         """
         Bulk update records matching filters
-        
+
         Args:
             filters: Dictionary of field filters to match records
             update_data: Dictionary of fields to update
-            
+
         Returns:
             Number of updated records
         """
         query = update(self.model)
-        
+
         # Apply filters
         if filters:
             conditions = []
@@ -468,16 +471,16 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
                 if hasattr(self.model, field_name):
                     field = getattr(self.model, field_name)
                     conditions.append(field == field_value)
-            
+
             if conditions:
                 query = query.where(and_(*conditions))
-        
+
         # Apply updates
         query = query.values(**update_data)
-        
+
         result = await self.db.execute(query)
         await self.db.commit()
-        
+
         return result.rowcount
 
     async def search(
@@ -490,35 +493,35 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType], ABC
     ) -> List[ModelType]:
         """
         Search records across multiple text fields
-        
+
         Args:
             search_term: Text to search for
             search_fields: List of field names to search in
             skip: Number of records to skip
             limit: Maximum number of records to return
             filters: Additional filters to apply
-            
+
         Returns:
             List of matching model instances
         """
         query = select(self.model)
-        
+
         # Build search conditions
         search_conditions = []
         for field_name in search_fields:
             if hasattr(self.model, field_name):
                 field = getattr(self.model, field_name)
                 search_conditions.append(field.ilike(f"%{search_term}%"))
-        
+
         if search_conditions:
             query = query.where(or_(*search_conditions))
-        
+
         # Apply additional filters
         if filters:
             query = self._apply_filters(query, filters)
-        
+
         # Apply pagination
         query = query.offset(skip).limit(limit)
-        
+
         result = await self.db.execute(query)
         return result.scalars().all()

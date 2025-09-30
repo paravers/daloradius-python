@@ -31,8 +31,10 @@ router = APIRouter()
 @router.get("/radcheck", response_model=PaginatedResponse[RadcheckResponse])
 async def list_radcheck_attributes(
     username: Optional[str] = Query(None, description="Filter by username"),
-    attribute: Optional[str] = Query(None, description="Filter by attribute name"),
-    search: Optional[str] = Query(None, description="Search in username or attribute"),
+    attribute: Optional[str] = Query(
+        None, description="Filter by attribute name"),
+    search: Optional[str] = Query(
+        None, description="Search in username or attribute"),
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -40,17 +42,17 @@ async def list_radcheck_attributes(
     Get list of RadCheck attributes with filtering and pagination
     """
     repo = RadcheckRepository(db)
-    
+
     # Build filters
     filters = {}
     if username:
         filters["username"] = username
     if attribute:
         filters["attribute"] = attribute
-    
+
     # Apply search
     search_fields = ["username", "attribute", "value"] if search else None
-    
+
     try:
         items, total = await repo.get_paginated(
             skip=pagination.skip,
@@ -60,7 +62,7 @@ async def list_radcheck_attributes(
             search_fields=search_fields,
             order_by="username"
         )
-        
+
         return PaginatedResponse(
             items=items,
             total=total,
@@ -84,14 +86,14 @@ async def get_radcheck_attribute(
     Get a specific RadCheck attribute by ID
     """
     repo = RadcheckRepository(db)
-    
+
     attribute = await repo.get(attribute_id)
     if not attribute:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadCheck attribute not found"
         )
-    
+
     return attribute
 
 
@@ -104,20 +106,20 @@ async def create_radcheck_attribute(
     Create a new RadCheck attribute
     """
     repo = RadcheckRepository(db)
-    
+
     try:
         # Check if attribute already exists for user
         existing = await repo.get_user_attribute(
-            attribute_data.username, 
+            attribute_data.username,
             attribute_data.attribute
         )
-        
+
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Attribute '{attribute_data.attribute}' already exists for user '{attribute_data.username}'"
             )
-        
+
         attribute = await repo.create(attribute_data)
         return attribute
     except HTTPException:
@@ -139,14 +141,14 @@ async def update_radcheck_attribute(
     Update an existing RadCheck attribute
     """
     repo = RadcheckRepository(db)
-    
+
     existing = await repo.get(attribute_id)
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadCheck attribute not found"
         )
-    
+
     try:
         attribute = await repo.update(existing, attribute_data)
         return attribute
@@ -166,14 +168,14 @@ async def delete_radcheck_attribute(
     Delete a RadCheck attribute
     """
     repo = RadcheckRepository(db)
-    
+
     existing = await repo.get(attribute_id)
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadCheck attribute not found"
         )
-    
+
     try:
         await repo.delete(existing)
         return {"message": "RadCheck attribute deleted successfully"}
@@ -189,8 +191,10 @@ async def delete_radcheck_attribute(
 @router.get("/radreply", response_model=PaginatedResponse[RadreplyResponse])
 async def list_radreply_attributes(
     username: Optional[str] = Query(None, description="Filter by username"),
-    attribute: Optional[str] = Query(None, description="Filter by attribute name"),
-    search: Optional[str] = Query(None, description="Search in username or attribute"),
+    attribute: Optional[str] = Query(
+        None, description="Filter by attribute name"),
+    search: Optional[str] = Query(
+        None, description="Search in username or attribute"),
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -198,17 +202,17 @@ async def list_radreply_attributes(
     Get list of RadReply attributes with filtering and pagination
     """
     repo = RadreplyRepository(db)
-    
+
     # Build filters
     filters = {}
     if username:
         filters["username"] = username
     if attribute:
         filters["attribute"] = attribute
-    
+
     # Apply search
     search_fields = ["username", "attribute", "value"] if search else None
-    
+
     try:
         items, total = await repo.get_paginated(
             skip=pagination.skip,
@@ -218,7 +222,7 @@ async def list_radreply_attributes(
             search_fields=search_fields,
             order_by="username"
         )
-        
+
         return PaginatedResponse(
             items=items,
             total=total,
@@ -242,14 +246,14 @@ async def get_radreply_attribute(
     Get a specific RadReply attribute by ID
     """
     repo = RadreplyRepository(db)
-    
+
     attribute = await repo.get(attribute_id)
     if not attribute:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadReply attribute not found"
         )
-    
+
     return attribute
 
 
@@ -262,7 +266,7 @@ async def create_radreply_attribute(
     Create a new RadReply attribute
     """
     repo = RadreplyRepository(db)
-    
+
     try:
         attribute = await repo.create(attribute_data)
         return attribute
@@ -283,14 +287,14 @@ async def update_radreply_attribute(
     Update an existing RadReply attribute
     """
     repo = RadreplyRepository(db)
-    
+
     existing = await repo.get(attribute_id)
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadReply attribute not found"
         )
-    
+
     try:
         attribute = await repo.update(existing, attribute_data)
         return attribute
@@ -310,14 +314,14 @@ async def delete_radreply_attribute(
     Delete a RadReply attribute
     """
     repo = RadreplyRepository(db)
-    
+
     existing = await repo.get(attribute_id)
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="RadReply attribute not found"
         )
-    
+
     try:
         await repo.delete(existing)
         return {"message": "RadReply attribute deleted successfully"}
@@ -340,11 +344,11 @@ async def get_user_attributes(
     """
     radcheck_repo = RadcheckRepository(db)
     radreply_repo = RadreplyRepository(db)
-    
+
     try:
         check_attributes = await radcheck_repo.get_user_attributes(username)
         reply_attributes = await radreply_repo.get_user_attributes(username)
-        
+
         return {
             "username": username,
             "check_attributes": check_attributes,
@@ -368,16 +372,16 @@ async def set_user_password(
     Set or update user password in RadCheck
     """
     repo = RadcheckRepository(db)
-    
+
     password = password_data.get("password")
     password_type = password_data.get("password_type", "Cleartext-Password")
-    
+
     if not password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password is required"
         )
-    
+
     try:
         attribute = await repo.set_user_password(username, password, password_type)
         return {
@@ -409,7 +413,7 @@ async def get_common_check_attributes():
     return {
         "password_attributes": [
             "User-Password",
-            "Cleartext-Password", 
+            "Cleartext-Password",
             "Crypt-Password",
             "MD5-Password",
             "SHA-Password",
@@ -436,7 +440,7 @@ async def get_common_reply_attributes():
     return {
         "networking": [
             "Framed-IP-Address",
-            "Framed-IP-Netmask", 
+            "Framed-IP-Netmask",
             "Framed-Protocol",
             "Framed-Route"
         ],
@@ -460,8 +464,10 @@ async def get_common_reply_attributes():
 @router.get("/radgroupcheck", response_model=PaginatedResponse[RadgroupcheckResponse])
 async def list_group_check_attributes(
     groupname: Optional[str] = Query(None, description="Filter by group name"),
-    attribute: Optional[str] = Query(None, description="Filter by attribute name"),
-    search: Optional[str] = Query(None, description="Search in groupname or attribute"),
+    attribute: Optional[str] = Query(
+        None, description="Filter by attribute name"),
+    search: Optional[str] = Query(
+        None, description="Search in groupname or attribute"),
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -469,19 +475,19 @@ async def list_group_check_attributes(
     Get list of RadGroupCheck attributes with filtering and pagination
     """
     from ...repositories.radius import GroupCheckRepository
-    
+
     repo = GroupCheckRepository(db)
-    
+
     # Build filters
     filters = {}
     if groupname:
         filters["groupname"] = groupname
     if attribute:
         filters["attribute"] = attribute
-    
+
     # Apply search
     search_fields = ["groupname", "attribute", "value"] if search else None
-    
+
     # Get paginated results
     result = await repo.get_multi_paginated(
         filters=filters,
@@ -491,7 +497,7 @@ async def list_group_check_attributes(
         size=pagination.size,
         order_by="groupname"
     )
-    
+
     return result
 
 
@@ -504,9 +510,9 @@ async def create_group_check_attribute(
     Create a new RadGroupCheck attribute
     """
     from ...repositories.radius import GroupCheckRepository
-    
+
     repo = GroupCheckRepository(db)
-    
+
     try:
         attribute = await repo.create(attribute_data)
         return attribute
@@ -526,16 +532,16 @@ async def get_group_check_attribute(
     Get a specific RadGroupCheck attribute by ID
     """
     from ...repositories.radius import GroupCheckRepository
-    
+
     repo = GroupCheckRepository(db)
     attribute = await repo.get(attribute_id)
-    
+
     if not attribute:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group check attribute not found"
         )
-    
+
     return attribute
 
 
@@ -549,9 +555,9 @@ async def update_group_check_attribute(
     Update a RadGroupCheck attribute
     """
     from ...repositories.radius import GroupCheckRepository
-    
+
     repo = GroupCheckRepository(db)
-    
+
     # Check if attribute exists
     existing_attribute = await repo.get(attribute_id)
     if not existing_attribute:
@@ -559,7 +565,7 @@ async def update_group_check_attribute(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group check attribute not found"
         )
-    
+
     # Update the attribute
     updated_attribute = await repo.update(attribute_id, attribute_data)
     return updated_attribute
@@ -574,9 +580,9 @@ async def delete_group_check_attribute(
     Delete a RadGroupCheck attribute
     """
     from ...repositories.radius import GroupCheckRepository
-    
+
     repo = GroupCheckRepository(db)
-    
+
     # Check if attribute exists
     existing_attribute = await repo.get(attribute_id)
     if not existing_attribute:
@@ -584,7 +590,7 @@ async def delete_group_check_attribute(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group check attribute not found"
         )
-    
+
     await repo.delete(attribute_id)
     return {"message": "Group check attribute deleted successfully"}
 
@@ -592,8 +598,10 @@ async def delete_group_check_attribute(
 @router.get("/radgroupreply", response_model=PaginatedResponse[RadgroupreplyResponse])
 async def list_group_reply_attributes(
     groupname: Optional[str] = Query(None, description="Filter by group name"),
-    attribute: Optional[str] = Query(None, description="Filter by attribute name"),
-    search: Optional[str] = Query(None, description="Search in groupname or attribute"),
+    attribute: Optional[str] = Query(
+        None, description="Filter by attribute name"),
+    search: Optional[str] = Query(
+        None, description="Search in groupname or attribute"),
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -601,19 +609,19 @@ async def list_group_reply_attributes(
     Get list of RadGroupReply attributes with filtering and pagination
     """
     from ...repositories.radius import GroupReplyRepository
-    
+
     repo = GroupReplyRepository(db)
-    
+
     # Build filters
     filters = {}
     if groupname:
         filters["groupname"] = groupname
     if attribute:
         filters["attribute"] = attribute
-    
+
     # Apply search
     search_fields = ["groupname", "attribute", "value"] if search else None
-    
+
     # Get paginated results
     result = await repo.get_multi_paginated(
         filters=filters,
@@ -623,7 +631,7 @@ async def list_group_reply_attributes(
         size=pagination.size,
         order_by="groupname"
     )
-    
+
     return result
 
 
@@ -636,9 +644,9 @@ async def create_group_reply_attribute(
     Create a new RadGroupReply attribute
     """
     from ...repositories.radius import GroupReplyRepository
-    
+
     repo = GroupReplyRepository(db)
-    
+
     try:
         attribute = await repo.create(attribute_data)
         return attribute
@@ -658,16 +666,16 @@ async def get_group_reply_attribute(
     Get a specific RadGroupReply attribute by ID
     """
     from ...repositories.radius import GroupReplyRepository
-    
+
     repo = GroupReplyRepository(db)
     attribute = await repo.get(attribute_id)
-    
+
     if not attribute:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group reply attribute not found"
         )
-    
+
     return attribute
 
 
@@ -681,9 +689,9 @@ async def update_group_reply_attribute(
     Update a RadGroupReply attribute
     """
     from ...repositories.radius import GroupReplyRepository
-    
+
     repo = GroupReplyRepository(db)
-    
+
     # Check if attribute exists
     existing_attribute = await repo.get(attribute_id)
     if not existing_attribute:
@@ -691,7 +699,7 @@ async def update_group_reply_attribute(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group reply attribute not found"
         )
-    
+
     # Update the attribute
     updated_attribute = await repo.update(attribute_id, attribute_data)
     return updated_attribute
@@ -706,9 +714,9 @@ async def delete_group_reply_attribute(
     Delete a RadGroupReply attribute
     """
     from ...repositories.radius import GroupReplyRepository
-    
+
     repo = GroupReplyRepository(db)
-    
+
     # Check if attribute exists
     existing_attribute = await repo.get(attribute_id)
     if not existing_attribute:
@@ -716,7 +724,7 @@ async def delete_group_reply_attribute(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group reply attribute not found"
         )
-    
+
     await repo.delete(attribute_id)
     return {"message": "Group reply attribute deleted successfully"}
 
@@ -731,17 +739,17 @@ async def list_groups(
     Get list of all RADIUS groups (from both check and reply tables)
     """
     from ...repositories.radius import GroupCheckRepository, GroupReplyRepository
-    
+
     check_repo = GroupCheckRepository(db)
     reply_repo = GroupReplyRepository(db)
-    
+
     # Get groups from both tables
     check_groups = await check_repo.get_groups_list()
     reply_groups = await reply_repo.get_groups_list()
-    
+
     # Combine and deduplicate
     all_groups = sorted(list(set(check_groups + reply_groups)))
-    
+
     return GroupListResponse(
         groups=all_groups,
         total=len(all_groups)
@@ -757,14 +765,14 @@ async def get_group_attributes(
     Get all attributes (check and reply) for a specific group
     """
     from ...repositories.radius import GroupCheckRepository, GroupReplyRepository
-    
+
     check_repo = GroupCheckRepository(db)
     reply_repo = GroupReplyRepository(db)
-    
+
     # Get attributes from both tables
     check_attributes = await check_repo.get_group_attributes(groupname)
     reply_attributes = await reply_repo.get_group_attributes(groupname)
-    
+
     return GroupAttributesResponse(
         groupname=groupname,
         check_attributes=check_attributes,
@@ -782,16 +790,16 @@ async def delete_group_all_attributes(
     Delete all attributes (check and reply) for a specific group
     """
     from ...repositories.radius import GroupCheckRepository, GroupReplyRepository
-    
+
     check_repo = GroupCheckRepository(db)
     reply_repo = GroupReplyRepository(db)
-    
+
     # Delete from both tables
     check_count = await check_repo.delete_group_attributes(groupname)
     reply_count = await reply_repo.delete_group_attributes(groupname)
-    
+
     total_deleted = check_count + reply_count
-    
+
     return {
         "message": f"Deleted {total_deleted} attributes for group '{groupname}'",
         "check_attributes_deleted": check_count,
@@ -807,19 +815,19 @@ async def get_group_statistics(
     Get statistics about RADIUS groups
     """
     from ...repositories.radius import GroupCheckRepository, GroupReplyRepository
-    
+
     check_repo = GroupCheckRepository(db)
     reply_repo = GroupReplyRepository(db)
-    
+
     # Get statistics from both tables
     check_stats = await check_repo.get_group_statistics()
     reply_stats = await reply_repo.get_group_statistics()
-    
+
     # Get unique groups
     check_groups = await check_repo.get_groups_list()
     reply_groups = await reply_repo.get_groups_list()
     unique_groups = set(check_groups + reply_groups)
-    
+
     return GroupStatisticsResponse(
         total_groups=len(unique_groups),
         total_check_attributes=check_stats['total_attributes'],

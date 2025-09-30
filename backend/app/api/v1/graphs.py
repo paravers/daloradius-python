@@ -56,14 +56,16 @@ async def get_graph_data(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @graphs_router.get("/overall-logins", response_model=GraphDataResponse)
 async def get_overall_logins(
     start_date: Optional[date] = Query(None, description="Start date"),
     end_date: Optional[date] = Query(None, description="End date"),
-    granularity: TimeGranularity = Query(TimeGranularity.DAY, description="Time granularity"),
+    granularity: TimeGranularity = Query(
+        TimeGranularity.DAY, description="Time granularity"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -77,7 +79,7 @@ async def get_overall_logins(
             granularity=granularity
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -86,7 +88,8 @@ async def get_overall_logins(
 async def get_download_upload_stats(
     start_date: Optional[date] = Query(None, description="Start date"),
     end_date: Optional[date] = Query(None, description="End date"),
-    granularity: TimeGranularity = Query(TimeGranularity.DAY, description="Time granularity"),
+    granularity: TimeGranularity = Query(
+        TimeGranularity.DAY, description="Time granularity"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -100,7 +103,7 @@ async def get_download_upload_stats(
             granularity=granularity
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -122,7 +125,7 @@ async def get_logged_users(
             granularity=TimeGranularity.DAY
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -138,7 +141,7 @@ async def get_alltime_stats(
         data_source="aggregate_statistics",
         time_range=GraphQueryParams()
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -148,7 +151,8 @@ async def get_top_users(
     start_date: Optional[date] = Query(None, description="Start date"),
     end_date: Optional[date] = Query(None, description="End date"),
     limit: int = Query(10, ge=1, le=100, description="Number of top users"),
-    traffic_type: str = Query("total", description="Traffic type: total, upload, download"),
+    traffic_type: str = Query(
+        "total", description="Traffic type: total, upload, download"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -163,7 +167,7 @@ async def get_top_users(
             filters={"traffic_type": traffic_type}
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -185,7 +189,7 @@ async def get_traffic_comparison(
             granularity=TimeGranularity.DAY
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -204,7 +208,7 @@ async def get_system_performance(
             filters={"hours": hours}
         )
     )
-    
+
     service = GraphDataService(db)
     return await service.get_graph_data(request)
 
@@ -245,10 +249,10 @@ async def create_dashboard_widget(
 ):
     """Create a new dashboard widget"""
     from app.repositories.graphs import DashboardWidgetRepository
-    
+
     widget_data = widget.dict()
     widget_data['created_by'] = current_user.username
-    
+
     repo = DashboardWidgetRepository(db)
     new_widget = await repo.create(**widget_data)
     return new_widget
@@ -263,23 +267,23 @@ async def update_dashboard_widget(
 ):
     """Update dashboard widget"""
     from app.repositories.graphs import DashboardWidgetRepository
-    
+
     repo = DashboardWidgetRepository(db)
-    
+
     # Check if widget exists and user has permission
     existing_widget = await repo.get_by_id(widget_id)
     if not existing_widget:
         raise HTTPException(status_code=404, detail="Widget not found")
-    
+
     if existing_widget.created_by != current_user.username:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     # Update widget
     update_data = widget_update.dict(exclude_unset=True)
     for key, value in update_data.items():
         if hasattr(existing_widget, key):
             setattr(existing_widget, key, value)
-    
+
     await db.commit()
     await db.refresh(existing_widget)
     return existing_widget
@@ -295,17 +299,17 @@ async def update_widget_position(
 ):
     """Update widget position"""
     from app.repositories.graphs import DashboardWidgetRepository
-    
+
     repo = DashboardWidgetRepository(db)
-    
+
     # Check permission
     widget = await repo.get_by_id(widget_id)
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
-    
+
     if widget.created_by != current_user.username:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     updated_widget = await repo.update_position(widget_id, position_x, position_y)
     return {"message": "Widget position updated", "widget_id": widget_id}
 
@@ -320,17 +324,17 @@ async def update_widget_size(
 ):
     """Update widget size"""
     from app.repositories.graphs import DashboardWidgetRepository
-    
+
     repo = DashboardWidgetRepository(db)
-    
+
     # Check permission
     widget = await repo.get_by_id(widget_id)
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
-    
+
     if widget.created_by != current_user.username:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     updated_widget = await repo.update_size(widget_id, width, height)
     return {"message": "Widget size updated", "widget_id": widget_id}
 
@@ -343,17 +347,17 @@ async def delete_dashboard_widget(
 ):
     """Delete dashboard widget"""
     from app.repositories.graphs import DashboardWidgetRepository
-    
+
     repo = DashboardWidgetRepository(db)
-    
+
     # Check permission
     widget = await repo.get_by_id(widget_id)
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
-    
+
     if widget.created_by != current_user.username:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     success = await repo.delete(widget_id)
     if success:
         return {"message": "Widget deleted", "widget_id": widget_id}
@@ -384,13 +388,13 @@ async def create_graph_template(
 ):
     """Create a new graph template"""
     from app.repositories.graphs import GraphTemplateRepository
-    
+
     template_data = template.dict()
     template_data['created_by'] = current_user.username
-    
+
     repo = GraphTemplateRepository(db)
     new_template = await repo.create(**template_data)
-    
+
     return {
         'id': new_template.id,
         'name': new_template.name,
@@ -409,13 +413,13 @@ async def get_graph_template(
 ):
     """Get specific graph template"""
     from app.repositories.graphs import GraphTemplateRepository
-    
+
     repo = GraphTemplateRepository(db)
     template = await repo.get_by_id(template_id)
-    
+
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    
+
     return template
 
 
@@ -428,24 +432,25 @@ async def update_graph_template(
 ):
     """Update graph template"""
     from app.repositories.graphs import GraphTemplateRepository
-    
+
     repo = GraphTemplateRepository(db)
-    
+
     # Check if template exists and user has permission
     existing_template = await repo.get_by_id(template_id)
     if not existing_template:
         raise HTTPException(status_code=404, detail="Template not found")
-    
+
     if existing_template.created_by != current_user.username:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     # Update template
     update_data = template_update.dict(exclude_unset=True)
     updated_template = await repo.update(template_id, **update_data)
-    
+
     if not updated_template:
-        raise HTTPException(status_code=500, detail="Failed to update template")
-    
+        raise HTTPException(
+            status_code=500, detail="Failed to update template")
+
     return updated_template
 
 
@@ -490,7 +495,7 @@ async def export_graph_data_csv(
     from fastapi.responses import StreamingResponse
     import csv
     import io
-    
+
     # Get graph data
     request = GraphDataRequest(
         graph_type=graph_type,
@@ -500,33 +505,36 @@ async def export_graph_data_csv(
             end_date=end_date or date.today()
         )
     )
-    
+
     service = GraphDataService(db)
     graph_data = await service.get_graph_data(request)
-    
+
     # Convert to CSV
     output = io.StringIO()
     writer = csv.writer(output)
-    
+
     # Write headers
     if graph_data.data.get('labels') and graph_data.data.get('datasets'):
-        headers = ['Date'] + [dataset['label'] for dataset in graph_data.data['datasets']]
+        headers = ['Date'] + [dataset['label']
+                              for dataset in graph_data.data['datasets']]
         writer.writerow(headers)
-        
+
         # Write data rows
         labels = graph_data.data['labels']
         for i, label in enumerate(labels):
             row = [label]
             for dataset in graph_data.data['datasets']:
-                row.append(dataset['data'][i] if i < len(dataset['data']) else '')
+                row.append(dataset['data'][i] if i <
+                           len(dataset['data']) else '')
             writer.writerow(row)
-    
+
     output.seek(0)
-    
+
     return StreamingResponse(
         io.BytesIO(output.getvalue().encode('utf-8')),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={graph_type}_export.csv"}
+        headers={
+            "Content-Disposition": f"attachment; filename={graph_type}_export.csv"}
     )
 
 
@@ -540,7 +548,7 @@ async def export_graph_data_json(
 ):
     """Export graph data as JSON"""
     from fastapi.responses import JSONResponse
-    
+
     # Get graph data
     request = GraphDataRequest(
         graph_type=graph_type,
@@ -550,13 +558,14 @@ async def export_graph_data_json(
             end_date=end_date or date.today()
         )
     )
-    
+
     service = GraphDataService(db)
     graph_data = await service.get_graph_data(request)
-    
+
     return JSONResponse(
         content=graph_data.dict(),
-        headers={"Content-Disposition": f"attachment; filename={graph_type}_export.json"}
+        headers={
+            "Content-Disposition": f"attachment; filename={graph_type}_export.json"}
     )
 
 

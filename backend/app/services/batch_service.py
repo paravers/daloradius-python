@@ -22,17 +22,17 @@ from app.schemas.batch import (
 
 class BatchService:
     """Service for handling batch operations"""
-    
+
     def __init__(self, db: Session):
         self.db = db
 
     async def execute_user_batch_operation(
-        self, 
+        self,
         operation_request: BatchUserOperationRequest,
         current_user: User
     ) -> BatchOperationResult:
         """Execute batch operations on users"""
-        
+
         # Create batch history record
         batch_history = BatchHistory(
             batch_name=operation_request.batch_name or f"User {operation_request.operation_type}",
@@ -50,16 +50,16 @@ class BatchService:
             status="running",
             started_at=datetime.utcnow(),
         )
-        
+
         self.db.add(batch_history)
         self.db.commit()
         self.db.refresh(batch_history)
-        
+
         try:
             success_count = 0
             failure_count = 0
             errors = []
-            
+
             # Execute the operation based on type
             if operation_request.operation_type == "delete":
                 success_count, failure_count, errors = await self._batch_delete_users(
@@ -78,19 +78,22 @@ class BatchService:
                     operation_request.target_ids, operation_request.operation_data
                 )
             else:
-                raise ValueError(f"Unsupported operation type: {operation_request.operation_type}")
-            
+                raise ValueError(
+                    f"Unsupported operation type: {operation_request.operation_type}")
+
             # Update batch history
             batch_history.success_count = success_count
             batch_history.failure_count = failure_count
             batch_history.status = "completed" if failure_count == 0 else "failed"
             batch_history.completed_at = datetime.utcnow()
-            
+
             if errors:
-                batch_history.error_message = "; ".join([str(error) for error in errors[:5]])  # Store first 5 errors
-            
+                batch_history.error_message = "; ".join(
+                    # Store first 5 errors
+                    [str(error) for error in errors[:5]])
+
             self.db.commit()
-            
+
             return BatchOperationResult(
                 batch_history_id=batch_history.id,
                 operation_type=operation_request.operation_type,
@@ -101,7 +104,7 @@ class BatchService:
                 errors=errors,
                 details={"batch_name": batch_history.batch_name}
             )
-            
+
         except Exception as e:
             # Update batch history with error
             batch_history.status = "failed"
@@ -115,7 +118,7 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for user_id in user_ids:
             try:
                 user = self.db.query(User).filter(User.id == user_id).first()
@@ -124,18 +127,19 @@ class BatchService:
                     success_count += 1
                 else:
                     failure_count += 1
-                    errors.append({"user_id": user_id, "error": "User not found"})
+                    errors.append(
+                        {"user_id": user_id, "error": "User not found"})
             except Exception as e:
                 failure_count += 1
                 errors.append({"user_id": user_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             # If commit fails, all operations failed
             return 0, len(user_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def _batch_update_user_status(
@@ -145,7 +149,7 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for user_id in user_ids:
             try:
                 user = self.db.query(User).filter(User.id == user_id).first()
@@ -154,17 +158,18 @@ class BatchService:
                     success_count += 1
                 else:
                     failure_count += 1
-                    errors.append({"user_id": user_id, "error": "User not found"})
+                    errors.append(
+                        {"user_id": user_id, "error": "User not found"})
             except Exception as e:
                 failure_count += 1
                 errors.append({"user_id": user_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(user_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def _batch_update_users(
@@ -174,7 +179,7 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for user_id in user_ids:
             try:
                 user = self.db.query(User).filter(User.id == user_id).first()
@@ -186,26 +191,27 @@ class BatchService:
                     success_count += 1
                 else:
                     failure_count += 1
-                    errors.append({"user_id": user_id, "error": "User not found"})
+                    errors.append(
+                        {"user_id": user_id, "error": "User not found"})
             except Exception as e:
                 failure_count += 1
                 errors.append({"user_id": user_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(user_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def execute_nas_batch_operation(
-        self, 
+        self,
         operation_request: BatchNasOperationRequest,
         current_user: User
     ) -> BatchOperationResult:
         """Execute batch operations on NAS devices"""
-        
+
         # Create batch history record
         batch_history = BatchHistory(
             batch_name=operation_request.batch_name or f"NAS {operation_request.operation_type}",
@@ -223,16 +229,16 @@ class BatchService:
             status="running",
             started_at=datetime.utcnow(),
         )
-        
+
         self.db.add(batch_history)
         self.db.commit()
         self.db.refresh(batch_history)
-        
+
         try:
             success_count = 0
             failure_count = 0
             errors = []
-            
+
             # Execute the operation based on type
             if operation_request.operation_type == "delete":
                 success_count, failure_count, errors = await self._batch_delete_nas(
@@ -243,19 +249,21 @@ class BatchService:
                     operation_request.target_ids, operation_request.operation_data
                 )
             else:
-                raise ValueError(f"Unsupported NAS operation type: {operation_request.operation_type}")
-            
+                raise ValueError(
+                    f"Unsupported NAS operation type: {operation_request.operation_type}")
+
             # Update batch history
             batch_history.success_count = success_count
             batch_history.failure_count = failure_count
             batch_history.status = "completed" if failure_count == 0 else "failed"
             batch_history.completed_at = datetime.utcnow()
-            
+
             if errors:
-                batch_history.error_message = "; ".join([str(error) for error in errors[:5]])
-            
+                batch_history.error_message = "; ".join(
+                    [str(error) for error in errors[:5]])
+
             self.db.commit()
-            
+
             return BatchOperationResult(
                 batch_history_id=batch_history.id,
                 operation_type=operation_request.operation_type,
@@ -266,7 +274,7 @@ class BatchService:
                 errors=errors,
                 details={"batch_name": batch_history.batch_name}
             )
-            
+
         except Exception as e:
             batch_history.status = "failed"
             batch_history.error_message = str(e)
@@ -279,7 +287,7 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for nas_id in nas_ids:
             try:
                 nas = self.db.query(Nas).filter(Nas.id == nas_id).first()
@@ -292,13 +300,13 @@ class BatchService:
             except Exception as e:
                 failure_count += 1
                 errors.append({"nas_id": nas_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(nas_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def _batch_update_nas(
@@ -308,7 +316,7 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for nas_id in nas_ids:
             try:
                 nas = self.db.query(Nas).filter(Nas.id == nas_id).first()
@@ -323,22 +331,22 @@ class BatchService:
             except Exception as e:
                 failure_count += 1
                 errors.append({"nas_id": nas_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(nas_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def execute_group_batch_operation(
-        self, 
+        self,
         operation_request: BatchGroupOperationRequest,
         current_user: User
     ) -> BatchOperationResult:
         """Execute batch operations on user groups"""
-        
+
         # Create batch history record
         batch_history = BatchHistory(
             batch_name=operation_request.batch_name or f"Group {operation_request.operation_type}",
@@ -356,16 +364,16 @@ class BatchService:
             status="running",
             started_at=datetime.utcnow(),
         )
-        
+
         self.db.add(batch_history)
         self.db.commit()
         self.db.refresh(batch_history)
-        
+
         try:
             success_count = 0
             failure_count = 0
             errors = []
-            
+
             # Execute the operation based on type
             if operation_request.operation_type == "delete":
                 success_count, failure_count, errors = await self._batch_delete_groups(
@@ -376,19 +384,21 @@ class BatchService:
                     operation_request.target_ids, operation_request.operation_data
                 )
             else:
-                raise ValueError(f"Unsupported group operation type: {operation_request.operation_type}")
-            
+                raise ValueError(
+                    f"Unsupported group operation type: {operation_request.operation_type}")
+
             # Update batch history
             batch_history.success_count = success_count
             batch_history.failure_count = failure_count
             batch_history.status = "completed" if failure_count == 0 else "failed"
             batch_history.completed_at = datetime.utcnow()
-            
+
             if errors:
-                batch_history.error_message = "; ".join([str(error) for error in errors[:5]])
-            
+                batch_history.error_message = "; ".join(
+                    [str(error) for error in errors[:5]])
+
             self.db.commit()
-            
+
             return BatchOperationResult(
                 batch_history_id=batch_history.id,
                 operation_type=operation_request.operation_type,
@@ -399,7 +409,7 @@ class BatchService:
                 errors=errors,
                 details={"batch_name": batch_history.batch_name}
             )
-            
+
         except Exception as e:
             batch_history.status = "failed"
             batch_history.error_message = str(e)
@@ -412,26 +422,28 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for group_id in group_ids:
             try:
-                group = self.db.query(UserGroup).filter(UserGroup.id == group_id).first()
+                group = self.db.query(UserGroup).filter(
+                    UserGroup.id == group_id).first()
                 if group:
                     self.db.delete(group)
                     success_count += 1
                 else:
                     failure_count += 1
-                    errors.append({"group_id": group_id, "error": "Group not found"})
+                    errors.append(
+                        {"group_id": group_id, "error": "Group not found"})
             except Exception as e:
                 failure_count += 1
                 errors.append({"group_id": group_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(group_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors
 
     async def _batch_update_groups(
@@ -441,10 +453,11 @@ class BatchService:
         success_count = 0
         failure_count = 0
         errors = []
-        
+
         for group_id in group_ids:
             try:
-                group = self.db.query(UserGroup).filter(UserGroup.id == group_id).first()
+                group = self.db.query(UserGroup).filter(
+                    UserGroup.id == group_id).first()
                 if group:
                     for field, value in update_data.items():
                         if hasattr(group, field):
@@ -452,15 +465,16 @@ class BatchService:
                     success_count += 1
                 else:
                     failure_count += 1
-                    errors.append({"group_id": group_id, "error": "Group not found"})
+                    errors.append(
+                        {"group_id": group_id, "error": "Group not found"})
             except Exception as e:
                 failure_count += 1
                 errors.append({"group_id": group_id, "error": str(e)})
-        
+
         try:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             return 0, len(group_ids), [{"error": f"Commit failed: {str(e)}"}]
-        
+
         return success_count, failure_count, errors

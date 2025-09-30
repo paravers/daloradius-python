@@ -897,13 +897,13 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 图表主页 | `graphs-main.php` | ✅ 已完成 | `GraphStatistics` | `GET /api/graphs/` | `GraphsOverview.vue` | 图表统计首页 |
-| 总体登录统计 | `graphs-overall_logins.php` | ✅ 已完成 | `LoginStatistics` | `GET /api/graphs/overall-logins` | `GraphsOverview.vue` | 登录成功失败统计图表 |
-| 下载上传统计 | `graphs-overall_download.php` / `graphs-overall_upload.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/graphs/download-upload-stats` | `GraphsOverview.vue` | 上传下载流量统计图表 |
-| 在线用户统计 | `graphs-logged_users.php` | ✅ 已完成 | `UserStatistics` | `GET /api/graphs/logged-users` | `GraphsOverview.vue` | 用户活跃度和增长趋势 |
-| 全时统计概览 | `graphs-alltime_logins.php` | ✅ 已完成 | 多模型聚合 | `GET /api/graphs/alltime-stats` | `GraphsOverview.vue` | 系统综合统计概览 |
-| 流量对比图表 | `graphs-alltime_traffic_compare.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/graphs/traffic-comparison` | `GraphsOverview.vue` | 上传下载流量对比 |
-| 系统性能监控 | 无对应PHP | ✅ 已完成 | `SystemMetrics` | `GET /api/graphs/system-performance` | `GraphsOverview.vue` | 服务器性能监控图表 |
+| 图表主页 | `graphs-main.php` | ✅ 已完成 | `GraphStatistics` | `GET /api/v1/graphs/` | `GraphsOverview.vue` | 图表统计首页 |
+| 总体登录统计 | `graphs-overall_logins.php` | ✅ 已完成 | `LoginStatistics` | `GET /api/v1/graphs/overall-logins` | `GraphsOverview.vue` | 登录成功失败统计图表 |
+| 下载上传统计 | `graphs-overall_download.php` / `graphs-overall_upload.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/v1/graphs/download-upload-stats` | `GraphsOverview.vue` | 上传下载流量统计图表 |
+| 在线用户统计 | `graphs-logged_users.php` | ✅ 已完成 | `UserStatistics` | `GET /api/v1/graphs/logged-users` | `GraphsOverview.vue` | 用户活跃度和增长趋势 |
+| 全时统计概览 | `graphs-alltime_logins.php` | ✅ 已完成 | 多模型聚合 | `GET /api/v1/graphs/alltime-stats` | `GraphsOverview.vue` | 系统综合统计概览 |
+| 流量对比图表 | `graphs-alltime_traffic_compare.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/v1/graphs/traffic-comparison` | `GraphsOverview.vue` | 上传下载流量对比 |
+| 系统性能监控 | 无对应PHP | ✅ 已完成 | `SystemMetrics` | `GET /api/v1/graphs/system-performance` | `GraphsOverview.vue` | 服务器性能监控图表 |
 
 ### 实现详情
 

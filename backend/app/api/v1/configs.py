@@ -17,7 +17,7 @@ from ...core.security import get_current_user
 from ...models.user import Operator
 from ...models.access_control import MessageType
 from ...services.config import (
-    SystemConfigService, MailService, BackupService, 
+    SystemConfigService, MailService, BackupService,
     CronJobService, MessageService, SystemInfoService
 )
 from ...schemas.config import (
@@ -35,9 +35,9 @@ from ...schemas.config import (
     SystemInfoResponse, ConfigErrorResponse
 )
 from ...core.exceptions import (
-    NotFoundError as NotFoundException, 
+    NotFoundError as NotFoundException,
     ValidationError as ValidationException,
-    BusinessLogicError as ConflictException, 
+    BusinessLogicError as ConflictException,
     DaloRadiusException as ServiceException
 )
 
@@ -48,8 +48,10 @@ router = APIRouter()
 @router.get("/configs", response_model=List[SystemConfigResponse])
 async def get_all_configs(
     category: Optional[str] = Query(None, description="Filter by category"),
-    include_system: bool = Query(True, description="Include system configurations"),
-    include_encrypted: bool = Query(False, description="Include encrypted configurations"),
+    include_system: bool = Query(
+        True, description="Include system configurations"),
+    include_encrypted: bool = Query(
+        False, description="Include encrypted configurations"),
     db: AsyncSession = Depends(get_db),
     current_user: Operator = Depends(get_current_user)
 ):
@@ -70,7 +72,7 @@ async def search_configs(
 ):
     """Search configurations with advanced filtering"""
     service = SystemConfigService(db)
-    
+
     if search_params.category:
         configs = await service.get_configs_by_category(search_params.category)
     else:
@@ -78,7 +80,7 @@ async def search_configs(
             include_system=search_params.is_system,
             include_encrypted=search_params.is_encrypted
         )
-    
+
     # Apply search filter if provided
     if search_params.search_term:
         search_term_lower = search_params.search_term.lower()
@@ -87,13 +89,13 @@ async def search_configs(
             if (search_term_lower in config.config_key.lower() or
                 (config.description and search_term_lower in config.description.lower()))
         ]
-    
+
     # Apply pagination
     total_count = len(configs)
     start_idx = search_params.skip
     end_idx = start_idx + search_params.limit
     paginated_configs = configs[start_idx:end_idx]
-    
+
     return ConfigSearchResponse(
         configs=paginated_configs,
         total_count=total_count,
@@ -209,8 +211,8 @@ async def set_config_value(
     """Set configuration value"""
     service = SystemConfigService(db)
     config = await service.set_config_value(
-        config_key, 
-        value, 
+        config_key,
+        value,
         updated_by=current_user.username
     )
     return {"success": True, "config": config}
@@ -459,14 +461,16 @@ async def update_cron_job_status(
 # System Messages Endpoints
 @router.get("/messages", response_model=List[MessageResponse])
 async def get_all_messages(
-    message_type: Optional[MessageType] = Query(None, description="Filter by message type"),
-    recent_days: Optional[int] = Query(None, description="Get messages from last N days"),
+    message_type: Optional[MessageType] = Query(
+        None, description="Filter by message type"),
+    recent_days: Optional[int] = Query(
+        None, description="Get messages from last N days"),
     db: AsyncSession = Depends(get_db),
     current_user: Operator = Depends(get_current_user)
 ):
     """Get system messages"""
     service = MessageService(db)
-    
+
     if recent_days:
         return await service.get_recent_messages(recent_days)
     elif message_type:

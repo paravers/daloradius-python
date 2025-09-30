@@ -62,7 +62,7 @@ export interface RealTimeStats {
 export const graphsApi = {
   // Graph data endpoints
   async getGraphData(request: GraphDataRequest): Promise<GraphDataResponse> {
-    const response = await axios.post('/api/graphs/data', request)
+    const response = await axios.post('/api/v1/graphs/data', request)
     return response.data
   },
 
@@ -71,7 +71,7 @@ export const graphsApi = {
     end_date?: string
     granularity?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/overall-logins', { params })
+    const response = await axios.get('/api/v1/graphs/overall-logins', { params })
     return response.data
   },
 
@@ -80,7 +80,7 @@ export const graphsApi = {
     end_date?: string
     granularity?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/download-upload-stats', { params })
+    const response = await axios.get('/api/v1/graphs/download-upload-stats', { params })
     return response.data
   },
 
@@ -88,12 +88,12 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/logged-users', { params })
+    const response = await axios.get('/api/v1/graphs/logged-users', { params })
     return response.data
   },
 
   async getAlltimeStats(): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/alltime-stats')
+    const response = await axios.get('/api/v1/graphs/alltime-stats')
     return response.data
   },
 
@@ -103,7 +103,7 @@ export const graphsApi = {
     limit?: number
     traffic_type?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/top-users', { params })
+    const response = await axios.get('/api/v1/graphs/top-users', { params })
     return response.data
   },
 
@@ -111,14 +111,14 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/traffic-comparison', { params })
+    const response = await axios.get('/api/v1/graphs/traffic-comparison', { params })
     return response.data
   },
 
   async getSystemPerformance(params: {
     hours?: number
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/graphs/system-performance', { params })
+    const response = await axios.get('/api/v1/graphs/system-performance', { params })
     return response.data
   },
 
@@ -168,33 +168,33 @@ export const graphsApi = {
 
   // Template endpoints
   async getGraphTemplates(params?: { category?: string }): Promise<any[]> {
-    const response = await axios.get('/api/graphs/templates', { params })
+    const response = await axios.get('/api/v1/graphs/templates', { params })
     return response.data
   },
 
   async getGraphTemplate(templateId: number): Promise<any> {
-    const response = await axios.get(`/api/graphs/templates/${templateId}`)
+    const response = await axios.get(`/api/v1/graphs/templates/${templateId}`)
     return response.data
   },
 
   async createGraphTemplate(templateData: any): Promise<any> {
-    const response = await axios.post('/api/graphs/templates', templateData)
+    const response = await axios.post('/api/v1/graphs/templates', templateData)
     return response.data
   },
 
   async updateGraphTemplate(templateId: number, templateData: any): Promise<any> {
-    const response = await axios.put(`/api/graphs/templates/${templateId}`, templateData)
+    const response = await axios.put(`/api/v1/graphs/templates/${templateId}`, templateData)
     return response.data
   },
 
   // Real-time stats
   async getRealTimeStats(): Promise<RealTimeStats> {
-    const response = await axios.get('/api/graphs/realtime/stats')
+    const response = await axios.get('/api/v1/graphs/realtime/stats')
     return response.data
   },
 
   async getRealTimeTrends(params?: { hours?: number }): Promise<any> {
-    const response = await axios.get('/api/graphs/realtime/trends', { params })
+    const response = await axios.get('/api/v1/graphs/realtime/trends', { params })
     return response.data
   },
 
@@ -204,7 +204,7 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await axios.get('/api/graphs/export/csv', { 
+    const response = await axios.get('/api/v1/graphs/export/csv', { 
       params,
       responseType: 'blob'
     })
@@ -225,7 +225,7 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await axios.get('/api/graphs/export/json', { 
+    const response = await axios.get('/api/v1/graphs/export/json', { 
       params,
       responseType: 'blob'
     })
@@ -243,7 +243,7 @@ export const graphsApi = {
 
   // Graph metadata
   async getGraphTypes(): Promise<any> {
-    const response = await axios.get('/api/graphs/types')
+    const response = await axios.get('/api/v1/graphs/types')
     return response.data
   }
 }
