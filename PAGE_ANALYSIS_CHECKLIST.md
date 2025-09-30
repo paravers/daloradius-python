@@ -1147,9 +1147,108 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| GIS主页 | `gis-main.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | 地图首页 |
-| 查看地图 | `gis-viewmap.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | 地图查看 |
-| 编辑地图 | `gis-editmap.php` | ❌ 未实现 | `Hotspot` | 需要开发 | 需要开发 | 地图编辑 |
+| GIS主页 | `gis-main.php` | ✅ 已完成 | `Hotspot` | `GET /api/v1/gis/map-data` | `GisMainView.vue` | 地图首页 |
+| 查看地图 | `gis-viewmap.php` | ✅ 已完成 | `Hotspot` | `GET /api/v1/gis/map-data` | `GisViewMapView.vue` | 地图查看 |
+| 编辑地图 | `gis-editmap.php` | ✅ 已完成 | `Hotspot` | `PUT /api/v1/gis/hotspots/{id}/location` | `GisEditMapView.vue` | 地图编辑 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：基于现有`Hotspot`模型，复用`geocode`字段存储地理坐标信息
+- **API接口**：`/backend/app/api/v1/gis.py` - 完整GIS RESTful API，包含11个专业地理操作端点
+- **服务层**：`/backend/app/services/gis.py` - GIS业务逻辑层，包含地理计算、坐标验证、空间分析
+- **仓储层**：`/backend/app/repositories/gis.py` - 地理数据访问层，支持空间查询和距离计算
+- **地理服务**：`/backend/app/services/geo_location.py` - IP地理定位服务，集成GeoIP2和GeoPy
+- **核心API端点**：
+  - 地图数据：GET `/api/v1/gis/map-data` - 获取完整地图数据和统计信息
+  - 位置搜索：POST `/api/v1/gis/search/near-location` - 基于坐标范围搜索热点
+  - 位置更新：PUT `/api/v1/gis/hotspots/{id}/location` - 更新热点地理位置
+  - 位置删除：DELETE `/api/v1/gis/hotspots/{id}/location` - 移除热点地理坐标
+  - 无位置热点：GET `/api/v1/gis/hotspots/without-location` - 获取未设置位置的热点
+  - 区域统计：POST `/api/v1/gis/statistics/regional` - 指定区域的热点统计分析
+  - 名称搜索：GET `/api/v1/gis/search/by-name` - 按名称搜索热点位置
+  - 坐标验证：POST `/api/v1/gis/validate-coordinates` - 地理坐标有效性验证
+
+**前端实现：**
+- **主要视图**：
+  - `GisMainView.vue` - GIS主界面，提供完整地图管理功能
+  - `GisViewMapView.vue` - 地图查看界面，专注于只读地图展示
+  - `GisEditMapView.vue` - 地图编辑界面，提供交互式位置编辑工具
+- **核心组件**：
+  - `GisMapView.vue` - 基于Leaflet的交互式地图组件，支持多种地图图层
+  - `HotspotMapMarker.vue` - 热点地图标记组件，支持状态可视化和交互
+  - `GisMapControls.vue` - 地图控制面板，提供搜索、过滤、坐标工具
+- **服务层**：`/frontend/src/services/gisService.ts` - 完整GIS API调用服务，包含TypeScript类型定义
+- **地理功能**：
+  - 交互式地图显示（支持街道、卫星、地形图层）
+  - 热点位置标记和状态可视化
+  - 地理坐标搜索和位置定位
+  - 距离计算和范围查询
+  - 批量位置导入导出
+  - 坐标验证和格式化
+
+**技术集成：**
+- **地图引擎**：Leaflet.js - 轻量级开源地图库
+- **地图数据源**：OpenStreetMap, 卫星图像, 地形图
+- **地理定位**：集成GeoIP2数据库进行IP地理定位
+- **地址解析**：集成GeoPy和Nominatim进行地址与坐标转换
+- **距离计算**：支持Haversine和geodesic距离计算算法
+- **坐标系统**：支持WGS84标准地理坐标系
+- **数据格式**：支持JSON和CSV格式的位置数据导入导出
+
+**系统集成：**
+- **路由配置**：`/gis/*` 路由已配置并集成到主应用
+- **菜单集成**：已添加到主导航菜单，支持权限控制
+- **导航路径**：GIS地图 → 主页/查看/编辑
+- **权限控制**：集成认证和权限验证中间件（gis.view, gis.edit）
+
+**技术特性：**
+- ✅ 完整的地理信息系统CRUD操作（创建、读取、更新、删除位置）
+- ✅ 交互式地图显示和编辑（点击添加、拖拽移动、双击编辑）
+- ✅ 多层地图支持（街道地图、卫星图像、地形图）
+- ✅ 高级地理搜索（坐标范围、距离搜索、名称搜索）
+- ✅ 空间分析功能（距离计算、区域统计、边界检测）
+- ✅ IP地理定位集成（自动根据IP确定大致位置）
+- ✅ 批量位置管理（导入导出、批量编辑、批量验证）
+- ✅ 实时地图交互（实时标记更新、动态过滤、状态可视化）
+- ✅ 响应式设计和移动端适配
+
+**业务功能：**
+- 热点地理位置可视化和管理
+- 基于位置的热点搜索和分析
+- 地理区域的热点分布统计
+- IP地址到地理位置的自动映射
+- 热点覆盖范围分析和规划
+- 地理数据的导入导出和备份
+
+**高级特性：**
+- 自动IP地理定位（支持GeoIP2数据库）
+- 地址解析和反向地理编码
+- 实时坐标验证和格式化
+- 地图图层切换和自定义
+- 热点状态的地理可视化
+- 移动端地理位置获取
+
+**安全特性：**
+- 地理坐标输入验证和边界检查
+- IP地址格式验证和安全过滤
+- 地理数据访问权限控制
+- 操作日志记录和审计
+- XSS防护和数据清理
+
+**性能优化：**
+- 地图瓦片缓存和预加载
+- 大量标记的集群显示
+- 地理查询的空间索引优化
+- 异步地理编码和批量处理
+- 地图视图的懒加载和虚拟化
+
+**架构优势：**
+- 完全遵循项目现有架构模式和设计规范
+- 与hotspot管理模块无缝集成
+- 使用相同的UI组件库和设计语言
+- 继承项目的错误处理和状态管理模式
+- 支持与用户管理、设备管理等模块的联动分析
 
 ## 11. 认证模块 (Authentication)
 

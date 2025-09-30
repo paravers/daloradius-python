@@ -113,6 +113,52 @@ const routes: RouteRecordRaw[] = [
           permissions: ['config.view'],
         } as RouteMeta,
       },
+      {
+        path: 'gis',
+        name: 'GIS',
+        meta: {
+          title: 'GIS地图',
+          icon: 'EnvironmentOutlined',
+          requiresAuth: true,
+          permissions: ['gis.view'],
+        } as RouteMeta,
+        children: [
+          {
+            path: '',
+            redirect: '/gis/main',
+          },
+          {
+            path: 'main',
+            name: 'GISMain',
+            component: () => import('@/views/gis/GisMainView.vue'),
+            meta: {
+              title: 'GIS主页',
+              requiresAuth: true,
+              permissions: ['gis.view'],
+            } as RouteMeta,
+          },
+          {
+            path: 'view',
+            name: 'GISView',
+            component: () => import('@/views/gis/GisViewMapView.vue'),
+            meta: {
+              title: '查看地图',
+              requiresAuth: true,
+              permissions: ['gis.view'],
+            } as RouteMeta,
+          },
+          {
+            path: 'edit',
+            name: 'GISEdit',
+            component: () => import('@/views/gis/GisEditMapView.vue'),
+            meta: {
+              title: '编辑地图',
+              requiresAuth: true,
+              permissions: ['gis.edit'],
+            } as RouteMeta,
+          },
+        ],
+      },
     ],
   },
   // 404 页面
