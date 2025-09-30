@@ -12,7 +12,7 @@ from .base import BaseModel, LegacyBaseModel, RadiusBaseModel
 from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo, BatchHistory
 from .radius import RadCheck, RadReply, RadUserGroup
 from .nas import Nas  
-from .accounting import RadAcct
+from .accounting import RadAcct, RadAcctUpdate, UserTrafficSummary, NasTrafficSummary
 from .system import BackupHistory
 
 # Import new models
@@ -43,6 +43,9 @@ __all__ = [
     "RadUserGroup",
     "Nas",
     "RadAcct",
+    "RadAcctUpdate",
+    "UserTrafficSummary", 
+    "NasTrafficSummary",
     "BackupHistory",
     
     # RADIUS Group Management

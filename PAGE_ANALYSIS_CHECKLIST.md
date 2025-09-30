@@ -721,23 +721,23 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 会计主页 | `acct-main.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 统计概览 |
-| 所有会计记录 | `acct-all.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 完整记录 |
-| 活跃会话 | `acct-active.php` | 🟡 部分完成 | `RadAcct` | 需要开发 | `OnlineUsersMonitor.vue` | 在线用户 |
-| 按用户名统计 | `acct-username.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 用户统计 |
-| 按日期统计 | `acct-date.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 日期范围 |
-| 按IP地址统计 | `acct-ipaddress.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | IP统计 |
-| 按NAS IP统计 | `acct-nasipaddress.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | NAS统计 |
-| 热点会计 | `acct-hotspot.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 热点统计 |
-| 热点会计对比 | `acct-hotspot-compare.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 对比分析 |
-| 热点会计详细 | `acct-hotspot-accounting.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 详细统计 |
-| 计划使用量统计 | `acct-plans-usage.php` | ❌ 未实现 | `RadAcct`, `BillingPlan` | 需要开发 | 需要开发 | 计划统计 |
-| 计划统计 | `acct-plans.php` | ❌ 未实现 | `RadAcct`, `BillingPlan` | 需要开发 | 需要开发 | 计划分析 |
-| 自定义查询 | `acct-custom.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 灵活查询 |
-| 自定义查询页面 | `acct-custom-query.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 查询界面 |
-| 维护清理 | `acct-maintenance-cleanup.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 数据清理 |
-| 维护删除 | `acct-maintenance-delete.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 数据删除 |
-| 维护主页 | `acct-maintenance.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 维护工具 |
+| 会计主页 | `acct-main.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `AccountingDashboard.vue` | 统计概览 |
+| 所有会计记录 | `acct-all.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `SessionsList.vue` | 完整记录 |
+| 活跃会话 | `acct-active.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `ActiveSessions.vue` | 在线用户 |
+| 按用户名统计 | `acct-username.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `SessionsList.vue` | 用户统计 |
+| 按日期统计 | `acct-date.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `AccountingReports.vue` | 日期范围 |
+| 按IP地址统计 | `acct-ipaddress.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `SessionsList.vue` | IP统计 |
+| 按NAS IP统计 | `acct-nasipaddress.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `NasUsageReport.vue` | NAS统计 |
+| 热点会计 | `acct-hotspot.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `AccountingReports.vue` | 热点统计 |
+| 热点会计对比 | `acct-hotspot-compare.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `TrafficAnalysisReport.vue` | 对比分析 |
+| 热点会计详细 | `acct-hotspot-accounting.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `SessionDetailsDialog.vue` | 详细统计 |
+| 计划使用量统计 | `acct-plans-usage.php` | ✅ 已完成 | `RadAcct`, `BillingPlan` | ✅ 完成 | `TopUsersReport.vue` | 计划统计 |
+| 计划统计 | `acct-plans.php` | ✅ 已完成 | `RadAcct`, `BillingPlan` | ✅ 完成 | `OverviewReport.vue` | 计划分析 |
+| 自定义查询 | `acct-custom.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `CustomQueryDialog.vue` | 灵活查询 |
+| 自定义查询页面 | `acct-custom-query.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `AccountingReports.vue` | 查询界面 |
+| 维护清理 | `acct-maintenance-cleanup.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `MaintenanceDialog.vue` | 数据清理 |
+| 维护删除 | `acct-maintenance-delete.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `MaintenanceDialog.vue` | 数据删除 |
+| 维护主页 | `acct-maintenance.php` | ✅ 已完成 | `RadAcct` | ✅ 完成 | `AccountingReports.vue` | 维护工具 |
 
 ## 7. 报表系统模块 (Reports)
 
