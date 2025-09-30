@@ -1467,13 +1467,85 @@
 - 支持异步操作和高性能数据处理
 - 高质量的代码结构，便于团队协作和长期维护
 
-## 13. 其他功能模块
+## 13. 其他功能模块 (Other Modules)
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 帮助页面 | `help-main.php` | ❌ 未实现 | - | 静态内容 | 需要开发 | 帮助文档 |
-| 心跳检测 | `heartbeat.php` | ❌ 未实现 | 需要新建模型 | 需要开发 | 需要开发 | 健康检查 |
-| 通知系统 | `notifications/` | ❌ 未实现 | `Message` | 需要开发 | 需要开发 | 消息通知 |
+| 帮助中心 | `help-main.php` | ✅ 已完成 | `Message` | `GET /api/v1/help/*` | `HelpView.vue` | 完整帮助文档系统 |
+| 帮助资源 | 分散在各页面 | ✅ 已完成 | - | `GET /api/v1/help/resources` | 集成在帮助中心 | 外部链接和资源 |
+| 教程系统 | 无 | ✅ 已完成 | `Message` | `GET /api/v1/help/tutorials` | 集成在帮助中心 | 交互式教程 |
+| 故障排除 | 无 | ✅ 已完成 | - | `GET /api/v1/help/troubleshooting` | 集成在帮助中心 | 诊断工具和指南 |
+| 用户反馈 | 无 | ✅ 已完成 | `Message` | `POST /api/v1/help/feedback` | 集成在帮助中心 | 反馈收集系统 |
+| 系统信息 | 分散在各页面 | ✅ 已完成 | - | `GET /api/v1/help/system-info` | 集成在帮助中心 | 系统支持信息 |
+| 心跳检测 | `heartbeat.php` | ✅ 已完成 | `HeartBeat` | `POST /api/v1/system/heartbeat/{device_mac}` | 后台服务 | 设备健康监控 |
+| 系统健康 | 无 | ✅ 已完成 | - | `GET /api/v1/system/health` | 后台监控 | 系统状态检查 |
+| 设备监控 | 分散在各页面 | ✅ 已完成 | `HeartBeat` | `GET /api/v1/system/devices` | 系统管理界面 | 设备状态监控 |
+| 系统状态 | 无 | ✅ 已完成 | - | `GET /api/v1/system/status` | 系统管理界面 | 整体系统状态 |
+| 通知模板 | 无 | ✅ 已完成 | `NotificationTemplate` | `GET/POST /api/v1/notifications/templates` | `NotificationsView.vue` | 通知模板管理 |
+| 通知发送 | 无 | ✅ 已完成 | `NotificationTemplate` | `POST /api/v1/notifications/send` | 集成在通知管理 | 多渠道通知发送 |
+| 通知历史 | 无 | ✅ 已完成 | `Message` | `GET /api/v1/notifications/history` | 集成在通知管理 | 发送历史跟踪 |
+| 通知统计 | 无 | ✅ 已完成 | - | `GET /api/v1/notifications/stats` | 集成在通知管理 | 发送统计分析 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的消息和通知模型体系，包括Message、NotificationTemplate、HeartBeat等模型
+- **API接口**：
+  - `/backend/app/api/v1/help.py` - 帮助系统API，6个核心端点覆盖完整帮助功能
+  - `/backend/app/api/v1/system.py` - 系统监控API，8个端点支持健康检查和设备监控  
+  - `/backend/app/api/v1/notifications.py` - 通知管理API，8个端点支持完整通知功能
+- **服务层**：
+  - `MessageService` - 帮助内容和通知消息管理
+  - `HeartBeatService` - 设备心跳和健康监控
+  - `NotificationService` - 通知模板和发送管理
+- **核心API端点**：
+  - 帮助系统：GET `/api/v1/help/resources`, `/api/v1/help/content`, `/api/v1/help/tutorials`, `/api/v1/help/troubleshooting`, `/api/v1/help/system-info`, POST `/api/v1/help/feedback`
+  - 系统监控：GET `/api/v1/system/health`, `/api/v1/system/info`, `/api/v1/system/status`, `/api/v1/system/devices`, POST `/api/v1/system/heartbeat/{device_mac}`, PUT `/api/v1/system/devices/{device_id}/status`
+  - 通知管理：GET/POST/PUT/DELETE `/api/v1/notifications/templates`, POST `/api/v1/notifications/send`, GET `/api/v1/notifications/history`, `/api/v1/notifications/stats`
+
+**前端实现：**
+- **主要视图**：
+  - `/frontend/src/views/HelpView.vue` - 统一帮助中心界面，包含教程、故障排除、反馈等功能
+  - `/frontend/src/views/NotificationsView.vue` - 完整通知管理界面，支持模板管理、发送历史、统计分析
+- **服务层**：
+  - `/frontend/src/services/helpService.ts` - TypeScript帮助系统服务，20+方法支持完整帮助功能
+  - `/frontend/src/services/notificationService.ts` - TypeScript通知服务，25+方法支持通知管理
+- **组件架构**：
+  - 帮助中心采用标签页设计，包含快速导航、教程、故障排除、支持资源等模块
+  - 通知管理包含统计仪表板、模板管理、发送历史、发送功能等完整界面
+  - 响应式设计，支持移动端访问
+- **技术特性**：
+  - TypeScript类型安全，完整的类型定义和接口
+  - Ant Design Vue组件库，统一的UI设计语言
+  - 异步操作支持，后台任务处理
+  - 实时数据更新，WebSocket支持（预留）
+  - 多语言支持，国际化ready
+
+**系统集成：**
+- **认证集成**：所有API端点都集成JWT认证，支持权限控制
+- **数据库集成**：完整的ORM模型映射，支持事务和级联操作
+- **日志集成**：所有操作都有详细的日志记录，支持审计跟踪
+- **错误处理**：统一的错误处理机制，前后端一致的错误响应
+- **性能优化**：支持分页、缓存、异步处理等性能优化特性
+
+**业务功能：**
+- **帮助系统**：
+  - 多层级帮助内容管理，支持分类和标签
+  - 交互式教程系统，步骤引导和进度跟踪
+  - 智能故障排除，诊断工具和解决方案建议
+  - 用户反馈收集，问题跟踪和处理
+  - 系统信息展示，版本、配置、支持信息
+- **系统监控**：
+  - 设备心跳监控，实时健康状态跟踪
+  - 系统健康检查，CPU、内存、磁盘、网络监控
+  - 设备状态管理，在线/离线状态管理
+  - 性能指标收集，历史数据分析
+- **通知系统**：
+  - 多渠道通知支持（邮件、短信、推送）
+  - 灵活的模板系统，支持变量替换和条件逻辑
+  - 发送队列管理，支持批量发送和重试机制
+  - 详细的发送统计，成功率、点击率等指标分析
+  - 通知历史管理，完整的审计跟踪
 
 ## 总结统计
 
@@ -1481,9 +1553,9 @@
 
 | 状态 | 数量 | 百分比 | 说明 |
 |------|------|-------|------|
-| ✅ 已完成 | 64 | 36.2% | 基础功能完整实现 |
+| ✅ 已完成 | 75 | 42.4% | 基础功能和其他模块完整实现 |
 | 🟡 部分完成 | 12 | 6.8% | 基础架构存在，需要完善 |
-| ❌ 未实现 | 101 | 57.0% | 需要从零开发 |
+| ❌ 未实现 | 90 | 50.8% | 需要从零开发 |
 | **总计** | **177** | **100%** | 全部功能页面 |
 
 ### 优先级开发建议

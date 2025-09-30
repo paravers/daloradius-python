@@ -199,6 +199,28 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: 'help',
+        name: 'Help',
+        component: () => import('@/views/HelpView.vue'),
+        meta: {
+          title: '帮助中心',
+          icon: 'QuestionCircleOutlined',
+          requiresAuth: true,
+          permissions: ['help.view'],
+        } as RouteMeta,
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('@/views/NotificationsView.vue'),
+        meta: {
+          title: '通知管理',
+          icon: 'NotificationOutlined',
+          requiresAuth: true,
+          permissions: ['notifications.view'],
+        } as RouteMeta,
+      },
     ],
   },
   // 404 页面

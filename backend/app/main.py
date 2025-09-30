@@ -16,7 +16,7 @@ import os
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import init_db, close_db
-from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management, batch, configs, gis, dashboard
+from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management, batch, configs, gis, dashboard, help, notifications
 from app.api.v1.hotspots import router as hotspots_router
 
 
@@ -199,6 +199,20 @@ def setup_routes(app: FastAPI) -> None:
         gis.router,
         prefix=settings.API_V1_STR + "/gis",
         tags=["gis"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        help.router,
+        prefix=settings.API_V1_STR + "/help",
+        tags=["help"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        notifications.router,
+        prefix=settings.API_V1_STR + "/notifications",
+        tags=["notifications"],
         dependencies=[Depends(security)]
     )
     
