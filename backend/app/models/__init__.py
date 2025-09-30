@@ -20,7 +20,7 @@ from .radius_groups import RadGroupCheck, RadGroupReply, RadPostAuth, NasReload,
 from .radius_profile import RadiusProfile, ProfileUsage
 from .nas import Realm, Proxy
 from .radius import RadHuntGroup
-from .billing import BillingPlan, BillingHistory, BillingMerchant, BillingRate, BillingPlanProfile
+from .billing import BillingPlan, BillingHistory, BillingMerchant, BillingRate, BillingPlanProfile, Invoice, Payment, Refund, PaymentType, POS
 from .access_control import OperatorAcl, OperatorAclFile, Dictionary, Message, MessageType
 from .hotspot import Hotspot
 
@@ -63,8 +63,13 @@ __all__ = [
     "BillingPlan",
     "BillingHistory",
     "BillingMerchant",
-    "BillingRate",
+    "BillingRate", 
     "BillingPlanProfile",
+    "Invoice",
+    "Payment",
+    "Refund",
+    "PaymentType",
+    "POS",
     
     # Access Control
     "OperatorAcl",

@@ -198,11 +198,261 @@ class BillingPlanProfile(BaseModel):
     profile_name = Column(String(256), nullable=True)
 
 
+class Invoice(BaseModel):
+    """
+    Invoice model for billing system
+    Maps to invoices table
+    """
+    __tablename__ = "invoices"
+    __table_args__ = (
+        Index('idx_invoices_number', 'invoice_number'),
+        Index('idx_invoices_customer', 'customer_id'),
+        Index('idx_invoices_status', 'status'),
+        Index('idx_invoices_due_date', 'due_date'),
+        {'extend_existing': True}
+    )
+    
+    # Invoice identification
+    invoice_number = Column(String(50), unique=True, nullable=False, index=True)
+    customer_id = Column(String(128), nullable=False, index=True)
+    customer_name = Column(String(255), nullable=False)
+    customer_email = Column(String(255), nullable=True)
+    customer_address = Column(Text, nullable=True)
+    
+    # Financial details
+    subtotal = Column(Numeric(10, 2), nullable=False, default=0)
+    tax_amount = Column(Numeric(10, 2), nullable=False, default=0)
+    discount_amount = Column(Numeric(10, 2), nullable=False, default=0)
+    total_amount = Column(Numeric(10, 2), nullable=False, default=0)
+    currency = Column(String(3), nullable=False, default='CNY')
+    
+    # Status and dates
+    status = Column(String(50), nullable=False, default='draft')  # draft, sent, paid, overdue, cancelled
+    issue_date = Column(Date, nullable=False, default=date.today)
+    due_date = Column(Date, nullable=False)
+    paid_date = Column(Date, nullable=True)
+    
+    # Description and notes
+    description = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    terms_conditions = Column(Text, nullable=True)
+    
+    # Legacy timestamp fields
+    creationdate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    creationby = Column(String(128), nullable=True)
+    updatedate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updateby = Column(String(128), nullable=True)
+
+
+class Payment(BaseModel):
+    """
+    Payment model for billing system  
+    Maps to payments table
+    """
+    __tablename__ = "payments"
+    __table_args__ = (
+        Index('idx_payments_customer', 'customer_id'),
+        Index('idx_payments_invoice', 'invoice_id'),
+        Index('idx_payments_status', 'status'),
+        Index('idx_payments_date', 'payment_date'),
+        {'extend_existing': True}
+    )
+    
+    # Payment identification
+    payment_number = Column(String(50), unique=True, nullable=False, index=True)
+    customer_id = Column(String(128), nullable=False, index=True)
+    invoice_id = Column(Integer, ForeignKey('invoices.id'), nullable=True)
+    
+    # Payment details
+    amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default='CNY')
+    payment_method = Column(String(50), nullable=False)  # cash, card, bank_transfer, alipay, wechat, etc.
+    payment_date = Column(DateTime, nullable=False, default=datetime.utcnow)
+    
+    # Transaction details
+    transaction_id = Column(String(255), nullable=True)
+    reference_number = Column(String(255), nullable=True)
+    gateway = Column(String(100), nullable=True)  # Payment gateway used
+    
+    # Status tracking
+    status = Column(String(50), nullable=False, default='pending')  # pending, completed, failed, refunded
+    
+    # Additional information
+    description = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    # Legacy timestamp fields
+    creationdate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    creationby = Column(String(128), nullable=True)
+    updatedate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updateby = Column(String(128), nullable=True)
+    
+    # Relationships
+    invoice = relationship("Invoice", back_populates="payments")
+
+
+class Refund(BaseModel):
+    """
+    Refund model for billing system
+    Maps to refunds table
+    """
+    __tablename__ = "refunds"
+    __table_args__ = (
+        Index('idx_refunds_payment', 'payment_id'),
+        Index('idx_refunds_customer', 'customer_id'),
+        Index('idx_refunds_status', 'status'),
+        Index('idx_refunds_date', 'refund_date'),
+        {'extend_existing': True}
+    )
+    
+    # Refund identification
+    refund_number = Column(String(50), unique=True, nullable=False, index=True)
+    payment_id = Column(Integer, ForeignKey('payments.id'), nullable=False)
+    customer_id = Column(String(128), nullable=False, index=True)
+    
+    # Refund details
+    amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default='CNY')
+    refund_date = Column(DateTime, nullable=False, default=datetime.utcnow)
+    
+    # Refund reason and status
+    reason = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False, default='pending')  # pending, processed, failed
+    
+    # Transaction details
+    transaction_id = Column(String(255), nullable=True)
+    gateway = Column(String(100), nullable=True)
+    
+    # Additional information
+    notes = Column(Text, nullable=True)
+    
+    # Legacy timestamp fields  
+    creationdate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    creationby = Column(String(128), nullable=True)
+    updatedate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updateby = Column(String(128), nullable=True)
+    
+    # Relationships
+    payment = relationship("Payment", back_populates="refunds")
+
+
+class PaymentType(BaseModel):
+    """
+    Payment types configuration
+    Maps to payment_types table
+    """
+    __tablename__ = "payment_types"
+    __table_args__ = (
+        Index('idx_payment_types_name', 'name'),
+        Index('idx_payment_types_active', 'is_active'),
+        {'extend_existing': True}
+    )
+    
+    # Type identification
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    display_name = Column(String(100), nullable=False)
+    code = Column(String(20), unique=True, nullable=False)
+    
+    # Configuration
+    is_active = Column(Boolean, nullable=False, default=True)
+    is_online = Column(Boolean, nullable=False, default=False)
+    requires_gateway = Column(Boolean, nullable=False, default=False)
+    
+    # Gateway settings
+    gateway_name = Column(String(100), nullable=True)
+    gateway_config = Column(Text, nullable=True)  # JSON configuration
+    
+    # Fees and limits
+    fixed_fee = Column(Numeric(10, 2), nullable=False, default=0)
+    percentage_fee = Column(Numeric(5, 4), nullable=False, default=0)  # 0.0000 to 1.0000 (0% to 100%)
+    min_amount = Column(Numeric(10, 2), nullable=True)
+    max_amount = Column(Numeric(10, 2), nullable=True)
+    
+    # Display and sorting
+    description = Column(Text, nullable=True)
+    icon = Column(String(100), nullable=True)
+    sort_order = Column(Integer, nullable=False, default=0)
+    
+    # Legacy timestamp fields
+    creationdate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    creationby = Column(String(128), nullable=True)
+    updatedate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updateby = Column(String(128), nullable=True)
+
+
+class POS(BaseModel):
+    """
+    POS (Point of Sale) terminals management
+    Maps to pos_terminals table
+    """
+    __tablename__ = "pos_terminals"
+    __table_args__ = (
+        Index('idx_pos_serial', 'serial_number'),
+        Index('idx_pos_location', 'location_id'),
+        Index('idx_pos_status', 'status'),
+        {'extend_existing': True}
+    )
+    
+    # Terminal identification
+    name = Column(String(100), nullable=False)
+    serial_number = Column(String(100), unique=True, nullable=False, index=True)
+    model = Column(String(100), nullable=True)
+    manufacturer = Column(String(100), nullable=True)
+    
+    # Location and assignment
+    location_id = Column(String(50), nullable=True, index=True)
+    location_name = Column(String(255), nullable=True)
+    assigned_user = Column(String(128), nullable=True)
+    
+    # Network configuration
+    ip_address = Column(String(45), nullable=True)
+    mac_address = Column(String(17), nullable=True)
+    network_config = Column(Text, nullable=True)  # JSON configuration
+    
+    # Status and health
+    status = Column(String(50), nullable=False, default='active')  # active, inactive, maintenance, error
+    last_heartbeat = Column(DateTime, nullable=True)
+    last_transaction = Column(DateTime, nullable=True)
+    
+    # Capabilities and features
+    supports_contactless = Column(Boolean, nullable=False, default=False)
+    supports_chip = Column(Boolean, nullable=False, default=False)
+    supports_pin = Column(Boolean, nullable=False, default=False)
+    supports_receipt_print = Column(Boolean, nullable=False, default=False)
+    
+    # Configuration and settings
+    terminal_config = Column(Text, nullable=True)  # JSON configuration
+    firmware_version = Column(String(50), nullable=True)
+    
+    # Additional information
+    description = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    # Legacy timestamp fields
+    creationdate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    creationby = Column(String(128), nullable=True)
+    updatedate = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updateby = Column(String(128), nullable=True)
+
+
+# Update relationships
+# Add to Invoice model
+Invoice.payments = relationship("Payment", back_populates="invoice")
+
+# Add to Payment model  
+Payment.refunds = relationship("Refund", back_populates="payment")
+
+
 # Export all models
 __all__ = [
     "BillingPlan",
     "BillingHistory",
     "BillingMerchant", 
     "BillingRate",
-    "BillingPlanProfile"
+    "BillingPlanProfile",
+    "Invoice",
+    "Payment", 
+    "Refund",
+    "PaymentType",
+    "POS"
 ]

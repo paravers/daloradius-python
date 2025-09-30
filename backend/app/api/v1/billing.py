@@ -16,19 +16,34 @@ from app.repositories.billing import (
     BillingPlanRepository,
     BillingHistoryRepository,
     BillingRateRepository,
-    BillingMerchantRepository
+    BillingMerchantRepository,
+    InvoiceRepository,
+    PaymentRepository,
+    RefundRepository,
+    PaymentTypeRepository,
+    POSRepository
 )
 from app.services.billing import (
     BillingPlanService,
     BillingHistoryService,
     BillingRateService,
-    BillingMerchantService
+    BillingMerchantService,
+    InvoiceService,
+    PaymentService,
+    RefundService,
+    PaymentTypeService,
+    POSService
 )
 from app.schemas.billing import (
     BillingPlanCreate, BillingPlanUpdate, BillingPlanResponse,
     BillingHistoryCreate, BillingHistoryResponse,
     BillingRateCreate, BillingRateUpdate, BillingRateResponse,
     MerchantTransactionCreate, MerchantTransactionResponse,
+    InvoiceCreate, InvoiceUpdate, InvoiceResponse,
+    PaymentCreate, PaymentUpdate, PaymentResponse,
+    RefundCreate, RefundUpdate, RefundResponse,
+    PaymentTypeCreate, PaymentTypeUpdate, PaymentTypeResponse,
+    POSCreate, POSUpdate, POSResponse,
     PaginatedResponse
 )
 from app.core.exceptions import NotFoundError, ValidationError
@@ -55,6 +70,31 @@ def get_billing_rate_service(db: Session = Depends(get_db)) -> BillingRateServic
 def get_billing_merchant_service(db: Session = Depends(get_db)) -> BillingMerchantService:
     repository = BillingMerchantRepository(db)
     return BillingMerchantService(repository)
+
+
+def get_invoice_service(db: Session = Depends(get_db)) -> InvoiceService:
+    repository = InvoiceRepository(db)
+    return InvoiceService(repository)
+
+
+def get_payment_service(db: Session = Depends(get_db)) -> PaymentService:
+    repository = PaymentRepository(db)
+    return PaymentService(repository)
+
+
+def get_refund_service(db: Session = Depends(get_db)) -> RefundService:
+    repository = RefundRepository(db)
+    return RefundService(repository)
+
+
+def get_payment_type_service(db: Session = Depends(get_db)) -> PaymentTypeService:
+    repository = PaymentTypeRepository(db)
+    return PaymentTypeService(repository)
+
+
+def get_pos_service(db: Session = Depends(get_db)) -> POSService:
+    repository = POSRepository(db)
+    return POSService(repository)
 
 
 # =====================================================================
@@ -394,6 +434,323 @@ async def get_billing_statistics(
             "plans": plan_stats,
             "generated_at": "2024-01-01T00:00:00Z"  # Current timestamp
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
+# Invoice API Endpoints
+# =====================================================================
+
+@router.get("/invoices", response_model=PaginatedResponse, summary="Get invoices")
+async def get_invoices(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size"),
+    customer: Optional[str] = Query(None, description="Filter by customer name or ID"),
+    status: Optional[str] = Query(None, description="Filter by invoice status"),
+    date_from: Optional[date] = Query(None, description="Start date filter"),
+    date_to: Optional[date] = Query(None, description="End date filter"),
+    sort_field: str = Query("id", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    service: InvoiceService = Depends(get_invoice_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated list of invoices with optional filtering"""
+    try:
+        return await service.get_invoices(
+            page=page,
+            page_size=page_size,
+            customer_filter=customer,
+            status_filter=status,
+            date_from=date_from,
+            date_to=date_to,
+            sort_field=sort_field,
+            sort_order=sort_order
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/invoices/{invoice_id}", response_model=InvoiceResponse, summary="Get invoice by ID")
+async def get_invoice(
+    invoice_id: int = Path(..., description="Invoice ID"),
+    service: InvoiceService = Depends(get_invoice_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific invoice by ID"""
+    try:
+        return await service.get_invoice(invoice_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/invoices", response_model=InvoiceResponse, status_code=201, summary="Create invoice")
+async def create_invoice(
+    invoice_data: InvoiceCreate,
+    service: InvoiceService = Depends(get_invoice_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new invoice"""
+    try:
+        return await service.create_invoice(invoice_data)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/invoices/{invoice_id}", response_model=InvoiceResponse, summary="Update invoice")
+async def update_invoice(
+    invoice_id: int = Path(..., description="Invoice ID"),
+    invoice_data: InvoiceUpdate = None,
+    service: InvoiceService = Depends(get_invoice_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update an existing invoice"""
+    try:
+        return await service.update_invoice(invoice_id, invoice_data)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/invoices/{invoice_id}", summary="Delete invoice")
+async def delete_invoice(
+    invoice_id: int = Path(..., description="Invoice ID"),
+    service: InvoiceService = Depends(get_invoice_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete an invoice"""
+    try:
+        result = await service.delete_invoice(invoice_id)
+        if result:
+            return {"message": f"Invoice {invoice_id} deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
+# Payment API Endpoints
+# =====================================================================
+
+@router.get("/payments", response_model=PaginatedResponse, summary="Get payments")
+async def get_payments(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size"),
+    customer: Optional[str] = Query(None, description="Filter by customer ID"),
+    payment_method: Optional[str] = Query(None, description="Filter by payment method"),
+    status: Optional[str] = Query(None, description="Filter by payment status"),
+    sort_field: str = Query("id", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    service: PaymentService = Depends(get_payment_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated list of payments with optional filtering"""
+    try:
+        return await service.get_payments(
+            page=page,
+            page_size=page_size,
+            customer_filter=customer,
+            payment_method_filter=payment_method,
+            status_filter=status,
+            sort_field=sort_field,
+            sort_order=sort_order
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/payments/{payment_id}", response_model=PaymentResponse, summary="Get payment by ID")
+async def get_payment(
+    payment_id: int = Path(..., description="Payment ID"),
+    service: PaymentService = Depends(get_payment_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific payment by ID"""
+    try:
+        return await service.get_payment(payment_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/payments", response_model=PaymentResponse, status_code=201, summary="Create payment")
+async def create_payment(
+    payment_data: PaymentCreate,
+    service: PaymentService = Depends(get_payment_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new payment"""
+    try:
+        return await service.create_payment(payment_data)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/payments/{payment_id}", response_model=PaymentResponse, summary="Update payment")
+async def update_payment(
+    payment_id: int = Path(..., description="Payment ID"),
+    payment_data: PaymentUpdate = None,
+    service: PaymentService = Depends(get_payment_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update an existing payment"""
+    try:
+        return await service.update_payment(payment_id, payment_data)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
+# Refund API Endpoints
+# =====================================================================
+
+@router.get("/refunds", response_model=PaginatedResponse, summary="Get refunds")
+async def get_refunds(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size"),
+    customer: Optional[str] = Query(None, description="Filter by customer ID"),
+    status: Optional[str] = Query(None, description="Filter by refund status"),
+    payment_id: Optional[int] = Query(None, description="Filter by payment ID"),
+    sort_field: str = Query("id", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    service: RefundService = Depends(get_refund_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated list of refunds with optional filtering"""
+    try:
+        return await service.get_refunds(
+            page=page,
+            page_size=page_size,
+            customer_filter=customer,
+            status_filter=status,
+            payment_id_filter=payment_id,
+            sort_field=sort_field,
+            sort_order=sort_order
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/refunds", response_model=RefundResponse, status_code=201, summary="Create refund")
+async def create_refund(
+    refund_data: RefundCreate,
+    service: RefundService = Depends(get_refund_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new refund"""
+    try:
+        return await service.create_refund(refund_data)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
+# Payment Type API Endpoints
+# =====================================================================
+
+@router.get("/payment-types", response_model=PaginatedResponse, summary="Get payment types")
+async def get_payment_types(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size"),
+    name: Optional[str] = Query(None, description="Filter by payment type name"),
+    active_only: bool = Query(False, description="Show only active payment types"),
+    sort_field: str = Query("sort_order", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    service: PaymentTypeService = Depends(get_payment_type_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated list of payment types with optional filtering"""
+    try:
+        return await service.get_payment_types(
+            page=page,
+            page_size=page_size,
+            name_filter=name,
+            active_only=active_only,
+            sort_field=sort_field,
+            sort_order=sort_order
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/payment-types", response_model=PaymentTypeResponse, status_code=201, summary="Create payment type")
+async def create_payment_type(
+    payment_type_data: PaymentTypeCreate,
+    service: PaymentTypeService = Depends(get_payment_type_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new payment type"""
+    try:
+        return await service.create_payment_type(payment_type_data)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
+# POS Terminal API Endpoints
+# =====================================================================
+
+@router.get("/pos-terminals", response_model=PaginatedResponse, summary="Get POS terminals")
+async def get_pos_terminals(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size"),
+    name: Optional[str] = Query(None, description="Filter by terminal name or serial"),
+    location: Optional[str] = Query(None, description="Filter by location"),
+    status: Optional[str] = Query(None, description="Filter by terminal status"),
+    sort_field: str = Query("id", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    service: POSService = Depends(get_pos_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated list of POS terminals with optional filtering"""
+    try:
+        return await service.get_terminals(
+            page=page,
+            page_size=page_size,
+            name_filter=name,
+            location_filter=location,
+            status_filter=status,
+            sort_field=sort_field,
+            sort_order=sort_order
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/pos-terminals", response_model=POSResponse, status_code=201, summary="Create POS terminal")
+async def create_pos_terminal(
+    pos_data: POSCreate,
+    service: POSService = Depends(get_pos_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new POS terminal"""
+    try:
+        return await service.create_terminal(pos_data)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

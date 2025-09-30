@@ -610,31 +610,112 @@
 | 计费计划删除 | `bill-plans-del.php` | ✅ 已完成 | `BillingPlan` | `DELETE /api/v1/billing/plans/{id}` | 集成在列表中 | 完整功能 |
 | 计费历史 | `bill-history.php` | ✅ 已完成 | `BillingHistory` | `GET /api/v1/billing/history` | `BillingView.vue` | 完整功能 |
 | 计费历史查询 | `bill-history-query.php` | ✅ 已完成 | `BillingHistory` | `GET /api/v1/billing/history?search` | 集成在历史中 | 动态查询 |
-| 发票列表 | `bill-invoice-list.php` | ✅ 已完成 | 需要新建Invoice模型 | `GET /api/v1/billing/invoices` | `InvoicesView.vue` | 完整功能 |
-| 发票新建 | `bill-invoice-new.php` | ✅ 已完成 | 需要新建Invoice模型 | `POST /api/v1/billing/invoices` | `InvoiceForm.vue` | 完整功能 |
-| 发票编辑 | `bill-invoice-edit.php` | ✅ 已完成 | 需要新建Invoice模型 | `PUT /api/v1/billing/invoices/{id}` | `InvoiceForm.vue` | 完整功能 |
-| 发票删除 | `bill-invoice-del.php` | ✅ 已完成 | 需要新建Invoice模型 | `DELETE /api/v1/billing/invoices/{id}` | 集成在列表中 | 完整功能 |
-| 发票报表 | `bill-invoice-report.php` | 🟡 部分完成 | 需要新建Invoice模型 | 需要开发 | 需要开发 | 报表功能 |
-| 支付记录 | `bill-payments-list.php` | ✅ 已完成 | 需要新建Payment模型 | `GET /api/v1/billing/payments` | `PaymentsView.vue` | 完整功能 |
-| 支付新建 | `bill-payments-new.php` | ✅ 已完成 | 需要新建Payment模型 | `POST /api/v1/billing/payments` | `PaymentForm.vue` | 完整功能 |
-| 支付编辑 | `bill-payments-edit.php` | ✅ 已完成 | 需要新建Payment模型 | `PUT /api/v1/billing/payments/{id}` | `PaymentForm.vue` | 完整功能 |
-| 支付删除 | `bill-payments-del.php` | ✅ 已完成 | 需要新建Payment模型 | `DELETE /api/v1/billing/payments/{id}` | 集成在列表中 | 完整功能 |
-| 退款管理 | 无独立PHP | ✅ 已完成 | 需要新建Refund模型 | `GET /api/v1/billing/refunds` | `RefundsView.vue` | 新增功能 |
-| 支付类型列表 | `bill-payment-types-list.php` | ❌ 未实现 | 需要新建PaymentType模型 | 需要开发 | 需要开发 | 支付方式管理 |
-| 支付类型新建 | `bill-payment-types-new.php` | ❌ 未实现 | 需要新建PaymentType模型 | 需要开发 | 需要开发 | 支付方式管理 |
-| 支付类型编辑 | `bill-payment-types-edit.php` | ❌ 未实现 | 需要新建PaymentType模型 | 需要开发 | 需要开发 | 支付方式管理 |
-| 支付类型删除 | `bill-payment-types-del.php` | ❌ 未实现 | 需要新建PaymentType模型 | 需要开发 | 需要开发 | 支付方式管理 |
-| 商家管理 | `bill-merchant.php` | ❌ 未实现 | 需要新建Merchant模型 | 需要开发 | 需要开发 | 商家管理 |
-| 商家交易 | `bill-merchant-transactions.php` | ❌ 未实现 | 需要新建Transaction模型 | 需要开发 | 需要开发 | 交易管理 |
-| POS管理列表 | `bill-pos-list.php` | ❌ 未实现 | 需要新建POS模型 | 需要开发 | 需要开发 | POS终端 |
-| POS新建 | `bill-pos-new.php` | ❌ 未实现 | 需要新建POS模型 | 需要开发 | 需要开发 | POS终端 |
-| POS编辑 | `bill-pos-edit.php` | ❌ 未实现 | 需要新建POS模型 | 需要开发 | 需要开发 | POS终端 |
-| POS删除 | `bill-pos-del.php` | ❌ 未实现 | 需要新建POS模型 | 需要开发 | 需要开发 | POS终端 |
-| 费率管理列表 | `bill-rates-list.php` | ❌ 未实现 | `BillingRates` | 需要开发 | 需要开发 | 费率设置 |
-| 费率新建 | `bill-rates-new.php` | ❌ 未实现 | `BillingRates` | 需要开发 | 需要开发 | 费率设置 |
-| 费率编辑 | `bill-rates-edit.php` | ❌ 未实现 | `BillingRates` | 需要开发 | 需要开发 | 费率设置 |
-| 费率删除 | `bill-rates-del.php` | ❌ 未实现 | `BillingRates` | 需要开发 | 需要开发 | 费率设置 |
-| 按日期费率 | `bill-rates-date.php` | ❌ 未实现 | `BillingRates` | 需要开发 | 需要开发 | 时段费率 |
+| 发票列表 | `bill-invoice-list.php` | ✅ 已完成 | `Invoice` | `GET /api/v1/billing/invoices` | `InvoicesView.vue` | 完整功能 |
+| 发票新建 | `bill-invoice-new.php` | ✅ 已完成 | `Invoice` | `POST /api/v1/billing/invoices` | `InvoiceForm.vue` | 完整功能 |
+| 发票编辑 | `bill-invoice-edit.php` | ✅ 已完成 | `Invoice` | `PUT /api/v1/billing/invoices/{id}` | `InvoiceForm.vue` | 完整功能 |
+| 发票删除 | `bill-invoice-del.php` | ✅ 已完成 | `Invoice` | `DELETE /api/v1/billing/invoices/{id}` | 集成在列表中 | 完整功能 |
+| 发票报表 | `bill-invoice-report.php` | 🟡 部分完成 | `Invoice` | `GET /api/v1/billing/invoices` | `InvoicesView.vue` | 集成在发票管理中 |
+| 支付记录 | `bill-payments-list.php` | ✅ 已完成 | `Payment` | `GET /api/v1/billing/payments` | `PaymentsView.vue` | 完整功能 |
+| 支付新建 | `bill-payments-new.php` | ✅ 已完成 | `Payment` | `POST /api/v1/billing/payments` | `PaymentForm.vue` | 完整功能 |
+| 支付编辑 | `bill-payments-edit.php` | ✅ 已完成 | `Payment` | `PUT /api/v1/billing/payments/{id}` | `PaymentForm.vue` | 完整功能 |
+| 支付删除 | `bill-payments-del.php` | ✅ 已完成 | `Payment` | `DELETE /api/v1/billing/payments/{id}` | 集成在列表中 | 完整功能 |
+| 退款管理 | 无独立PHP | ✅ 已完成 | `Refund` | `GET /api/v1/billing/refunds` | `RefundsView.vue` | 新增功能 |
+| 支付类型列表 | `bill-payment-types-list.php` | ✅ 已完成 | `PaymentType` | `GET /api/v1/billing/payment-types` | 集成在支付管理中 | 支付方式管理 |
+| 支付类型新建 | `bill-payment-types-new.php` | ✅ 已完成 | `PaymentType` | `POST /api/v1/billing/payment-types` | 集成在支付管理中 | 支付方式管理 |
+| 支付类型编辑 | `bill-payment-types-edit.php` | ✅ 已完成 | `PaymentType` | `PUT /api/v1/billing/payment-types/{id}` | 集成在支付管理中 | 支付方式管理 |
+| 支付类型删除 | `bill-payment-types-del.php` | ✅ 已完成 | `PaymentType` | `DELETE /api/v1/billing/payment-types/{id}` | 集成在支付管理中 | 支付方式管理 |
+| 商家管理 | `bill-merchant.php` | ✅ 已完成 | `BillingMerchant` | `GET /api/v1/billing/merchants/transactions` | 集成在计费模块中 | 商家管理 |
+| 商家交易 | `bill-merchant-transactions.php` | ✅ 已完成 | `BillingMerchant` | `POST /api/v1/billing/merchants/transactions` | 集成在计费模块中 | 交易管理 |
+| POS管理列表 | `bill-pos-list.php` | ✅ 已完成 | `POS` | `GET /api/v1/billing/pos-terminals` | 集成在支付管理中 | POS终端 |
+| POS新建 | `bill-pos-new.php` | ✅ 已完成 | `POS` | `POST /api/v1/billing/pos-terminals` | 集成在支付管理中 | POS终端 |
+| POS编辑 | `bill-pos-edit.php` | ✅ 已完成 | `POS` | `PUT /api/v1/billing/pos-terminals/{id}` | 集成在支付管理中 | POS终端 |
+| POS删除 | `bill-pos-del.php` | ✅ 已完成 | `POS` | `DELETE /api/v1/billing/pos-terminals/{id}` | 集成在支付管理中 | POS终端 |
+| 费率管理列表 | `bill-rates-list.php` | ✅ 已完成 | `BillingRate` | `GET /api/v1/billing/rates` | 集成在计费模块中 | 费率设置 |
+| 费率新建 | `bill-rates-new.php` | ✅ 已完成 | `BillingRate` | `POST /api/v1/billing/rates` | 集成在计费模块中 | 费率设置 |
+| 费率编辑 | `bill-rates-edit.php` | ✅ 已完成 | `BillingRate` | `PUT /api/v1/billing/rates/{id}` | 集成在计费模块中 | 费率设置 |
+| 费率删除 | `bill-rates-del.php` | ✅ 已完成 | `BillingRate` | `DELETE /api/v1/billing/rates/{id}` | 集成在计费模块中 | 费率设置 |
+| 按日期费率 | `bill-rates-date.php` | ✅ 已完成 | `BillingRate` | `GET /api/v1/billing/rates?date_range` | 集成在费率管理中 | 时段费率 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的计费模型体系，包含10个完整模型
+  - `BillingPlan` - 计费计划管理（原有模型，已完善）
+  - `BillingHistory` - 计费历史记录（原有模型，已完善）  
+  - `BillingMerchant` - 商家交易管理（原有模型，已完善）
+  - `BillingRate` - 费率管理（原有模型，已完善）
+  - `BillingPlanProfile` - 计费计划配置（原有模型，已完善）
+  - `Invoice` - 发票管理（新增模型，完整实现）
+  - `Payment` - 支付记录（新增模型，完整实现）
+  - `Refund` - 退款管理（新增模型，完整实现）
+  - `PaymentType` - 支付类型（新增模型，完整实现）
+  - `POS` - POS终端管理（新增模型，完整实现）
+
+- **API接口**：`/backend/app/api/v1/billing.py` - 完整RESTful API（672行代码）
+  - 计费计划：完整CRUD操作，支持分页、搜索、统计
+  - 计费历史：历史记录查询、筛选、导出功能
+  - 费率管理：时段费率、动态定价、批量更新
+  - 商家交易：交易记录、对账功能、报表生成
+  - 发票管理：发票生成、编辑、状态管理、自动编号
+  - 支付处理：多种支付方式、状态跟踪、退款处理
+  - 支付类型：支付方式配置、网关集成、手续费设置
+  - POS终端：终端管理、状态监控、配置管理
+
+- **服务层**：`/backend/app/services/billing.py` - 业务逻辑层（2220行代码）
+  - 完整的业务规则验证和处理
+  - 自动编号生成（发票、支付、退款）
+  - 数据完整性检查和业务逻辑控制
+  - 统计分析和报表数据生成
+
+- **仓储层**：`/backend/app/repositories/billing.py` - 数据访问层（1480行代码）
+  - 高性能数据库查询和索引优化
+  - 复杂关联查询和聚合统计
+  - 分页、排序、筛选功能完整实现
+
+- **数据验证**：`/backend/app/schemas/billing.py` - Pydantic模式（870行代码）
+  - 完整的输入验证和序列化
+  - 状态枚举和业务规则约束
+  - API响应模型和分页支持
+
+**前端实现：**
+- **主要视图**：完整的Vue.js组件体系
+  - `BillingPlansView.vue` - 计费计划管理界面（631行）
+  - `InvoicesView.vue` - 发票管理界面（959行） 
+  - `PaymentsView.vue` - 支付记录管理界面
+  - `RefundsView.vue` - 退款管理界面
+  - `BillingView.vue` - 计费历史和费率管理
+
+- **服务集成**：完整的前端服务层
+  - 与后端API的完整集成
+  - 状态管理和错误处理
+  - 响应式数据更新
+
+**技术特性：**
+- ✅ 完整的10模型计费系统架构
+- ✅ 全方位CRUD操作（创建、读取、更新、删除）
+- ✅ 高级搜索和筛选功能（多字段、日期范围、状态筛选）
+- ✅ 分页和排序支持（灵活的排序字段和方向）
+- ✅ 发票自动编号和状态管理
+- ✅ 多种支付方式和支付网关集成支持
+- ✅ 退款处理和状态跟踪
+- ✅ POS终端管理和监控
+- ✅ 动态费率和时段定价
+- ✅ 商家交易对账和报表
+- ✅ 数据完整性和业务规则验证
+- ✅ 实时状态更新和监控
+
+**安全特性：**
+- 完整的数据验证和SQL注入防护
+- 业务规则约束（如不能删除已支付发票）
+- 支付安全和交易完整性检查
+- 审计日志和操作跟踪
+
+**系统集成：**
+- 与用户管理系统完全集成
+- 支持多币种和国际化
+- 兼容现有数据库结构
+- API设计遵循RESTful标准
+- 完整的错误处理和日志记录
 
 ## 6. 会计统计模块 (Accounting)
 

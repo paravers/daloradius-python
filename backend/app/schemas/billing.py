@@ -630,6 +630,243 @@ class MerchantTransactionResponse(MerchantTransactionBase):
         from_attributes = True
 
 
+# =====================================================================
+# Invoice Schemas
+# =====================================================================
+
+class InvoiceBase(BaseModel):
+    """Base schema for invoices"""
+    invoice_number: Optional[str] = Field(None, max_length=50, description="Invoice number")
+    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
+    customer_name: Optional[str] = Field(None, max_length=255, description="Customer name")
+    customer_email: Optional[str] = Field(None, max_length=255, description="Customer email")
+    customer_address: Optional[str] = Field(None, description="Customer address")
+    subtotal: Optional[Decimal] = Field(Decimal('0.00'), description="Subtotal amount")
+    tax_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Tax amount")
+    discount_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Discount amount")
+    total_amount: Optional[Decimal] = Field(Decimal('0.00'), description="Total amount")
+    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
+    status: Optional[InvoiceStatus] = Field(InvoiceStatus.DRAFT, description="Invoice status")
+    issue_date: Optional[date] = Field(None, description="Issue date")
+    due_date: Optional[date] = Field(None, description="Due date")
+    paid_date: Optional[date] = Field(None, description="Paid date")
+    description: Optional[str] = Field(None, description="Invoice description")
+    notes: Optional[str] = Field(None, description="Invoice notes")
+    terms_conditions: Optional[str] = Field(None, description="Terms and conditions")
+
+
+class InvoiceCreate(InvoiceBase):
+    """Schema for creating invoices"""
+    customer_id: str = Field(..., description="Customer ID is required")
+    customer_name: str = Field(..., description="Customer name is required") 
+    due_date: date = Field(..., description="Due date is required")
+
+
+class InvoiceUpdate(InvoiceBase):
+    """Schema for updating invoices"""
+    pass
+
+
+class InvoiceResponse(InvoiceBase):
+    """Schema for invoice responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# =====================================================================
+# Payment Schemas
+# =====================================================================
+
+class PaymentBase(BaseModel):
+    """Base schema for payments"""
+    payment_number: Optional[str] = Field(None, max_length=50, description="Payment number")
+    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
+    invoice_id: Optional[int] = Field(None, description="Invoice ID")
+    amount: Optional[Decimal] = Field(Decimal('0.00'), description="Payment amount")
+    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
+    payment_method: Optional[str] = Field(None, max_length=50, description="Payment method")
+    payment_date: Optional[datetime] = Field(None, description="Payment date")
+    transaction_id: Optional[str] = Field(None, max_length=255, description="Transaction ID")
+    reference_number: Optional[str] = Field(None, max_length=255, description="Reference number")
+    gateway: Optional[str] = Field(None, max_length=100, description="Payment gateway")
+    status: Optional[PaymentStatus] = Field(PaymentStatus.PENDING, description="Payment status")
+    description: Optional[str] = Field(None, description="Payment description")
+    notes: Optional[str] = Field(None, description="Payment notes")
+
+
+class PaymentCreate(PaymentBase):
+    """Schema for creating payments"""
+    customer_id: str = Field(..., description="Customer ID is required")
+    amount: Decimal = Field(..., gt=0, description="Amount must be greater than 0")
+    payment_method: str = Field(..., description="Payment method is required")
+
+
+class PaymentUpdate(PaymentBase):
+    """Schema for updating payments"""
+    pass
+
+
+class PaymentResponse(PaymentBase):
+    """Schema for payment responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# =====================================================================
+# Refund Schemas
+# =====================================================================
+
+class RefundBase(BaseModel):
+    """Base schema for refunds"""
+    refund_number: Optional[str] = Field(None, max_length=50, description="Refund number")
+    payment_id: Optional[int] = Field(None, description="Payment ID")
+    customer_id: Optional[str] = Field(None, max_length=128, description="Customer ID")
+    amount: Optional[Decimal] = Field(Decimal('0.00'), description="Refund amount")
+    currency: Optional[str] = Field("CNY", max_length=3, description="Currency code")
+    refund_date: Optional[datetime] = Field(None, description="Refund date")
+    reason: Optional[str] = Field(None, max_length=255, description="Refund reason")
+    status: Optional[str] = Field("pending", description="Refund status")
+    transaction_id: Optional[str] = Field(None, max_length=255, description="Transaction ID")
+    gateway: Optional[str] = Field(None, max_length=100, description="Payment gateway")
+    notes: Optional[str] = Field(None, description="Refund notes")
+
+
+class RefundCreate(RefundBase):
+    """Schema for creating refunds"""
+    payment_id: int = Field(..., description="Payment ID is required")
+    customer_id: str = Field(..., description="Customer ID is required")
+    amount: Decimal = Field(..., gt=0, description="Amount must be greater than 0")
+    reason: str = Field(..., description="Refund reason is required")
+
+
+class RefundUpdate(RefundBase):
+    """Schema for updating refunds"""
+    pass
+
+
+class RefundResponse(RefundBase):
+    """Schema for refund responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# =====================================================================
+# Payment Type Schemas
+# =====================================================================
+
+class PaymentTypeBase(BaseModel):
+    """Base schema for payment types"""
+    name: Optional[str] = Field(None, max_length=100, description="Payment type name")
+    display_name: Optional[str] = Field(None, max_length=100, description="Display name")
+    code: Optional[str] = Field(None, max_length=20, description="Payment type code")
+    is_active: Optional[bool] = Field(True, description="Is payment type active")
+    is_online: Optional[bool] = Field(False, description="Is online payment")
+    requires_gateway: Optional[bool] = Field(False, description="Requires payment gateway")
+    gateway_name: Optional[str] = Field(None, max_length=100, description="Gateway name")
+    gateway_config: Optional[str] = Field(None, description="Gateway configuration (JSON)")
+    fixed_fee: Optional[Decimal] = Field(Decimal('0.00'), description="Fixed fee")
+    percentage_fee: Optional[Decimal] = Field(Decimal('0.00'), description="Percentage fee")
+    min_amount: Optional[Decimal] = Field(None, description="Minimum amount")
+    max_amount: Optional[Decimal] = Field(None, description="Maximum amount")
+    description: Optional[str] = Field(None, description="Payment type description")
+    icon: Optional[str] = Field(None, max_length=100, description="Payment type icon")
+    sort_order: Optional[int] = Field(0, description="Sort order")
+
+
+class PaymentTypeCreate(PaymentTypeBase):
+    """Schema for creating payment types"""
+    name: str = Field(..., description="Payment type name is required")
+    display_name: str = Field(..., description="Display name is required")
+    code: str = Field(..., description="Payment type code is required")
+
+
+class PaymentTypeUpdate(PaymentTypeBase):
+    """Schema for updating payment types"""
+    pass
+
+
+class PaymentTypeResponse(PaymentTypeBase):
+    """Schema for payment type responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# =====================================================================
+# POS Schemas
+# =====================================================================
+
+class POSBase(BaseModel):
+    """Base schema for POS terminals"""
+    name: Optional[str] = Field(None, max_length=100, description="Terminal name")
+    serial_number: Optional[str] = Field(None, max_length=100, description="Serial number")
+    model: Optional[str] = Field(None, max_length=100, description="Terminal model")
+    manufacturer: Optional[str] = Field(None, max_length=100, description="Manufacturer")
+    location_id: Optional[str] = Field(None, max_length=50, description="Location ID")
+    location_name: Optional[str] = Field(None, max_length=255, description="Location name")
+    assigned_user: Optional[str] = Field(None, max_length=128, description="Assigned user")
+    ip_address: Optional[str] = Field(None, max_length=45, description="IP address")
+    mac_address: Optional[str] = Field(None, max_length=17, description="MAC address")
+    network_config: Optional[str] = Field(None, description="Network configuration (JSON)")
+    status: Optional[str] = Field("active", description="Terminal status")
+    last_heartbeat: Optional[datetime] = Field(None, description="Last heartbeat")
+    last_transaction: Optional[datetime] = Field(None, description="Last transaction")
+    supports_contactless: Optional[bool] = Field(False, description="Supports contactless payments")
+    supports_chip: Optional[bool] = Field(False, description="Supports chip cards")
+    supports_pin: Optional[bool] = Field(False, description="Supports PIN entry")
+    supports_receipt_print: Optional[bool] = Field(False, description="Supports receipt printing")
+    terminal_config: Optional[str] = Field(None, description="Terminal configuration (JSON)")
+    firmware_version: Optional[str] = Field(None, max_length=50, description="Firmware version")
+    description: Optional[str] = Field(None, description="Terminal description")
+    notes: Optional[str] = Field(None, description="Terminal notes")
+
+
+class POSCreate(POSBase):
+    """Schema for creating POS terminals"""
+    name: str = Field(..., description="Terminal name is required")
+    serial_number: str = Field(..., description="Serial number is required")
+
+
+class POSUpdate(POSBase):
+    """Schema for updating POS terminals"""
+    pass
+
+
+class POSResponse(POSBase):
+    """Schema for POS terminal responses"""
+    id: int
+    creationdate: Optional[datetime] = None
+    creationby: Optional[str] = None
+    updatedate: Optional[datetime] = None
+    updateby: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 # Paginated response schema
 class PaginatedResponse(BaseModel):
     """Generic paginated response schema"""
