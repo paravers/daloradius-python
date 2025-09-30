@@ -13,7 +13,7 @@ from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo, BatchHis
 from .radius import RadCheck, RadReply, RadUserGroup
 from .nas import Nas  
 from .accounting import RadAcct, RadAcctUpdate, UserTrafficSummary, NasTrafficSummary
-from .system import BackupHistory
+from .system import BackupHistory, SystemLog
 
 # Import new models
 from .radius_groups import RadGroupCheck, RadGroupReply, RadPostAuth, NasReload, RadIpPool
@@ -23,6 +23,7 @@ from .radius import RadHuntGroup
 from .billing import BillingPlan, BillingHistory, BillingMerchant, BillingRate, BillingPlanProfile, Invoice, Payment, Refund, PaymentType, POS
 from .access_control import OperatorAcl, OperatorAclFile, Dictionary, Message, MessageType
 from .hotspot import Hotspot
+from .reports import UpsStatus, RaidStatus, HeartBeat, ReportTemplate, ReportGeneration, ServerMonitoring
 
 # Export all models
 __all__ = [
@@ -47,6 +48,7 @@ __all__ = [
     "UserTrafficSummary", 
     "NasTrafficSummary",
     "BackupHistory",
+    "SystemLog",
     
     # RADIUS Group Management
     "RadGroupCheck",
@@ -82,5 +84,13 @@ __all__ = [
     "MessageType",
     
     # Hotspot Management
-    "Hotspot"
+    "Hotspot",
+    
+    # Reports System
+    "UpsStatus",
+    "RaidStatus", 
+    "HeartBeat",
+    "ReportTemplate",
+    "ReportGeneration",
+    "ServerMonitoring"
 ]
