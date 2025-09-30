@@ -7,14 +7,18 @@ export interface User {
   id: number
   username: string
   email: string
+  first_name?: string
+  last_name?: string
   fullName?: string
   avatar?: string
-  status: 'active' | 'inactive' | 'suspended'
+  is_active: boolean
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'EXPIRED'
+  auth_type: string
   roles: string[]
   permissions: string[]
-  createdAt: string
-  updatedAt: string
-  lastLoginAt?: string
+  last_login?: string
+  created_at: string
+  updated_at?: string
 }
 
 // 登录表单
@@ -30,8 +34,8 @@ export interface RegisterForm {
   username: string
   email: string
   password: string
-  confirmPassword: string
-  fullName?: string
+  firstName?: string
+  lastName?: string
 }
 
 // 认证结果

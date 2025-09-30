@@ -8,13 +8,53 @@ import type { RouteMeta } from '@/types'
 
 // 路由配置
 const routes: RouteRecordRaw[] = [
+  // 认证相关路由
+  {
+    path: '/auth',
+    name: 'Auth',
+    redirect: '/auth/login',
+    meta: {
+      requiresAuth: false,
+      hidden: true,
+    } as RouteMeta,
+    children: [
+      {
+        path: 'login',
+        name: 'Login',
+        component: () => import('@/views/auth/LoginView.vue'),
+        meta: {
+          title: '登录',
+          requiresAuth: false,
+          hidden: true,
+        } as RouteMeta,
+      },
+      {
+        path: 'register',
+        name: 'Register',
+        component: () => import('@/views/auth/RegisterView.vue'),
+        meta: {
+          title: '注册',
+          requiresAuth: false,
+          hidden: true,
+        } as RouteMeta,
+      },
+      {
+        path: 'forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('@/views/auth/ForgotPasswordView.vue'),
+        meta: {
+          title: '忘记密码',
+          requiresAuth: false,
+          hidden: true,
+        } as RouteMeta,
+      },
+    ],
+  },
+  // 兼容旧的登录路由
   {
     path: '/login',
-    name: 'Login',
-    component: () => import('@/views/auth/LoginView.vue'),
+    redirect: '/auth/login',
     meta: {
-      title: '登录',
-      requiresAuth: false,
       hidden: true,
     } as RouteMeta,
   },

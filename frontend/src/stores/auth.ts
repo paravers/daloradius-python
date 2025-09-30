@@ -4,7 +4,7 @@
 
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { User, AuthState, LoginForm, AuthResult } from '@/types'
+import type { User, AuthState, LoginForm, RegisterForm, AuthResult } from '@/types'
 import { authService } from '@/services'
 import { message } from 'ant-design-vue'
 
@@ -91,6 +91,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 注册
+  const register = async (registerData: RegisterForm): Promise<void> => {
+    try {
+      isLoading.value = true
+      const authResult = await authService.register(registerData)
+      saveAuthState(authResult)
+      message.success('注册成功')
+    } catch (error) {
+      console.error('Registration failed:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // 登出
   const logout = async (): Promise<void> => {
     try {
@@ -169,6 +184,7 @@ export const useAuthStore = defineStore('auth', () => {
     // 方法
     initializeAuth,
     login,
+    register,
     logout,
     refreshTokenAction,
     hasPermission,

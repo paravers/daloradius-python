@@ -1254,11 +1254,114 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 登录页面 | `login.php` | ✅ 已完成 | `User` | `POST /api/v1/auth/login` | `LoginView.vue` | 完整功能 |
-| 登录处理 | `dologin.php` | ✅ 已完成 | `User` | 集成在login API | 后端处理 | JWT认证 |
+| 登录页面 | `login.php` | ✅ 已完成 | `User`, `Operator` | `POST /api/v1/auth/login` | `LoginView.vue` | JWT认证 |
+| 登录处理 | `dologin.php` | ✅ 已完成 | `User`, `Operator` | 集成在login API | 后端处理 | JWT认证 |
 | 注销 | `logout.php` | ✅ 已完成 | - | `POST /api/v1/auth/logout` | 集成在Header | 完整功能 |
 | 注册页面 | 无PHP文件 | ✅ 已完成 | `User` | `POST /api/v1/auth/register` | `RegisterView.vue` | 新增功能 |
 | 忘记密码 | 无PHP文件 | ✅ 已完成 | `User` | `POST /api/v1/auth/forgot-password` | `ForgotPasswordView.vue` | 新增功能 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：
+  - `User` - 用户认证数据模型，支持多种认证类型（LOCAL, LDAP, RADIUS）
+  - `Operator` - 操作员认证模型，兼容现有系统架构
+  - `UserStatus` 和 `AuthType` 枚举类型，提供状态和认证类型管理
+- **服务层**：`/backend/app/services/auth.py` - 完整认证服务，包含JWT令牌管理和密码处理
+- **API接口**：`/backend/app/api/v1/auth.py` - 全面的RESTful认证API，11个专业端点
+- **数据访问层**：继承现有 `UserRepository` 和 `OperatorRepository`，提供认证查询支持
+- **核心API端点**：
+  - 用户登录：POST `/api/v1/auth/login` - JWT认证，支持用户和操作员双重认证
+  - 用户注册：POST `/api/v1/auth/register` - 新用户账户创建
+  - 用户登出：POST `/api/v1/auth/logout` - 安全登出处理
+  - 令牌刷新：POST `/api/v1/auth/refresh` - JWT令牌自动刷新
+  - 用户信息：GET `/api/v1/auth/me` - 获取当前认证用户信息
+  - 密码修改：POST `/api/v1/auth/change-password` - 在线密码修改
+  - 忘记密码：POST `/api/v1/auth/forgot-password` - 密码重置流程启动
+  - 密码重置：POST `/api/v1/auth/reset-password` - 验证码密码重置
+  - 令牌验证：POST `/api/v1/auth/validate-token` - 令牌有效性验证
+
+**前端实现：**
+- **认证视图**：
+  - `LoginView.vue` - 用户登录界面，支持用户名密码认证和记住我功能
+  - `RegisterView.vue` - 用户注册界面，包含表单验证和协议确认
+  - `ForgotPasswordView.vue` - 忘记密码界面，三步式密码重置流程
+- **状态管理**：`/frontend/src/stores/auth.ts` - Pinia状态管理，完整认证生命周期
+- **服务层**：`/frontend/src/services/auth.ts` - TypeScript认证服务，API调用封装
+- **类型定义**：`/frontend/src/types/auth.ts` - 完整认证相关TypeScript类型定义
+- **路由配置**：认证路由组已集成到主路由系统（/auth/login, /auth/register, /auth/forgot-password）
+
+**技术特性：**
+- ✅ JWT访问令牌和刷新令牌双令牌系统（8天访问令牌 + 30天刷新令牌）
+- ✅ bcrypt密码哈希加密，安全等级高
+- ✅ 多认证后端支持（本地SQL、LDAP、RADIUS代理）
+- ✅ 自动令牌刷新机制，无感知续期
+- ✅ 权限和角色管理集成
+- ✅ 用户状态管理（活跃、非活跃、暂停、过期）
+- ✅ 密码强度验证和安全策略
+- ✅ 跨域认证支持（CORS配置）
+- ✅ 认证中间件和路由保护
+- ✅ 双重认证支持（用户表和操作员表）
+
+**安全特性：**
+- 密码复杂度验证（最少6字符，支持特殊字符）
+- JWT令牌签名验证和过期检查
+- HTTPS强制传输加密
+- 防暴力破解保护（可扩展）
+- CSRF攻击防护
+- XSS攻击防护
+- 安全头部设置
+- 审计日志记录（登录、登出、密码修改）
+
+**业务功能：**
+- 用户账户生命周期管理
+- 多租户认证支持
+- 单点登录（SSO）扩展能力
+- 密码策略和强度管理
+- 账户锁定和解锁机制
+- 登录历史和会话管理
+- 角色权限分配和验证
+- 多因素认证扩展接口
+
+**前端用户体验：**
+- 响应式设计，支持移动端和桌面端
+- 实时表单验证和错误提示
+- 密码可见性切换
+- 记住登录状态
+- 自动跳转和路由守卫
+- 加载状态和进度指示
+- 友好的错误消息和用户引导
+- 无刷新页面认证体验
+
+**系统集成：**
+- **路由保护**：所有需要认证的页面都通过路由守卫进行保护
+- **API拦截**：HTTP拦截器自动添加认证头和处理401错误
+- **状态同步**：认证状态在多标签页间同步
+- **权限控制**：与其他模块的权限验证集成
+
+**架构优势：**
+- 遵循现代Web安全最佳实践
+- 可扩展的认证架构设计
+- 与现有daloRADIUS系统无缝集成
+- 支持渐进式迁移和升级
+- 高性能和可扩展性设计
+- 完整的错误处理和恢复机制
+
+**扩展能力：**
+- OAuth2/OpenID Connect集成准备
+- SAML认证协议支持扩展
+- 多因素认证（MFA）集成接口
+- 外部身份提供商集成
+- 企业级目录服务集成
+- 社交登录支持扩展
+
+**运维特性：**
+- 详细的认证和授权日志
+- 性能监控和指标收集
+- 认证失败分析和报告
+- 用户行为分析和审计
+- 安全事件检测和告警
+- 配置热重载和动态更新
 
 ## 12. 仪表板模块 (Dashboard)
 
