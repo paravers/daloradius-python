@@ -16,7 +16,7 @@ import os
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import init_db, close_db
-from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management, batch
+from app.api.v1 import auth, users, accounting, billing, nas, reports, system, radius, user_groups, radius_management, batch, configs
 from app.api.v1.hotspots import router as hotspots_router
 
 
@@ -178,6 +178,13 @@ def setup_routes(app: FastAPI) -> None:
         hotspots_router,
         prefix=settings.API_V1_STR + "/hotspots",
         tags=["hotspots"],
+        dependencies=[Depends(security)]
+    )
+    
+    app.include_router(
+        configs.router,
+        prefix=settings.API_V1_STR + "/configs",
+        tags=["configurations"],
         dependencies=[Depends(security)]
     )
     

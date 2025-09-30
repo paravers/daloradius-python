@@ -1,0 +1,7 @@
+export { default as LineChart } from './LineChart.vue'
+export { default as AreaChart } from './AreaChart.vue'
+export { default as BarChart } from './BarChart.vue'
+export { default as HorizontalBarChart } from './HorizontalBarChart.vue'
+export { default as StackedAreaChart } from './StackedAreaChart.vue'
+export { default as PieChart } from './PieChart.vue'
+export { default as DoughnutChart } from './DoughnutChart.vue'

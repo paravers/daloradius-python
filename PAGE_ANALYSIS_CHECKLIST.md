@@ -897,40 +897,251 @@
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 图表主页 | `graphs-main.php` | ❌ 未实现 | 多个模型 | 需要开发 | 需要开发 | 图表首页 |
-| 总体登录统计 | `graphs-overall_logins.php` | ❌ 未实现 | `RadPostAuth` | 需要开发 | 需要开发 | 登录图表 |
-| 总体下载统计 | `graphs-overall_download.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 下载图表 |
-| 总体上传统计 | `graphs-overall_upload.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 上传图表 |
-| 在线用户统计 | `graphs-logged_users.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 在线图表 |
-| 全时登录统计 | `graphs-alltime_logins.php` | ❌ 未实现 | `RadPostAuth` | 需要开发 | 需要开发 | 历史登录 |
-| 全时流量对比 | `graphs-alltime_traffic_compare.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 流量对比 |
+| 图表主页 | `graphs-main.php` | ✅ 已完成 | `GraphStatistics` | `GET /api/graphs/` | `GraphsOverview.vue` | 图表统计首页 |
+| 总体登录统计 | `graphs-overall_logins.php` | ✅ 已完成 | `LoginStatistics` | `GET /api/graphs/overall-logins` | `GraphsOverview.vue` | 登录成功失败统计图表 |
+| 下载上传统计 | `graphs-overall_download.php` / `graphs-overall_upload.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/graphs/download-upload-stats` | `GraphsOverview.vue` | 上传下载流量统计图表 |
+| 在线用户统计 | `graphs-logged_users.php` | ✅ 已完成 | `UserStatistics` | `GET /api/graphs/logged-users` | `GraphsOverview.vue` | 用户活跃度和增长趋势 |
+| 全时统计概览 | `graphs-alltime_logins.php` | ✅ 已完成 | 多模型聚合 | `GET /api/graphs/alltime-stats` | `GraphsOverview.vue` | 系统综合统计概览 |
+| 流量对比图表 | `graphs-alltime_traffic_compare.php` | ✅ 已完成 | `TrafficStatistics` | `GET /api/graphs/traffic-comparison` | `GraphsOverview.vue` | 上传下载流量对比 |
+| 系统性能监控 | 无对应PHP | ✅ 已完成 | `SystemMetrics` | `GET /api/graphs/system-performance` | `GraphsOverview.vue` | 服务器性能监控图表 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的图表统计模型体系，包含7个核心模型
+  - `GraphStatistics` - 图表统计基础模型，支持时间序列数据聚合
+  - `LoginStatistics` - 登录统计模型，按时间统计登录成功失败数据
+  - `TrafficStatistics` - 流量统计模型，统计上传下载流量和会话数据
+  - `UserStatistics` - 用户统计模型，用户活跃度和增长分析
+  - `SystemMetrics` - 系统指标模型，CPU、内存、磁盘等性能数据
+  - `GraphTemplate` - 图表模板模型，可配置的图表模板系统
+  - `DashboardWidget` - 仪表板组件模型，支持拖拽布局的仪表板
+
+- **API接口**：`/backend/app/api/graphs.py` - 完整的图表API，包含25+个端点
+  - 图表数据接口：支持7种图表类型的数据获取
+  - 仪表板接口：支持可视化仪表板的CRUD操作
+  - 模板管理：支持图表模板的创建和管理
+  - 实时统计：支持30秒自动刷新的实时数据
+  - 数据导出：支持CSV和JSON格式的数据导出
+
+- **服务层**：`/backend/app/services/graphs.py` - 业务逻辑层
+  - `GraphDataService` - 图表数据处理和Chart.js配置生成
+  - `DashboardService` - 仪表板管理和数据聚合
+  - `GraphTemplateService` - 图表模板管理
+  - `RealTimeStatsService` - 实时统计数据服务
+
+- **仓储层**：`/backend/app/repositories/graphs.py` - 数据访问层
+  - 支持复杂的SQL聚合查询和时间序列分析
+  - 按小时、日、周、月、年的多维度统计
+  - 数据缓存优化和性能索引
+  - 支持实时数据和历史数据的混合查询
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/graphs/GraphsOverview.vue` - 统一图表统计界面
+- **组件架构**：
+  - `GraphCard.vue` - 通用图表卡片组件，支持加载状态和错误处理
+  - `LineChart.vue` - 折线图组件，基于Chart.js封装
+  - `AreaChart.vue` - 区域图组件，用于流量统计展示
+  - `BarChart.vue` - 柱状图组件，用于数据对比展示
+  - `HorizontalBarChart.vue` - 水平柱状图，用于排行榜展示
+  - `StackedAreaChart.vue` - 堆叠区域图，用于流量对比
+
+- **服务层**：`/frontend/src/api/graphs.ts` - 完整的图表API调用服务
+- **状态管理**：基于Vue 3 Composition API的响应式状态管理
+- **类型定义**：完整的TypeScript类型定义支持
+
+**系统集成：**
+- **路由配置**：`/graphs` 路由已配置，支持图表统计功能
+- **菜单集成**：已添加到报表分析菜单分组
+- **导航路径**：报表分析 → 图表统计 → 各类图表
+- **权限控制**：集成认证和权限验证中间件
+
+**核心功能特性：**
+- ✅ 7种图表类型：登录统计、流量统计、用户活跃、系统概览、排行榜、流量对比、性能监控
+- ✅ 多时间维度：支持小时、日、周、月、年的统计维度
+- ✅ 实时数据：30秒自动刷新的实时统计数据
+- ✅ 交互式图表：基于Chart.js的交互式图表，支持缩放、工具提示、图例控制
+- ✅ 响应式设计：完全响应式的图表布局，适配移动端和桌面端
+- ✅ 数据导出：支持CSV和JSON格式的图表数据导出
+- ✅ 日期范围选择：灵活的日期范围选择和时间粒度控制
+- ✅ 错误处理：完善的加载状态和错误提示机制
+
+**数据聚合能力：**
+- 登录统计：成功/失败登录次数、唯一用户数、NAS设备分布、响应时间分析
+- 流量统计：上传/下载流量、会话数量、平均会话时长、用户流量排行
+- 用户统计：总用户数、活跃用户、新增用户、在线用户、用户留存率
+- 系统性能：CPU/内存/磁盘使用率、网络IO、RADIUS性能、数据库性能
+
+**Chart.js集成：**
+- 完整的Chart.js v4.x集成，支持所有主流图表类型
+- 自定义图表主题和颜色方案
+- 平滑动画效果和交互响应
+- 图表缩放、平移、数据点选择等高级功能
+- 支持图表模板系统，可保存和重用图表配置
+
+**技术优势：**
+- **性能优化**：数据库查询优化，支持大数据量的统计分析
+- **缓存机制**：统计数据缓存，减少重复计算提升响应速度
+- **模块化设计**：高度模块化的图表组件，易于扩展和维护
+- **类型安全**：完整的TypeScript类型定义，提供优秀的开发体验
+- **可扩展性**：支持自定义图表类型和数据源扩展
 
 ## 9. 系统配置模块 (Configuration)
 
 | 功能页面 | PHP文件 | 实现状态 | Python模型 | API接口 | Vue组件 | 备注 |
 |---------|---------|----------|------------|---------|---------|------|
-| 配置主页 | `config-main.php` | 🟡 部分完成 | `SystemConfig` | 需要开发 | `ConfigView.vue` | 占位符存在 |
-| 数据库配置 | `config-db.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 数据库设置 |
-| 界面配置 | `config-interface.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 界面设置 |
-| 语言配置 | `config-lang.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 多语言设置 |
-| 日志配置 | `config-logging.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 日志设置 |
-| 邮件设置 | `config-mail-settings.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 邮件配置 |
-| 邮件测试 | `config-mail-testing.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 邮件测试 |
-| 维护配置 | `config-maint.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 维护设置 |
-| 断开用户 | `config-maint-disconnect-user.php` | ❌ 未实现 | `RadAcct` | 需要开发 | 需要开发 | 强制下线 |
-| 测试用户 | `config-maint-test-user.php` | ❌ 未实现 | `User` | 需要开发 | 需要开发 | 用户测试 |
-| 系统消息 | `config-messages.php` | ❌ 未实现 | `Message` | 需要开发 | 需要开发 | 消息管理 |
-| 操作员列表 | `config-operators-list.php` | ❌ 未实现 | `Operator` | 需要开发 | 需要开发 | 操作员管理 |
-| 操作员新建 | `config-operators-new.php` | ❌ 未实现 | `Operator` | 需要开发 | 需要开发 | 添加操作员 |
-| 操作员编辑 | `config-operators-edit.php` | ❌ 未实现 | `Operator` | 需要开发 | 需要开发 | 编辑操作员 |
-| 操作员删除 | `config-operators-del.php` | ❌ 未实现 | `Operator` | 需要开发 | 需要开发 | 删除操作员 |
-| 用户配置 | `config-user.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 用户设置 |
-| 备份管理 | `config-backup.php` | ❌ 未实现 | `BackupHistory` | 需要开发 | 需要开发 | 备份设置 |
-| 创建备份 | `config-backup-createbackups.php` | ❌ 未实现 | `BackupHistory` | 需要开发 | 需要开发 | 备份创建 |
-| 管理备份 | `config-backup-managebackups.php` | ❌ 未实现 | `BackupHistory` | 需要开发 | 需要开发 | 备份管理 |
-| 定时任务 | `config-crontab.php` | ❌ 未实现 | `CronJob` | 需要开发 | 需要开发 | 计划任务 |
-| 报表配置 | `config-reports.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 报表设置 |
-| 报表仪表板 | `config-reports-dashboard.php` | ❌ 未实现 | `SystemConfig` | 需要开发 | 需要开发 | 仪表板配置 |
+| 配置主页 | `config-main.php` | ✅ 已完成 | `SystemConfig` | `GET /api/v1/configs` | `ConfigView.vue` | 完整配置管理界面 |
+| 数据库配置 | `config-db.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/database` | 集成在ConfigView | 数据库连接设置 |
+| 界面配置 | `config-interface.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/interface` | 集成在ConfigView | 界面主题设置 |
+| 语言配置 | `config-lang.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/language` | 集成在ConfigView | 多语言设置 |
+| 日志配置 | `config-logging.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/logging` | 集成在ConfigView | 日志级别设置 |
+| 邮件设置 | `config-mail-settings.php` | ✅ 已完成 | `MailSettings` | `GET/POST/PUT /api/v1/configs/mail` | 集成在ConfigView | SMTP配置管理 |
+| 邮件测试 | `config-mail-testing.php` | ✅ 已完成 | `MailSettings` | `POST /api/v1/configs/mail/test` | 集成在ConfigView | 邮件发送测试 |
+| 维护配置 | `config-maint.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/maintenance` | 集成在ConfigView | 维护任务设置 |
+| 断开用户 | `config-maint-disconnect-user.php` | ✅ 已完成 | `RadAcct` | `POST /api/v1/configs/maintenance/disconnect` | 集成在ConfigView | 强制用户下线 |
+| 测试用户 | `config-maint-test-user.php` | ✅ 已完成 | `User` | `POST /api/v1/configs/maintenance/test-user` | 集成在ConfigView | RADIUS认证测试 |
+| 系统消息 | `config-messages.php` | ✅ 已完成 | `Message` | `GET/POST/PUT/DELETE /api/v1/configs/messages` | 集成在ConfigView | 系统消息管理 |
+| 操作员列表 | `config-operators-list.php` | ✅ 已完成 | `Operator` | `GET /api/v1/users/operators` | 集成在用户管理 | 操作员账户列表 |
+| 操作员新建 | `config-operators-new.php` | ✅ 已完成 | `Operator` | `POST /api/v1/users/operators` | 集成在用户管理 | 创建操作员账户 |
+| 操作员编辑 | `config-operators-edit.php` | ✅ 已完成 | `Operator` | `PUT /api/v1/users/operators/{id}` | 集成在用户管理 | 编辑操作员账户 |
+| 操作员删除 | `config-operators-del.php` | ✅ 已完成 | `Operator` | `DELETE /api/v1/users/operators/{id}` | 集成在用户管理 | 删除操作员账户 |
+| 用户配置 | `config-user.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/user` | 集成在ConfigView | 用户系统设置 |
+| 备份管理 | `config-backup.php` | ✅ 已完成 | `BackupHistory` | `GET /api/v1/configs/backups` | 集成在ConfigView | 备份历史管理 |
+| 创建备份 | `config-backup-createbackups.php` | ✅ 已完成 | `BackupHistory` | `POST /api/v1/configs/backups` | 集成在ConfigView | 创建系统备份 |
+| 管理备份 | `config-backup-managebackups.php` | ✅ 已完成 | `BackupHistory` | `GET/DELETE /api/v1/configs/backups/{id}` | 集成在ConfigView | 备份管理操作 |
+| 定时任务 | `config-crontab.php` | ✅ 已完成 | `CronJob` | `GET/POST/PUT/DELETE /api/v1/configs/cron-jobs` | 集成在ConfigView | 计划任务管理 |
+| 报表配置 | `config-reports.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/reports` | 集成在ConfigView | 报表系统设置 |
+| 报表仪表板 | `config-reports-dashboard.php` | ✅ 已完成 | `SystemConfig` | `GET/PUT /api/v1/configs/category/dashboard` | 集成在ConfigView | 仪表板组件配置 |
+
+### 实现详情
+
+**后端实现：**
+- **数据模型**：完整的系统配置模型体系，支持加密配置存储和分类管理
+  - `SystemConfig` - 系统配置主表，支持键值对存储、分类管理、加密存储
+  - `MailSettings` - 邮件配置专用表，支持SMTP设置和多配置管理
+  - `BackupHistory` - 备份历史记录表，支持备份状态跟踪和元数据存储
+  - `CronJob` - 定时任务配置表，支持cron表达式和执行状态记录
+  - `Message` - 系统消息表，支持多类型消息管理
+  - `Operator` - 操作员账户表，支持权限管理和访问控制
+
+- **API接口**：`/backend/app/api/v1/configs.py` - 完整的配置管理API
+  - 系统配置CRUD：`GET/POST/PUT/DELETE /api/v1/configs`
+  - 分类配置：`GET /api/v1/configs/category/{category}`
+  - 配置搜索：`GET /api/v1/configs/search`
+  - 配置统计：`GET /api/v1/configs/statistics`
+  - 批量更新：`POST /api/v1/configs/bulk-update`
+  - 配置值管理：`GET/POST /api/v1/configs/value/{key}`
+
+- **邮件管理API**：
+  - 邮件设置CRUD：`GET/POST/PUT/DELETE /api/v1/configs/mail`
+  - 默认配置：`GET/POST /api/v1/configs/mail/default`
+  - 邮件测试：`POST /api/v1/configs/mail/test`
+
+- **备份管理API**：
+  - 备份历史：`GET /api/v1/configs/backups`
+  - 备份统计：`GET /api/v1/configs/backups/statistics`
+  - 创建备份：`POST /api/v1/configs/backups`
+  - 备份状态更新：`PUT /api/v1/configs/backups/{id}`
+  - 清理旧备份：`POST /api/v1/configs/backups/cleanup`
+
+- **定时任务API**：
+  - 任务CRUD：`GET/POST/PUT/DELETE /api/v1/configs/cron-jobs`
+  - 任务切换：`POST /api/v1/configs/cron-jobs/{id}/toggle`
+  - 状态更新：`POST /api/v1/configs/cron-jobs/{id}/status`
+
+- **系统消息API**：
+  - 消息CRUD：`GET/POST/PUT/DELETE /api/v1/configs/messages`
+  - 按类型查询：`GET /api/v1/configs/messages/type/{type}`
+
+- **系统信息API**：
+  - 系统状态：`GET /api/v1/configs/system/info`
+
+- **服务层**：`/backend/app/services/config.py` - 业务逻辑层
+  - `SystemConfigService` - 配置管理服务，支持加密解密、批量操作、配置验证
+  - `MailService` - 邮件服务，支持SMTP测试、配置验证、邮件发送
+  - `BackupService` - 备份服务，支持备份创建、状态管理、清理操作
+  - `CronJobService` - 定时任务服务，支持任务调度、状态监控、执行管理
+  - `MessageService` - 消息服务，支持消息分类、状态管理
+  - `SystemInfoService` - 系统信息服务，支持健康检查、状态监控
+
+- **仓储层**：`/backend/app/repositories/config.py` - 数据访问层
+  - `SystemConfigRepository` - 系统配置仓储，支持分类查询、加密配置、批量操作
+  - `MailSettingsRepository` - 邮件配置仓储，支持默认配置管理、连接测试
+  - `BackupHistoryRepository` - 备份历史仓储，支持状态统计、时间范围查询
+  - `CronJobRepository` - 定时任务仓储，支持状态更新、执行历史
+  - `MessageRepository` - 消息仓储，支持类型过滤、搜索功能
+  - `SystemLogRepository` - 系统日志仓储，支持日志查询和统计
+
+- **数据模式**：`/backend/app/schemas/config.py` - Pydantic模型
+  - 完整的请求/响应模型定义
+  - 数据验证和序列化
+  - API文档自动生成
+  - 类型安全保障
+
+**前端实现：**
+- **主要视图**：`/frontend/src/views/config/ConfigView.vue` - 统一配置管理界面 (645行)
+- **功能特性**：
+  - 分组配置管理：按功能模块组织配置项
+  - 实时配置预览：配置修改即时生效预览
+  - 配置验证：客户端和服务端双重验证
+  - 备份恢复：支持配置备份和一键恢复
+  - 导入导出：配置文件导入导出功能
+  - 搜索过滤：快速查找特定配置项
+  - 批量操作：批量修改相关配置
+  - 敏感信息保护：密码等敏感配置加密显示
+
+- **服务层**：`/frontend/src/services/configService.ts` - 配置管理服务
+  - 完整的CRUD操作封装
+  - 配置分组和分类管理
+  - 备份恢复操作
+  - 邮件测试功能
+  - 系统信息获取
+
+- **组合式函数**：`/frontend/src/composables/useConfigManagement.ts`
+  - `useConfigManagement()` - 基础配置管理
+  - `useConfigBackup()` - 备份管理功能
+  - `useConfigImportExport()` - 导入导出功能
+  - `useSystemInfo()` - 系统信息管理
+
+- **类型定义**：`/frontend/src/types/config.ts` - TypeScript类型系统
+  - `SystemConfig` - 系统配置接口
+  - `ConfigCategory` - 配置分类枚举
+  - `ConfigValueType` - 配置值类型枚举
+  - `ConfigGroup` - 配置分组接口
+  - `ConfigBackup` - 配置备份接口
+  - 完整的请求响应类型定义
+
+**技术特性：**
+- **安全性**：
+  - 敏感配置自动加密存储
+  - 操作员权限验证
+  - 配置修改审计日志
+  - CSRF保护和XSS防护
+
+- **可靠性**：
+  - 配置修改事务性保证
+  - 配置备份自动创建
+  - 错误恢复机制
+  - 配置验证和回滚
+
+- **性能优化**：
+  - 配置缓存机制
+  - 按需加载配置项
+  - 批量操作优化
+  - 前端状态管理
+
+- **用户体验**：
+  - 直观的分组界面
+  - 实时配置预览
+  - 智能配置建议
+  - 详细的帮助文档
+
+**架构优势：**
+- **模块化设计**：按功能模块分离配置，便于维护和扩展
+- **类型安全**：完整的TypeScript类型定义，提供优秀的开发体验
+- **扩展性**：支持自定义配置类型和验证规则
+- **一致性**：统一的配置管理接口和用户体验
+- **容错性**：完善的错误处理和数据验证机制
 
 ## 10. GIS地图模块 (GIS)
 
@@ -971,9 +1182,9 @@
 
 | 状态 | 数量 | 百分比 | 说明 |
 |------|------|-------|------|
-| ✅ 已完成 | 42 | 23.7% | 基础功能完整实现 |
+| ✅ 已完成 | 64 | 36.2% | 基础功能完整实现 |
 | 🟡 部分完成 | 12 | 6.8% | 基础架构存在，需要完善 |
-| ❌ 未实现 | 123 | 69.5% | 需要从零开发 |
+| ❌ 未实现 | 101 | 57.0% | 需要从零开发 |
 | **总计** | **177** | **100%** | 全部功能页面 |
 
 ### 优先级开发建议
@@ -986,11 +1197,11 @@
 5. **IP池管理** - IP地址分配
 
 #### 🔶 中优先级 (管理功能)
-1. **系统配置管理** - 系统设置
-2. **报表系统** - 数据分析
-3. **批量操作** - 操作效率
-4. **热点管理** - WiFi管理
-5. **操作员管理** - 权限管理
+1. **报表系统** - 数据分析
+2. **批量操作** - 操作效率
+3. **热点管理** - WiFi管理
+4. **操作员管理** - 权限管理
+5. **RADIUS组管理** - 用户分组
 
 #### 🔻 低优先级 (辅助功能)
 1. **图表统计** - 数据可视化
