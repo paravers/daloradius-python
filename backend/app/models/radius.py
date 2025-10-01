@@ -101,76 +101,75 @@ class RadReply(RadiusBaseModel):
 
 
 class GroupCheck(RadiusBaseModel):
-    """
-    RADIUS group check attributes
-    Maps to radgroupcheck table
+    """RADIUS group check attributes (canonical definition)
+
+    NOTE: Consolidated duplicate definition (previously also in radius_groups.py).
+    Aligns with Alembic migration 003 schema which uses a simple String(2)
+    operator column rather than an Enum. We keep business enum elsewhere
+    (AttributeOperator) for validation at service layer instead of DDL.
     """
     __tablename__ = "radgroupcheck"
 
     groupname = Column(String(64), nullable=False, index=True)
     attribute = Column(String(64), nullable=False)
-    op = Column(Enum(AttributeOperator),
-                default=AttributeOperator.EQUAL, nullable=False)
+    # Stored as raw two-char operator per legacy schema (==, =, :=, += ...)
+    op = Column(String(2), nullable=False, default='==')
     value = Column(String(253), nullable=False)
 
-    # Relationships
-    group = relationship("Group", back_populates="group_checks")
+    # Relationship placeholder (optional backref)
+    group = relationship("Group", back_populates="group_checks",
+                         uselist=False, viewonly=True, foreign_keys=[])  # type: ignore
 
-    # Indexes for performance
     __table_args__ = (
         Index('idx_radgroupcheck_groupname', 'groupname'),
         Index('idx_radgroupcheck_groupname_attribute', 'groupname', 'attribute'),
+        {'extend_existing': True}
     )
 
 
 class GroupReply(RadiusBaseModel):
-    """
-    RADIUS group reply attributes
-    Maps to radgroupreply table
+    """RADIUS group reply attributes (canonical definition)
+
+    See notes in GroupCheck about consolidation & schema alignment.
     """
     __tablename__ = "radgroupreply"
 
     groupname = Column(String(64), nullable=False, index=True)
     attribute = Column(String(64), nullable=False)
-    op = Column(Enum(AttributeOperator),
-                default=AttributeOperator.EQUAL, nullable=False)
+    op = Column(String(2), nullable=False, default='=')
     value = Column(String(253), nullable=False)
 
-    # Relationships
-    group = relationship("Group", back_populates="group_replies")
+    group = relationship("Group", back_populates="group_replies",
+                         uselist=False, viewonly=True, foreign_keys=[])  # type: ignore
 
-    # Indexes for performance
     __table_args__ = (
         Index('idx_radgroupreply_groupname', 'groupname'),
         Index('idx_radgroupreply_groupname_attribute', 'groupname', 'attribute'),
+        {'extend_existing': True}
     )
 
 
 class RadPostAuth(RadiusBaseModel):
-    """
-    RADIUS post-authentication log
-    Maps to radpostauth table
+    """RADIUS post-authentication log (canonical definition)
+
+    Consolidated with legacy version. Matches migration 003 that uses columns:
+    id, username, pass, reply, authdate, class.
+    Additional NAS columns from earlier experimental model removed to avoid
+    schema drift; can be reintroduced via a new migration if required.
     """
     __tablename__ = "radpostauth"
 
     username = Column(String(64), nullable=False, index=True)
-    password = Column(String(64), nullable=True)  # May be obfuscated
-    reply = Column(String(32), nullable=True)
-    authdate = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default='NOW()',
-        index=True
-    )
-    nas_ip_address = Column(String(15), nullable=True, index=True)
-    nas_port = Column(Integer, nullable=True)
+    pass_field = Column('pass', String(64), nullable=False)
+    reply = Column(String(32), nullable=False)
+    authdate = Column(DateTime(timezone=True), nullable=False,
+                      server_default='NOW()', index=True)
+    class_field = Column('class', String(64), nullable=True)
 
-    # Indexes for common queries
     __table_args__ = (
         Index('idx_radpostauth_username', 'username'),
         Index('idx_radpostauth_authdate', 'authdate'),
-        Index('idx_radpostauth_nas_ip', 'nas_ip_address'),
-        Index('idx_radpostauth_username_authdate', 'username', 'authdate'),
+        {'extend_existing': True}
     )
 
 

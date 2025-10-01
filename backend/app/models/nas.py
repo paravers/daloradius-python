@@ -14,7 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import INET
 import enum
 
-from .base import BaseModel
+from .base import BaseModel, RadiusBaseModel
 
 
 class NasType(enum.Enum):
@@ -214,73 +214,32 @@ class Proxy(BaseModel):
     )
 
 
-class IpPool(BaseModel):
-    """
-    IP address pools for dynamic IP assignment
-    Maps to radippool table
-    """
+class NasReload(RadiusBaseModel):
+    """NAS reload management (migrated from radius_groups.py)"""
+    __tablename__ = "nasreload"
+    nasipaddress = Column(INET, primary_key=True)
+    reloadtime = Column(DateTime(timezone=True), nullable=False)
+
+
+class RadIpPool(RadiusBaseModel):
+    """RADIUS IP pool management (canonical, legacy-compatible)"""
     __tablename__ = "radippool"
 
-    pool_name = Column(
-        String(30),
-        nullable=False,
-        index=True,
-        comment="Pool name"
-    )
-    framedipaddress = Column(
-        INET,
-        nullable=False,
-        index=True,
-        comment="IP address"
-    )
-    nasipaddress = Column(
-        String(16),
-        default='',
-        nullable=False,
-        comment="NAS IP address"
-    )
-    pool_key = Column(
-        String(30),
-        default='',
-        nullable=False,
-        comment="Pool key"
-    )
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    pool_name = Column(String(30), nullable=False, index=True)
+    framedipaddress = Column(INET, nullable=False, index=True)
+    nasipaddress = Column(INET, nullable=False, index=True)
+    calledstationid = Column(String(30), nullable=True)
+    callingstationid = Column(String(30), nullable=True)
+    expiry_time = Column(DateTime(timezone=True), nullable=True)
+    username = Column(String(64), nullable=True, index=True)
+    pool_key = Column(String(30), nullable=True)
 
-    # Assignment tracking
-    callingstationid = Column(
-        String(30),
-        default='',
-        nullable=False,
-        comment="Calling station ID (MAC)"
-    )
-    username = Column(
-        String(64),
-        default='',
-        nullable=False,
-        index=True,
-        comment="Assigned username"
-    )
-
-    # Status and timing
-    expiry_time = Column(
-        DateTime(timezone=True),
-        nullable=True,
-        comment="IP lease expiry time"
-    )
-    is_allocated = Column(
-        Boolean,
-        default=False,
-        nullable=False,
-        comment="Is IP allocated"
-    )
-
-    # Indexes
     __table_args__ = (
-        Index('idx_ippool_pool_name', 'pool_name'),
-        Index('idx_ippool_framedip', 'framedipaddress'),
-        Index('idx_ippool_username', 'username'),
-        Index('idx_ippool_pool_allocated', 'pool_name', 'is_allocated'),
-        UniqueConstraint('framedipaddress', 'pool_name', name='uq_ip_pool'),
+        Index('idx_radippool_pool_name', 'pool_name'),
+        Index('idx_radippool_framedipaddress', 'framedipaddress'),
+        Index('idx_radippool_nasipaddress', 'nasipaddress'),
+        {'extend_existing': True}
     )
 
 
@@ -382,7 +341,8 @@ __all__ = [
     "Nas",
     "Realm",
     "Proxy",
-    "IpPool",
+    "NasReload",
+    "RadIpPool",
     "NasGroup",
     "NasGroupMember",
     "NasMonitoring",

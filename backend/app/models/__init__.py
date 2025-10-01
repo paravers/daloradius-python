@@ -10,13 +10,13 @@ from .base import BaseModel, LegacyBaseModel, RadiusBaseModel
 
 # Import core models
 from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo, BatchHistory
-from .radius import RadCheck, RadReply, RadUserGroup
+from .radius import RadCheck, RadReply, RadUserGroup, GroupCheck, GroupReply, RadPostAuth
 from .nas import Nas
 from .accounting import RadAcct, RadAcctUpdate, UserTrafficSummary, NasTrafficSummary
 from .system import BackupHistory, SystemLog
 
 # Import new models
-from .radius_groups import RadGroupCheck, RadGroupReply, RadPostAuth, NasReload, RadIpPool
+from .nas import NasReload, RadIpPool
 from .radius_profile import RadiusProfile, ProfileUsage
 from .nas import Realm, Proxy
 from .radius import RadHuntGroup
@@ -50,9 +50,9 @@ __all__ = [
     "BackupHistory",
     "SystemLog",
 
-    # RADIUS Group Management
-    "RadGroupCheck",
-    "RadGroupReply",
+    # RADIUS Group / Reply / PostAuth (consolidated)
+    "GroupCheck",
+    "GroupReply",
     "RadPostAuth",
     "NasReload",
     "RadIpPool",

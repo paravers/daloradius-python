@@ -6,7 +6,7 @@ including IP pools, profiles, realms, proxies, and hunt groups.
 """
 
 from typing import Optional, List, Dict, Any, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import select, and_, or_, func, text, desc, asc
@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from ipaddress import IPv4Address
 
 from .base import BaseRepository
-from ..models.radius_groups import RadIpPool
+from ..models.nas import RadIpPool
 from ..models.radius_profile import RadiusProfile, ProfileUsage
 from ..models.nas import Realm, Proxy
 from ..models.radius import RadHuntGroup, GroupCheck, GroupReply
@@ -55,7 +55,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
                 RadIpPool.username == '',
                 and_(
                     RadIpPool.expiry_time.isnot(None),
-                    RadIpPool.expiry_time < datetime.utcnow()
+                    RadIpPool.expiry_time < datetime.now(timezone.utc)
                 )
             )
         )
@@ -80,7 +80,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
                 RadIpPool.username != '',
                 or_(
                     RadIpPool.expiry_time.is_(None),
-                    RadIpPool.expiry_time > datetime.utcnow()
+                    RadIpPool.expiry_time > datetime.now(timezone.utc)
                 )
             )
         )
@@ -109,7 +109,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
         ip_entry = available_ips[0]
         ip_entry.username = username
         ip_entry.expiry_time = expiry_time
-        ip_entry.updated_at = datetime.utcnow()
+        ip_entry.updated_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         return ip_entry
@@ -121,7 +121,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
             ip_entry.username = None
             ip_entry.expiry_time = None
             ip_entry.callingstationid = None
-            ip_entry.updated_at = datetime.utcnow()
+            ip_entry.updated_at = datetime.now(timezone.utc)
             await self.db.commit()
             return True
         return False
@@ -154,7 +154,7 @@ class RadIpPoolRepository(BaseRepository[RadIpPool, RadIpPoolCreate, RadIpPoolUp
         expired_query = select(func.count(RadIpPool.id)).where(
             and_(
                 RadIpPool.expiry_time.isnot(None),
-                RadIpPool.expiry_time < datetime.utcnow()
+                RadIpPool.expiry_time < datetime.now(timezone.utc)
             )
         )
         expired_result = await self.db.execute(expired_query)
