@@ -251,6 +251,7 @@ router.beforeEach(async (to, from, next) => {
       // 临时注释掉，等待后端API准备好
       // await authStore.fetchUserInfo()
     } catch (error) {
+      console.error('Route navigation error:', error)
       // Token 可能已失效，清除并跳转到登录页
       authStore.logout()
       next('/login')

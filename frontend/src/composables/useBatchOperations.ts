@@ -4,7 +4,7 @@
  * Provides reactive state and methods for managing batch operations
  */
 
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import type { 
   BatchHistoryResponse, 
   BatchHistoryListResponse,
@@ -50,10 +50,10 @@ export function useBatchOperations() {
     return await batchService.getBatchDetails(batchId)
   }
 
-  const executeBatchOperation = async (
-    type: 'users' | 'nas' | 'groups',
-    request: BatchOperationRequest
-  ): Promise<BatchOperationResult> => {
+  const executeBatchUserOperation = async (
+    operation: BatchUserOperation,
+    operationData?: Record<string, unknown>
+  ): Promise<BatchOperation> => {
     loading.value = true
     try {
       let result: BatchOperationResult

@@ -140,7 +140,9 @@ export const graphsApi = {
     end_date?: string
     granularity?: string
   }): Promise<GraphDataResponse> {
-    return await apiService.get<GraphDataResponse>('/api/v1/graphs/download-upload-stats', { params })
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/download-upload-stats', {
+      params,
+    })
   },
 
   async getLoggedUsers(params: {
@@ -170,9 +172,7 @@ export const graphsApi = {
     return await apiService.get<GraphDataResponse>('/api/v1/graphs/traffic-comparison', { params })
   },
 
-  async getSystemPerformance(params: {
-    hours?: number
-  }): Promise<GraphDataResponse> {
+  async getSystemPerformance(params: { hours?: number }): Promise<GraphDataResponse> {
     return await apiService.get<GraphDataResponse>('/api/v1/graphs/system-performance', { params })
   },
 
@@ -181,32 +181,52 @@ export const graphsApi = {
     return await apiService.get<DashboardOverview>('/api/dashboard/overview')
   },
 
-  async getDashboardWidgets(dashboardId: string, params?: {
-    include_shared?: boolean
-  }): Promise<DashboardWidget[]> {
-    return await apiService.get<DashboardWidget[]>(`/api/dashboard/widgets/${dashboardId}`, { params })
+  async getDashboardWidgets(
+    dashboardId: string,
+    params?: {
+      include_shared?: boolean
+    },
+  ): Promise<DashboardWidget[]> {
+    return await apiService.get<DashboardWidget[]>(`/api/dashboard/widgets/${dashboardId}`, {
+      params,
+    })
   },
 
   async createDashboardWidget(widgetData: Partial<DashboardWidget>): Promise<DashboardWidget> {
     return await apiService.post<DashboardWidget>('/api/dashboard/widgets', widgetData)
   },
 
-  async updateDashboardWidget(widgetId: number, widgetData: Partial<DashboardWidget>): Promise<DashboardWidget> {
+  async updateDashboardWidget(
+    widgetId: number,
+    widgetData: Partial<DashboardWidget>,
+  ): Promise<DashboardWidget> {
     return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}`, widgetData)
   },
 
-  async updateWidgetPosition(widgetId: number, params: {
-    position_x: number
-    position_y: number
-  }): Promise<DashboardWidget> {
-    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}/position`, null, { params })
+  async updateWidgetPosition(
+    widgetId: number,
+    params: {
+      position_x: number
+      position_y: number
+    },
+  ): Promise<DashboardWidget> {
+    return await apiService.put<DashboardWidget>(
+      `/api/dashboard/widgets/${widgetId}/position`,
+      null,
+      { params },
+    )
   },
 
-  async updateWidgetSize(widgetId: number, params: {
-    width: number
-    height: number
-  }): Promise<DashboardWidget> {
-    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}/size`, null, { params })
+  async updateWidgetSize(
+    widgetId: number,
+    params: {
+      width: number
+      height: number
+    },
+  ): Promise<DashboardWidget> {
+    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}/size`, null, {
+      params,
+    })
   },
 
   async deleteDashboardWidget(widgetId: number): Promise<void> {
@@ -226,8 +246,14 @@ export const graphsApi = {
     return await apiService.post<GraphTemplate>('/api/v1/graphs/templates', templateData)
   },
 
-  async updateGraphTemplate(templateId: number, templateData: Partial<GraphTemplate>): Promise<GraphTemplate> {
-    return await apiService.put<GraphTemplate>(`/api/v1/graphs/templates/${templateId}`, templateData)
+  async updateGraphTemplate(
+    templateId: number,
+    templateData: Partial<GraphTemplate>,
+  ): Promise<GraphTemplate> {
+    return await apiService.put<GraphTemplate>(
+      `/api/v1/graphs/templates/${templateId}`,
+      templateData,
+    )
   },
 
   // Real-time stats
@@ -245,11 +271,11 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await apiService.get('/api/v1/graphs/export/csv', { 
+    const response = (await apiService.get('/api/v1/graphs/export/csv', {
       params,
-      responseType: 'blob'
-    }) as unknown as { data: Blob }
-    
+      responseType: 'blob',
+    })) as unknown as { data: Blob }
+
     // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
@@ -266,11 +292,11 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await apiService.get('/api/v1/graphs/export/json', { 
+    const response = (await apiService.get('/api/v1/graphs/export/json', {
       params,
-      responseType: 'blob'
-    }) as unknown as { data: Blob }
-    
+      responseType: 'blob',
+    })) as unknown as { data: Blob }
+
     // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
@@ -285,5 +311,5 @@ export const graphsApi = {
   // Graph metadata
   async getGraphTypes(): Promise<GraphType[]> {
     return await apiService.get<GraphType[]>('/api/v1/graphs/types')
-  }
+  },
 }

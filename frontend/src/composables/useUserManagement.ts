@@ -1,5 +1,5 @@
-import { ref, computed, watch, readonly } from 'vue'
-import type { User, UserQueryParams, CreateUserRequest, UpdateUserRequest, UserListResponse } from '@/types/user'
+import { ref, computed, readonly } from 'vue'
+import type { User, UserQueryParams, UserListResponse } from '@/types/user'
 import { userService } from '@/services/userService'
 import { batchService } from '@/services/batchService'
 
@@ -76,7 +76,7 @@ export function useUserManagement() {
   }
 
   // 搜索用户
-  const searchUsers = (searchParams: Record<string, any>) => {
+  const searchUsers = (searchParams: Record<string, unknown>) => {
     const { dateRange, ...otherParams } = searchParams
     
     const params: Partial<UserQueryParams> = {
