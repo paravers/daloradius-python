@@ -215,6 +215,7 @@ class RadiusDictionary(BaseModel):
     """
     __tablename__ = "dalodictionary"
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String(64), nullable=True)
     attribute = Column(String(64), nullable=False, index=True)
     value = Column(String(64), nullable=True)

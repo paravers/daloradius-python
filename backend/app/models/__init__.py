@@ -10,7 +10,7 @@ from .base import BaseModel, LegacyBaseModel, RadiusBaseModel
 
 # Import core models
 from .user import User, UserInfo, UserGroup, Operator, UserBillingInfo, BatchHistory
-from .radius import RadCheck, RadReply, RadUserGroup, GroupCheck, GroupReply, RadPostAuth
+from .radius import RadCheck, RadReply, RadUserGroup, GroupCheck, GroupReply, RadPostAuth, RadiusDictionary, RadAttribute
 from .nas import Nas
 from .accounting import RadAcct, RadAcctUpdate, UserTrafficSummary, NasTrafficSummary
 from .system import BackupHistory, SystemLog
@@ -63,6 +63,8 @@ __all__ = [
     "Realm",
     "Proxy",
     "RadHuntGroup",
+    "RadiusDictionary",
+    "RadAttribute",
 
     # Billing System
     "BillingPlan",

@@ -1,4 +1,4 @@
-import axios from '@/utils/axios'
+import { apiService } from '@/services/api'
 
 export interface GraphDataRequest {
   graph_type: string
@@ -8,9 +8,9 @@ export interface GraphDataRequest {
     end_date?: string
     granularity?: string
     limit?: number
-    filters?: Record<string, any>
+    filters?: Record<string, string | number | boolean>
   }
-  chart_config?: Record<string, any>
+  chart_config?: Record<string, string | number | boolean | object>
 }
 
 export interface GraphDataResponse {
@@ -29,9 +29,71 @@ export interface GraphDataResponse {
       tension?: number
     }[]
   }
-  options?: Record<string, any>
-  metadata?: Record<string, any>
+  options?: Record<string, string | number | boolean | object>
+  metadata?: Record<string, string | number | boolean>
   generated_at: string
+}
+
+export interface TopUser {
+  username: string
+  traffic_mb: number
+  sessions: number
+  last_login?: string
+}
+
+export interface RecentActivity {
+  id: number
+  action: string
+  username: string
+  timestamp: string
+  details?: string
+}
+
+export interface Alert {
+  id: number
+  level: 'info' | 'warning' | 'error'
+  message: string
+  timestamp: string
+  resolved?: boolean
+}
+
+export interface DashboardWidget {
+  id: number
+  title: string
+  type: string
+  position_x: number
+  position_y: number
+  width: number
+  height: number
+  config: Record<string, string | number | boolean>
+  created_at: string
+  updated_at: string
+}
+
+export interface GraphTemplate {
+  id: number
+  name: string
+  category: string
+  description?: string
+  config: Record<string, string | number | boolean | object>
+  created_at: string
+  updated_at: string
+}
+
+export interface GraphType {
+  name: string
+  label: string
+  description: string
+  required_params: string[]
+  optional_params: string[]
+}
+
+export interface RealTimeTrends {
+  timestamps: string[]
+  online_users: number[]
+  login_rate: number[]
+  traffic_rate: number[]
+  system_load: number[]
 }
 
 export interface DashboardOverview {
@@ -40,9 +102,9 @@ export interface DashboardOverview {
   today_traffic: number
   active_sessions: number
   system_health_score: number
-  top_users: any[]
-  recent_activity: any[]
-  alerts: any[]
+  top_users: TopUser[]
+  recent_activity: RecentActivity[]
+  alerts: Alert[]
   generated_at: string
 }
 
@@ -62,8 +124,7 @@ export interface RealTimeStats {
 export const graphsApi = {
   // Graph data endpoints
   async getGraphData(request: GraphDataRequest): Promise<GraphDataResponse> {
-    const response = await axios.post('/api/v1/graphs/data', request)
-    return response.data
+    return await apiService.post<GraphDataResponse>('/api/v1/graphs/data', request)
   },
 
   async getOverallLogins(params: {
@@ -71,8 +132,7 @@ export const graphsApi = {
     end_date?: string
     granularity?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/overall-logins', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/overall-logins', { params })
   },
 
   async getDownloadUploadStats(params: {
@@ -80,21 +140,18 @@ export const graphsApi = {
     end_date?: string
     granularity?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/download-upload-stats', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/download-upload-stats', { params })
   },
 
   async getLoggedUsers(params: {
     start_date?: string
     end_date?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/logged-users', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/logged-users', { params })
   },
 
   async getAlltimeStats(): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/alltime-stats')
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/alltime-stats')
   },
 
   async getTopUsers(params: {
@@ -103,99 +160,83 @@ export const graphsApi = {
     limit?: number
     traffic_type?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/top-users', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/top-users', { params })
   },
 
   async getTrafficComparison(params: {
     start_date?: string
     end_date?: string
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/traffic-comparison', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/traffic-comparison', { params })
   },
 
   async getSystemPerformance(params: {
     hours?: number
   }): Promise<GraphDataResponse> {
-    const response = await axios.get('/api/v1/graphs/system-performance', { params })
-    return response.data
+    return await apiService.get<GraphDataResponse>('/api/v1/graphs/system-performance', { params })
   },
 
   // Dashboard endpoints
   async getDashboardOverview(): Promise<DashboardOverview> {
-    const response = await axios.get('/api/dashboard/overview')
-    return response.data
+    return await apiService.get<DashboardOverview>('/api/dashboard/overview')
   },
 
   async getDashboardWidgets(dashboardId: string, params?: {
     include_shared?: boolean
-  }): Promise<any[]> {
-    const response = await axios.get(`/api/dashboard/widgets/${dashboardId}`, { params })
-    return response.data
+  }): Promise<DashboardWidget[]> {
+    return await apiService.get<DashboardWidget[]>(`/api/dashboard/widgets/${dashboardId}`, { params })
   },
 
-  async createDashboardWidget(widgetData: any): Promise<any> {
-    const response = await axios.post('/api/dashboard/widgets', widgetData)
-    return response.data
+  async createDashboardWidget(widgetData: Partial<DashboardWidget>): Promise<DashboardWidget> {
+    return await apiService.post<DashboardWidget>('/api/dashboard/widgets', widgetData)
   },
 
-  async updateDashboardWidget(widgetId: number, widgetData: any): Promise<any> {
-    const response = await axios.put(`/api/dashboard/widgets/${widgetId}`, widgetData)
-    return response.data
+  async updateDashboardWidget(widgetId: number, widgetData: Partial<DashboardWidget>): Promise<DashboardWidget> {
+    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}`, widgetData)
   },
 
   async updateWidgetPosition(widgetId: number, params: {
     position_x: number
     position_y: number
-  }): Promise<any> {
-    const response = await axios.put(`/api/dashboard/widgets/${widgetId}/position`, null, { params })
-    return response.data
+  }): Promise<DashboardWidget> {
+    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}/position`, null, { params })
   },
 
   async updateWidgetSize(widgetId: number, params: {
     width: number
     height: number
-  }): Promise<any> {
-    const response = await axios.put(`/api/dashboard/widgets/${widgetId}/size`, null, { params })
-    return response.data
+  }): Promise<DashboardWidget> {
+    return await apiService.put<DashboardWidget>(`/api/dashboard/widgets/${widgetId}/size`, null, { params })
   },
 
-  async deleteDashboardWidget(widgetId: number): Promise<any> {
-    const response = await axios.delete(`/api/dashboard/widgets/${widgetId}`)
-    return response.data
+  async deleteDashboardWidget(widgetId: number): Promise<void> {
+    await apiService.delete(`/api/dashboard/widgets/${widgetId}`)
   },
 
   // Template endpoints
-  async getGraphTemplates(params?: { category?: string }): Promise<any[]> {
-    const response = await axios.get('/api/v1/graphs/templates', { params })
-    return response.data
+  async getGraphTemplates(params?: { category?: string }): Promise<GraphTemplate[]> {
+    return await apiService.get<GraphTemplate[]>('/api/v1/graphs/templates', { params })
   },
 
-  async getGraphTemplate(templateId: number): Promise<any> {
-    const response = await axios.get(`/api/v1/graphs/templates/${templateId}`)
-    return response.data
+  async getGraphTemplate(templateId: number): Promise<GraphTemplate> {
+    return await apiService.get<GraphTemplate>(`/api/v1/graphs/templates/${templateId}`)
   },
 
-  async createGraphTemplate(templateData: any): Promise<any> {
-    const response = await axios.post('/api/v1/graphs/templates', templateData)
-    return response.data
+  async createGraphTemplate(templateData: Partial<GraphTemplate>): Promise<GraphTemplate> {
+    return await apiService.post<GraphTemplate>('/api/v1/graphs/templates', templateData)
   },
 
-  async updateGraphTemplate(templateId: number, templateData: any): Promise<any> {
-    const response = await axios.put(`/api/v1/graphs/templates/${templateId}`, templateData)
-    return response.data
+  async updateGraphTemplate(templateId: number, templateData: Partial<GraphTemplate>): Promise<GraphTemplate> {
+    return await apiService.put<GraphTemplate>(`/api/v1/graphs/templates/${templateId}`, templateData)
   },
 
   // Real-time stats
   async getRealTimeStats(): Promise<RealTimeStats> {
-    const response = await axios.get('/api/v1/graphs/realtime/stats')
-    return response.data
+    return await apiService.get<RealTimeStats>('/api/v1/graphs/realtime/stats')
   },
 
-  async getRealTimeTrends(params?: { hours?: number }): Promise<any> {
-    const response = await axios.get('/api/v1/graphs/realtime/trends', { params })
-    return response.data
+  async getRealTimeTrends(params?: { hours?: number }): Promise<RealTimeTrends> {
+    return await apiService.get<RealTimeTrends>('/api/v1/graphs/realtime/trends', { params })
   },
 
   // Export endpoints
@@ -204,10 +245,10 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await axios.get('/api/v1/graphs/export/csv', { 
+    const response = await apiService.get('/api/v1/graphs/export/csv', { 
       params,
       responseType: 'blob'
-    })
+    }) as unknown as { data: Blob }
     
     // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -225,10 +266,10 @@ export const graphsApi = {
     start_date?: string
     end_date?: string
   }): Promise<void> {
-    const response = await axios.get('/api/v1/graphs/export/json', { 
+    const response = await apiService.get('/api/v1/graphs/export/json', { 
       params,
       responseType: 'blob'
-    })
+    }) as unknown as { data: Blob }
     
     // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -242,8 +283,7 @@ export const graphsApi = {
   },
 
   // Graph metadata
-  async getGraphTypes(): Promise<any> {
-    const response = await axios.get('/api/v1/graphs/types')
-    return response.data
+  async getGraphTypes(): Promise<GraphType[]> {
+    return await apiService.get<GraphType[]>('/api/v1/graphs/types')
   }
 }

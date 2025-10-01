@@ -68,6 +68,12 @@ class RadAcct(RadiusBaseModel):
         index=True,
         comment="Session start time"
     )
+    acctupdatetime = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        comment="Last accounting update time"
+    )
     acctstoptime = Column(
         DateTime(timezone=True),
         nullable=True,
