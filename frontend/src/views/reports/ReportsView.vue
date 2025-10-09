@@ -273,7 +273,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -448,19 +448,19 @@ const exportCurrentReport = async () => {
 }
 
 // 报表创建处理
-const handleReportCreated = (report: any) => {
+const handleReportCreated = (report: Record<string, unknown>) => {
   message.success('报表创建成功')
   refreshCurrentReport()
 }
 
 // 模板选择处理
-const handleTemplateSelected = (template: any) => {
+const handleTemplateSelected = (template: Record<string, unknown>) => {
   message.success('模板应用成功')
   refreshCurrentReport()
 }
 
 // 筛选器应用处理
-const handleFiltersApplied = (filters: any) => {
+const handleFiltersApplied = (filters: Record<string, unknown>) => {
   reportsStore.setReportFilters(filters)
   refreshCurrentReport()
 }
@@ -660,217 +660,6 @@ const fetchRaidStatusList = () => reportsStore.fetchRaidStatusList()
   }
 }
 </style>
-        icon="bar-chart"
-      />
-    </div>
-
-    <!-- 搜索和工具栏 -->
-    <a-card class="search-card">
-      <SearchForm
-        v-model:values="searchParams"
-        :fields="searchFields"
-        @search="searchReports"
-        @reset="resetSearch"
-      />
-      
-      <div class="table-toolbar">
-        <div class="toolbar-left">
-          <span v-if="hasSelection" class="selection-info">
-            已选择 {{ selectionCount }} 项
-          </span>
-        </div>
-        <div class="toolbar-right">
-          <a-button
-            v-if="hasSelection"
-            danger
-            @click="handleBatchDelete"
-            :loading="loading"
-          >
-            <template #icon><DeleteOutlined /></template>
-            批量删除
-          </a-button>
-          <a-button @click="fetchReports" :loading="loading">
-            <template #icon><ReloadOutlined /></template>
-            刷新
-          </a-button>
-        </div>
-      </div>
-    </a-card>
-
-    <!-- 报表列表 -->
-    <a-card title="报表列表">
-      <DataTable
-        :columns="columns"
-        :data="reports"
-        :loading="loading"
-        :pagination="{
-          current: currentPage,
-          pageSize: pageSize,
-          total: total,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 项，共 ${total} 项`
-        }"
-        :row-selection="{
-          selectedRowKeys: selectedReports,
-          onChange: (keys) => selectedReports = keys,
-          onSelectAll: toggleAllSelection
-        }"
-        @change="handleTableChange"
-      >
-        <!-- 报表类型 -->
-        <template #type="{ record }">
-          <a-tag color="blue">
-            {{ getTypeText(record.type) }}
-          </a-tag>
-        </template>
-
-        <!-- 报表状态 -->
-        <template #status="{ record }">
-          <a-tag :color="getStatusColor(record.status)">
-            {{ getStatusText(record.status) }}
-          </a-tag>
-        </template>
-
-        <!-- 最后运行时间 -->
-        <template #lastRunTime="{ record }">
-          {{ record.lastRunTime || '-' }}
-        </template>
-
-        <!-- 操作列 -->
-        <template #actions="{ record }">
-          <div class="action-buttons">
-            <a-button
-              type="link"
-              size="small"
-              @click="viewReport(record)"
-            >
-              查看
-            </a-button>
-            <a-button
-              type="link"
-              size="small"
-              @click="generateReportData(record)"
-              :loading="generating"
-            >
-              生成
-            </a-button>
-            <a-dropdown>
-              <a-button type="link" size="small">
-                更多
-                <DownOutlined />
-              </a-button>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item @click="editReport(record)">
-                    <EditOutlined /> 编辑
-                  </a-menu-item>
-                  <a-menu-item @click="duplicateReport(record)">
-                    <CopyOutlined /> 复制
-                  </a-menu-item>
-                  <a-menu-item @click="scheduleReport(record)">
-                    <ClockCircleOutlined /> 定时任务
-                  </a-menu-item>
-                  <a-menu-divider />
-                  <a-menu-item @click="deleteReport(record.id)" danger>
-                    <DeleteOutlined /> 删除
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
-          </div>
-        </template>
-      </DataTable>
-    </a-card>
-
-    <!-- 报表详情抽屉 -->
-    <a-drawer
-      v-model:open="showDetailDrawer"
-      title="报表详情"
-      :width="700"
-      placement="right"
-    >
-      <ReportDetail
-        v-if="selectedReport"
-        :report="selectedReport"
-        @edit="editReport"
-        @generate="generateReportData"
-        @delete="deleteReport"
-      />
-    </a-drawer>
-
-    <!-- 创建报表模态框 -->
-    <a-modal
-      v-model:open="showCreateModal"
-      title="创建报表"
-      :width="900"
-      :footer="null"
-    >
-      <ReportForm
-        @submit="handleCreateReport"
-        @cancel="showCreateModal = false"
-      />
-    </a-modal>
-
-    <!-- 编辑报表模态框 -->
-    <a-modal
-      v-model:open="showEditModal"
-      title="编辑报表"
-      :width="900"
-      :footer="null"
-    >
-      <ReportForm
-        v-if="editingReport"
-        :report="editingReport"
-        @submit="handleUpdateReport"
-        @cancel="showEditModal = false"
-      />
-    </a-modal>
-
-    <!-- 报表生成结果模态框 -->
-    <a-modal
-      v-model:open="showResultModal"
-      :title="`报表生成结果 - ${reportData?.reportName}`"
-      :width="1200"
-      :footer="null"
-      class="report-result-modal"
-    >
-      <ReportResult
-        v-if="reportData"
-        :report-data="reportData"
-        @export="handleExportReport"
-      />
-    </a-modal>
-
-    <!-- 报表模板模态框 -->
-    <a-modal
-      v-model:open="showTemplateModal"
-      title="报表模板"
-      :width="1000"
-      :footer="null"
-    >
-      <ReportTemplates
-        @select="handleSelectTemplate"
-        @close="showTemplateModal = false"
-      />
-    </a-modal>
-
-    <!-- 定时任务配置模态框 -->
-    <a-modal
-      v-model:open="showScheduleModal"
-      title="定时任务配置"
-      :width="600"
-      :footer="null"
-    >
-      <ReportSchedule
-        v-if="schedulingReport"
-        :report="schedulingReport"
-        @submit="handleScheduleReport"
-        @cancel="showScheduleModal = false"
-      />
-    </a-modal>
-  </div>
-</template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
@@ -885,14 +674,15 @@ import {
   ClockCircleOutlined,
   DownOutlined
 } from '@ant-design/icons-vue';
-import DataTable from '@/components/common/DataTable.vue';
-import SearchForm from '@/components/common/SearchForm.vue';
+// import DataTable from '@/components/common/DataTable.vue';
+// import SearchForm from '@/components/common/SearchForm.vue';
 import StatCard from '@/components/common/StatCard.vue';
-import ReportDetail from '@/components/reports/ReportDetail.vue';
-import ReportForm from '@/components/reports/ReportForm.vue';
-import ReportResult from '@/components/reports/ReportResult.vue';
-import ReportTemplates from '@/components/reports/ReportTemplates.vue';
-import ReportSchedule from '@/components/reports/ReportSchedule.vue';
+// TODO: Create missing report detail components
+// import ReportDetail from '@/components/reports/ReportDetail.vue';
+// import ReportForm from '@/components/reports/ReportForm.vue';
+// import ReportResult from '@/components/reports/ReportResult.vue';
+// import ReportTemplates from '@/components/reports/ReportTemplates.vue';
+// import ReportSchedule from '@/components/reports/ReportSchedule.vue';
 import { useReportManagement, useReportGeneration } from '@/composables/useReportManagement';
 import type { 
   Report, 

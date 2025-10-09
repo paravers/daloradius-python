@@ -5,13 +5,7 @@
         <div class="modal-header" v-if="title || $slots.header">
           <h3 class="modal-title" v-if="title">{{ title }}</h3>
           <slot name="header" />
-          <button 
-            v-if="closable" 
-            class="modal-close" 
-            @click="handleClose"
-          >
-            ×
-          </button>
+          <button v-if="closable" class="modal-close" @click="handleClose">×</button>
         </div>
         <div class="modal-body">
           <slot />
@@ -43,14 +37,14 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   closable: true,
   closeOnOverlay: true,
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<Emits>()
 
 const modalClass = computed(() => {
   return {
-    [`modal-content--${props.size}`]: true
+    [`modal-content--${props.size}`]: true,
   }
 })
 
@@ -66,13 +60,16 @@ const handleOverlayClick = () => {
 }
 
 // Prevent body scroll when modal is open
-watch(() => props.show, (show) => {
-  if (show) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-  }
-})
+watch(
+  () => props.show,
+  (show) => {
+    if (show) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+  },
+)
 </script>
 
 <style scoped>

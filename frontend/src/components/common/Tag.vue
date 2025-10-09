@@ -20,7 +20,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<Emits>()
@@ -29,7 +29,7 @@ const tagClass = computed(() => {
   return {
     [`tag--${props.variant}`]: true,
     [`tag--${props.size}`]: true,
-    'tag--closable': props.closable
+    'tag--closable': props.closable,
   }
 })
 

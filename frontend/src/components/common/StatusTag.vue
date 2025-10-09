@@ -14,13 +14,13 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md'
+  size: 'md',
 })
 
 const statusClass = computed(() => {
   return {
     [`status-tag--${props.status}`]: true,
-    [`status-tag--${props.size}`]: true
+    [`status-tag--${props.size}`]: true,
   }
 })
 </script>

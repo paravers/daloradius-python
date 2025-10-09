@@ -4,12 +4,7 @@
       <div class="filter-card__header">
         <Icon name="filter" />
         <span>{{ title || '过滤器' }}</span>
-        <Button
-          v-if="clearable && hasActiveFilters"
-          variant="ghost"
-          size="sm"
-          @click="handleClear"
-        >
+        <Button v-if="clearable && hasActiveFilters" variant="ghost" size="sm" @click="handleClear">
           清除
         </Button>
       </div>
@@ -21,18 +16,8 @@
 
     <template #footer v-if="showFooter">
       <div class="filter-card__footer">
-        <Button
-          variant="ghost"
-          @click="handleReset"
-        >
-          重置
-        </Button>
-        <Button
-          variant="primary"
-          @click="handleApply"
-        >
-          应用
-        </Button>
+        <Button variant="ghost" @click="handleReset"> 重置 </Button>
+        <Button variant="primary" @click="handleApply"> 应用 </Button>
       </div>
     </template>
   </Card>
@@ -59,7 +44,7 @@ interface Emits {
 withDefaults(defineProps<Props>(), {
   clearable: true,
   showFooter: true,
-  hasActiveFilters: false
+  hasActiveFilters: false,
 })
 
 const emit = defineEmits<Emits>()

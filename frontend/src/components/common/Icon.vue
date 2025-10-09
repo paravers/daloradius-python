@@ -12,7 +12,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md'
+  size: 'md',
 })
 
 const iconComponent = computed(() => {
@@ -22,9 +22,9 @@ const iconComponent = computed(() => {
 
 const iconClass = computed(() => {
   return {
-    'icon': true,
+    icon: true,
     [`icon--${props.size}`]: true,
-    [`text-${props.color}`]: props.color
+    [`text-${props.color}`]: props.color,
   }
 })
 </script>

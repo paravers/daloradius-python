@@ -1,5 +1,5 @@
 <template>
-  <input 
+  <input
     v-model="internalValue"
     class="input"
     :class="inputClass"
@@ -10,7 +10,7 @@
     @input="handleInput"
     @blur="handleBlur"
     @focus="handleFocus"
-  >
+  />
 </template>
 
 <script setup lang="ts">
@@ -35,23 +35,26 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<Emits>()
 
 const internalValue = ref(props.modelValue || '')
 
-watch(() => props.modelValue, (newValue) => {
-  internalValue.value = newValue || ''
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    internalValue.value = newValue || ''
+  },
+)
 
 const inputClass = computed(() => {
   return {
     'input--error': props.error,
     'input--disabled': props.disabled,
     'input--readonly': props.readonly,
-    [`input--${props.size}`]: true
+    [`input--${props.size}`]: true,
   }
 })
 
@@ -76,7 +79,9 @@ const handleFocus = (event: FocusEvent) => {
   border-radius: 6px;
   background-color: white;
   color: #374151;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .input:focus {

@@ -29,7 +29,7 @@ const props = defineProps<Props>()
 const fieldClass = computed(() => {
   return {
     'form-field--error': !!props.error,
-    'form-field--disabled': props.disabled
+    'form-field--disabled': props.disabled,
   }
 })
 </script>

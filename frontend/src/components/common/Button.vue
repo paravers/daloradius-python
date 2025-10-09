@@ -1,5 +1,5 @@
 <template>
-  <button 
+  <button
     class="button"
     :class="buttonClass"
     :disabled="disabled || loading"
@@ -30,7 +30,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
   size: 'md',
-  type: 'button'
+  type: 'button',
 })
 
 const emit = defineEmits<Emits>()
@@ -41,7 +41,7 @@ const buttonClass = computed(() => {
     [`button--${props.size}`]: true,
     'button--disabled': props.disabled,
     'button--loading': props.loading,
-    'button--block': props.block
+    'button--block': props.block,
   }
 })
 

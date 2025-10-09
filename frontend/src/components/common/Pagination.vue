@@ -1,19 +1,12 @@
 <template>
   <nav class="pagination" v-if="totalPages > 1">
-    <div class="pagination__info">
-      显示第 {{ startItem }} - {{ endItem }} 项，共 {{ total }} 项
-    </div>
-    
+    <div class="pagination__info">显示第 {{ startItem }} - {{ endItem }} 项，共 {{ total }} 项</div>
+
     <div class="pagination__controls">
-      <Button
-        variant="ghost"
-        size="sm"
-        :disabled="currentPage === 1"
-        @click="handlePageChange(1)"
-      >
+      <Button variant="ghost" size="sm" :disabled="currentPage === 1" @click="handlePageChange(1)">
         首页
       </Button>
-      
+
       <Button
         variant="ghost"
         size="sm"
@@ -22,7 +15,7 @@
       >
         上一页
       </Button>
-      
+
       <div class="pagination__pages">
         <Button
           v-for="page in visiblePages"
@@ -34,7 +27,7 @@
           {{ page }}
         </Button>
       </div>
-      
+
       <Button
         variant="ghost"
         size="sm"
@@ -43,7 +36,7 @@
       >
         下一页
       </Button>
-      
+
       <Button
         variant="ghost"
         size="sm"
@@ -53,12 +46,13 @@
         末页
       </Button>
     </div>
-    
+
     <div class="pagination__size-selector" v-if="showSizeSelector">
-      <Select
-        :modelValue="pageSize.toString()"
-        @update:modelValue="handlePageSizeChange"
+      <Select 
+        :modelValue="pageSize.toString()" 
+        @update:modelValue="handlePageSizeChange" 
         size="sm"
+        :options="['10', '20', '50', '100']"
       >
         <option value="10">10 条/页</option>
         <option value="20">20 条/页</option>
@@ -73,6 +67,10 @@
 import { computed } from 'vue'
 import Button from './Button.vue'
 import Select from './Select.vue'
+
+defineOptions({
+  name: 'PaginationComponent'
+})
 
 interface Props {
   currentPage: number
@@ -89,7 +87,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   showSizeSelector: true,
-  maxVisiblePages: 7
+  maxVisiblePages: 7,
 })
 
 const emit = defineEmits<Emits>()
@@ -121,7 +119,7 @@ const visiblePages = computed(() => {
     // 否则计算需要显示的页码
     const half = Math.floor(max / 2)
     let start = Math.max(1, current - half)
-    let end = Math.min(total, start + max - 1)
+    const end = Math.min(total, start + max - 1)
 
     // 调整起始位置
     if (end - start + 1 < max) {
@@ -142,8 +140,8 @@ const handlePageChange = (page: number) => {
   }
 }
 
-const handlePageSizeChange = (value: string) => {
-  const size = parseInt(value, 10)
+const handlePageSizeChange = (value: string | number) => {
+  const size = typeof value === 'string' ? parseInt(value, 10) : value
   emit('size-change', size)
 }
 </script>
@@ -183,12 +181,12 @@ const handlePageSizeChange = (value: string) => {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .pagination__controls {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .pagination__info {
     order: 2;
   }

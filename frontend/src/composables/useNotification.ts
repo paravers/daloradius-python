@@ -15,9 +15,9 @@ let notificationId = 0
 
 export function useNotification() {
   const showNotification = (
-    title: string, 
+    title: string,
     type: NotificationItem['type'] = 'info',
-    options: Partial<NotificationItem> = {}
+    options: Partial<NotificationItem> = {},
   ) => {
     const notification: NotificationItem = {
       id: `notification-${++notificationId}`,
@@ -26,7 +26,7 @@ export function useNotification() {
       message: options.message,
       duration: options.duration ?? (type === 'error' ? 0 : 4000),
       closable: options.closable ?? true,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     notifications.value.push(notification)
@@ -42,7 +42,7 @@ export function useNotification() {
   }
 
   const removeNotification = (id: string) => {
-    const index = notifications.value.findIndex(n => n.id === id)
+    const index = notifications.value.findIndex((n) => n.id === id)
     if (index > -1) {
       notifications.value.splice(index, 1)
     }
@@ -77,6 +77,6 @@ export function useNotification() {
     success,
     error,
     warning,
-    info
+    info,
   }
 }

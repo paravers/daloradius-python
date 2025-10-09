@@ -9,25 +9,25 @@
       <!-- Statistics Cards -->
       <div class="stats-grid">
         <StatsCard
-          title="总操作数"
+          label="总操作数"
           :value="stats.total_operations"
           icon="database"
           color="primary"
         />
         <StatsCard
-          title="本周操作"
+          label="本周操作"
           :value="stats.recent_operations"
           icon="calendar-week"
           color="success"
         />
         <StatsCard
-          title="成功率"
+          label="成功率"
           :value="successRate + '%'"
           icon="check-circle"
-          color="info"
+          color="primary"
         />
         <StatsCard
-          title="运行中"
+          label="运行中"
           :value="runningOperations"
           icon="sync"
           color="warning"
@@ -78,7 +78,7 @@
             </FormField>
             
             <div class="filter-actions">
-              <Button @click="resetFilters" variant="outline">
+              <Button @click="resetFilters" variant="secondary">
                 <Icon name="refresh" />
                 重置
               </Button>
@@ -100,7 +100,7 @@
         </template>
         
         <DataTable
-          :data="batchHistory"
+          :dataSource="dataSource"
           :columns="columns"
           :loading="loading"
           :pagination="pagination"
@@ -112,9 +112,8 @@
 
       <!-- Batch Operation Details Modal -->
       <Modal
-        v-model:visible="showDetailsModal"
+        v-model:show="showDetailsModal"
         title="批量操作详情"
-        :width="800"
       >
         <BatchOperationDetails
           v-if="selectedOperation"
@@ -176,8 +175,15 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total: number) => `共 ${total} 条记录`
+  showTotal: true
 })
+
+// Computed
+const dataSource = computed(() => ({
+  data: batchHistory.value,
+  total: pagination.total,
+  loading: loading.value
+}))
 
 // Options
 const operationTypeOptions = [
@@ -260,21 +266,21 @@ const columns = [
     dataIndex: 'total_count',
     key: 'total_count',
     width: 80,
-    align: 'center'
+    align: 'center' as const
   },
   {
     title: '成功',
     dataIndex: 'success_count',
     key: 'success_count',
     width: 80,
-    align: 'center'
+    align: 'center' as const
   },
   {
     title: '失败',
     dataIndex: 'failure_count',
     key: 'failure_count',
     width: 80,
-    align: 'center'
+    align: 'center' as const
   },
   {
     title: '创建时间',
@@ -307,8 +313,8 @@ const handleFilterChange = () => {
   loadData()
 }
 
-const handleDateRangeChange = (dates: [string, string] | null) => {
-  if (dates) {
+const handleDateRangeChange = (dates: string | [string, string] | null) => {
+  if (Array.isArray(dates) && dates.length === 2) {
     filters.created_after = new Date(dates[0]).toISOString()
     filters.created_before = new Date(dates[1]).toISOString()
   } else {
@@ -343,7 +349,7 @@ const handlePageChange = (page: number, pageSize: number) => {
   loadData()
 }
 
-const handleSortChange = (sorter: any) => {
+const handleSortChange = (sorter: { field?: string; order?: 'ascend' | 'descend' }) => {
   if (sorter.field) {
     filters.sort_by = sorter.field
     filters.sort_order = sorter.order === 'ascend' ? 'asc' : 'desc'
@@ -361,7 +367,7 @@ const showOperationDetails = async (operationId: number) => {
   try {
     selectedOperation.value = await getBatchDetails(operationId)
     showDetailsModal.value = true
-  } catch (error) {
+  } catch {
     message.error('获取操作详情失败')
   }
 }
@@ -376,7 +382,7 @@ const loadData = async () => {
     const result = await fetchBatchHistory(filters)
     pagination.total = result.total
     pagination.current = result.page
-  } catch (error) {
+  } catch {
     message.error('加载批量操作历史失败')
   }
 }

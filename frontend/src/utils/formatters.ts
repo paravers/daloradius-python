@@ -35,7 +35,7 @@ export function formatDateTime(date: string | Date, locale: string = 'en-US'): s
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   }).format(dateObj)
 }
 
@@ -59,10 +59,14 @@ export function formatDuration(seconds: number): string {
 /**
  * Format currency
  */
-export function formatCurrency(amount: number, currency: string = 'USD', locale: string = 'en-US'): string {
+export function formatCurrency(
+  amount: number,
+  currency: string = 'USD',
+  locale: string = 'en-US',
+): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: currency
+    currency: currency,
   }).format(amount)
 }
 
@@ -79,14 +83,14 @@ export function formatPercentage(value: number, decimals: number = 1): string {
 export function formatPhoneNumber(phone: string): string {
   // Remove all non-numeric characters
   const cleaned = phone.replace(/\D/g, '')
-  
+
   // Format based on length
   if (cleaned.length === 10) {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
   } else if (cleaned.length === 11) {
     return `+${cleaned.slice(0, 1)} (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
   }
-  
+
   return phone // Return original if doesn't match expected format
 }
 
@@ -105,11 +109,11 @@ export function formatIpAddress(ip: string): string {
   // Basic IPv4 validation and formatting
   const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
   const match = ip.match(ipv4Regex)
-  
+
   if (match) {
     return match[0]
   }
-  
+
   // Return as-is for IPv6 or invalid IP
   return ip
 }
@@ -120,10 +124,10 @@ export function formatIpAddress(ip: string): string {
 export function formatMacAddress(mac: string): string {
   // Remove any existing separators and normalize
   const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase()
-  
+
   if (cleaned.length === 12) {
     return cleaned.match(/.{2}/g)?.join(':') || mac
   }
-  
+
   return mac
 }

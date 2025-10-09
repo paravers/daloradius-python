@@ -13,13 +13,13 @@ export function useUserManagement() {
   const users = ref<User[]>([])
   const total = ref(0)
   const error = ref<string>()
-  
+
   // 查询参数
   const queryParams = ref<UserQueryParams>({
     page: 1,
     pageSize: 10,
     sortField: 'createdAt',
-    sortOrder: 'descend'
+    sortOrder: 'descend',
   })
 
   // 选择状态
@@ -31,7 +31,7 @@ export function useUserManagement() {
     data: users.value,
     total: total.value,
     loading: loading.value,
-    error: error.value
+    error: error.value,
   }))
 
   const hasSelectedRows = computed(() => selectedRowKeys.value.length > 0)
@@ -42,17 +42,18 @@ export function useUserManagement() {
     try {
       loading.value = true
       error.value = undefined
-      
+
       const mergedParams = { ...queryParams.value, ...params }
       const response: UserListResponse = await userService.getUsers(mergedParams)
-      
+
       users.value = response.data
       total.value = response.total
-      
+
       // 更新查询参数
       Object.assign(queryParams.value, mergedParams)
-    } catch (err: any) {
-      error.value = err.message || '获取用户列表失败'
+    } catch (err) {
+      const error_msg = err instanceof Error ? err.message : '获取用户列表失败'
+      error.value = error_msg
       console.error('获取用户列表失败:', err)
     } finally {
       loading.value = false
@@ -70,7 +71,7 @@ export function useUserManagement() {
       page: 1,
       pageSize: 10,
       sortField: 'createdAt',
-      sortOrder: 'descend'
+      sortOrder: 'descend',
     }
     fetchUsers()
   }
@@ -78,18 +79,18 @@ export function useUserManagement() {
   // 搜索用户
   const searchUsers = (searchParams: Record<string, unknown>) => {
     const { dateRange, ...otherParams } = searchParams
-    
+
     const params: Partial<UserQueryParams> = {
       ...otherParams,
-      page: 1 // 重置到第一页
+      page: 1, // 重置到第一页
     }
-    
+
     // 处理日期范围
-    if (dateRange && dateRange.length === 2) {
-      params.startDate = dateRange[0]
-      params.endDate = dateRange[1]
+    if (dateRange && Array.isArray(dateRange) && dateRange.length === 2) {
+      params.startDate = dateRange[0] as string
+      params.endDate = dateRange[1] as string
     }
-    
+
     fetchUsers(params)
   }
 
@@ -102,7 +103,7 @@ export function useUserManagement() {
   const handleSort = (field: string, order: 'ascend' | 'descend' | null) => {
     fetchUsers({
       sortField: field,
-      sortOrder: order || undefined
+      sortOrder: order || undefined,
     })
   }
 
@@ -125,8 +126,8 @@ export function useUserManagement() {
       await userService.deleteUser(id)
       await fetchUsers() // 重新获取数据
       return true
-    } catch (err: any) {
-      error.value = err.message || '删除用户失败'
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '删除用户失败'
       return false
     } finally {
       loading.value = false
@@ -141,19 +142,19 @@ export function useUserManagement() {
     try {
       loading.value = true
       // Use batch service with history tracking
-      const numericIds = userIds.map(id => parseInt(id))
+      const numericIds = userIds.map((id) => parseInt(id))
       const result = await batchService.batchDeleteUsersWithHistory(numericIds, {
         batchName: `批量删除 ${numericIds.length} 个用户`,
-        description: `通过用户管理界面执行的批量删除操作`
+        description: `通过用户管理界面执行的批量删除操作`,
       })
-      
+
       clearSelection()
       await fetchUsers() // 重新获取数据
-      
+
       // Return success if no failures
       return result.failure_count === 0
-    } catch (err: any) {
-      error.value = err.message || '批量删除失败'
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '批量删除失败'
       return false
     } finally {
       loading.value = false
@@ -168,23 +169,23 @@ export function useUserManagement() {
     try {
       loading.value = true
       // Use batch service with history tracking
-      const numericIds = userIds.map(id => parseInt(id))
+      const numericIds = userIds.map((id) => parseInt(id))
       const result = await batchService.batchUpdateUserStatusWithHistory(
-        numericIds, 
+        numericIds,
         status as 'active' | 'inactive',
         {
           batchName: `批量${status === 'active' ? '激活' : '停用'} ${numericIds.length} 个用户`,
-          description: `通过用户管理界面执行的批量状态更新操作`
-        }
+          description: `通过用户管理界面执行的批量状态更新操作`,
+        },
       )
-      
+
       clearSelection()
       await fetchUsers() // 重新获取数据
-      
+
       // Return success if no failures
       return result.failure_count === 0
-    } catch (err: any) {
-      error.value = err.message || '批量更新状态失败'
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '批量更新状态失败'
       return false
     } finally {
       loading.value = false
@@ -196,9 +197,9 @@ export function useUserManagement() {
     try {
       // 这里应该调用实际的导出API
       console.log('导出用户数据:', format)
-      
+
       // 模拟导出逻辑
-      const exportData = users.value.map(user => ({
+      const exportData = users.value.map((user) => ({
         ID: user.id,
         用户名: user.username,
         邮箱: user.email,
@@ -206,14 +207,14 @@ export function useUserManagement() {
         状态: user.status,
         角色: user.roles.join(', '),
         最后登录: user.lastLoginAt || '',
-        创建时间: user.createdAt
+        创建时间: user.createdAt,
       }))
 
       // 实际项目中这里会调用文件下载
       console.log('导出数据:', exportData)
       return true
-    } catch (err: any) {
-      error.value = err.message || '导出数据失败'
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '导出数据失败'
       return false
     }
   }
@@ -227,12 +228,12 @@ export function useUserManagement() {
     queryParams: readonly(queryParams),
     selectedRowKeys: readonly(selectedRowKeys),
     selectedRows: readonly(selectedRows),
-    
+
     // 计算属性
     dataSource,
     hasSelectedRows,
     selectedCount,
-    
+
     // 方法
     fetchUsers,
     refreshUsers,
@@ -245,6 +246,6 @@ export function useUserManagement() {
     deleteUser,
     batchDeleteUsers,
     batchUpdateStatus,
-    exportUsers
+    exportUsers,
   }
 }

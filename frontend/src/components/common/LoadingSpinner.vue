@@ -16,13 +16,13 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
-  overlay: false
+  overlay: false,
 })
 
 const spinnerClass = computed(() => {
   return {
     [`loading-spinner--${props.size}`]: true,
-    'loading-spinner--overlay': props.overlay
+    'loading-spinner--overlay': props.overlay,
   }
 })
 </script>

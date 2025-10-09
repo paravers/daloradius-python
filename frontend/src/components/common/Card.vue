@@ -26,14 +26,14 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   shadow: 'sm',
   border: true,
-  padding: 'md'
+  padding: 'md',
 })
 
 const cardClass = computed(() => {
   return {
     [`card--shadow-${props.shadow}`]: props.shadow !== 'none',
     'card--no-border': !props.border,
-    [`card--padding-${props.padding}`]: true
+    [`card--padding-${props.padding}`]: true,
   }
 })
 </script>

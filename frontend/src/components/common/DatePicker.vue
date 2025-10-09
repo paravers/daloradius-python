@@ -1,5 +1,5 @@
 <template>
-  <input 
+  <input
     v-model="internalValue"
     type="date"
     class="date-picker"
@@ -8,49 +8,57 @@
     :min="min"
     :max="max"
     @change="handleChange"
-  >
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
 interface Props {
-  modelValue?: string
+  modelValue?: string | [string, string] | null
   disabled?: boolean
   min?: string
   max?: string
   error?: boolean
   size?: 'sm' | 'md' | 'lg'
+  type?: 'date' | 'daterange'
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: string): void
-  (e: 'change', value: string): void
+  (e: 'update:modelValue', value: string | [string, string] | null): void
+  (e: 'change', value: string | [string, string] | null): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md'
+  size: 'md',
+  type: 'date',
 })
 
 const emit = defineEmits<Emits>()
 
-const internalValue = ref(props.modelValue || '')
+const internalValue = ref(
+  typeof props.modelValue === 'string' ? props.modelValue : ''
+)
 
-watch(() => props.modelValue, (newValue) => {
-  internalValue.value = newValue || ''
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    internalValue.value = typeof newValue === 'string' ? newValue : ''
+  },
+)
 
 const pickerClass = computed(() => {
   return {
     'date-picker--error': props.error,
     'date-picker--disabled': props.disabled,
-    [`date-picker--${props.size}`]: true
+    [`date-picker--${props.size}`]: true,
   }
 })
 
 const handleChange = () => {
-  emit('update:modelValue', internalValue.value)
-  emit('change', internalValue.value)
+  const value = internalValue.value || null
+  emit('update:modelValue', value)
+  emit('change', value)
 }
 </script>
 
@@ -61,7 +69,9 @@ const handleChange = () => {
   border-radius: 6px;
   background-color: white;
   color: #374151;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .date-picker:focus {

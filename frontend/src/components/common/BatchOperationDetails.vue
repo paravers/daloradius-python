@@ -3,9 +3,7 @@
     <template #header>
       <div class="batch-operation-details__header">
         <h3>{{ title }}</h3>
-        <span class="batch-operation-details__count">
-          已选择 {{ selectedCount }} 项
-        </span>
+        <span class="batch-operation-details__count"> 已选择 {{ selectedCount }} 项 </span>
       </div>
     </template>
 
@@ -19,8 +17,8 @@
           <span>操作项目：</span>
         </div>
         <div class="batch-operation-details__items-list">
-          <div 
-            v-for="(item, index) in displayItems" 
+          <div
+            v-for="(item, index) in displayItems"
             :key="index"
             class="batch-operation-details__item"
           >
@@ -35,16 +33,8 @@
 
     <template #footer v-if="showFooter">
       <div class="batch-operation-details__footer">
-        <Button variant="ghost" @click="handleCancel">
-          取消
-        </Button>
-        <Button 
-          variant="primary" 
-          :loading="loading"
-          @click="handleConfirm"
-        >
-          确认操作
-        </Button>
+        <Button variant="ghost" @click="handleCancel"> 取消 </Button>
+        <Button variant="primary" :loading="loading" @click="handleConfirm"> 确认操作 </Button>
       </div>
     </template>
   </Card>
@@ -74,7 +64,7 @@ const props = withDefaults(defineProps<Props>(), {
   selectedCount: 0,
   loading: false,
   showFooter: true,
-  maxDisplayItems: 10
+  maxDisplayItems: 10,
 })
 
 const emit = defineEmits<Emits>()

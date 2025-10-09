@@ -244,7 +244,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  
+
   // 获取用户信息（如果已登录）
   if (authStore.token && !authStore.user) {
     try {
@@ -258,25 +258,25 @@ router.beforeEach(async (to, from, next) => {
       return
     }
   }
-  
+
   // 检查是否需要认证
   if (to.meta?.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
     return
   }
-  
+
   // 暂时跳过权限检查，等待完整的权限系统
   // if (to.meta?.permissions && !authStore.hasPermission(to.meta.permissions[0])) {
   //   next('/403')
   //   return
   // }
-  
+
   // 已登录用户访问登录页，重定向到仪表板
   if (to.path === '/login' && authStore.isAuthenticated) {
     next('/dashboard')
     return
   }
-  
+
   next()
 })
 

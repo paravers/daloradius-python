@@ -10,8 +10,10 @@ import type {
   SystemStatus, 
   RecentActivity,
   SystemAlert,
-  QuickStats,
-  ChartData 
+  ChartData,
+  ChartDataset,
+  TrendDataPoint,
+  DashboardWidget
 } from '@/types'
 import { apiService } from './api'
 
@@ -19,16 +21,22 @@ export interface DashboardStatsResponse {
   total_users: number
   active_users: number
   total_sessions: number
-  active_sessions: number
-  total_nas: number
-  active_nas: number
-  total_hotspots: number
-  today_logins: number
-  today_sessions: number
-  today_traffic_gb: number
-  monthly_revenue: number
+  total_traffic: number
   system_health_score: number
-  last_updated: string
+  // 扩展字段
+  active_sessions?: number
+  monthly_revenue?: number
+  total_nas?: number
+  active_nas?: number
+  today_traffic_gb?: number
+  today_logins?: number
+  today_sessions?: number
+  last_updated?: string
+  trends: {
+    sessions_trend: TrendDataPoint[]
+    traffic_trend: TrendDataPoint[]
+    user_activity: TrendDataPoint[]
+  }
 }
 
 export interface DashboardOverviewResponse {
@@ -49,9 +57,9 @@ export interface DashboardOverviewResponse {
     nas_response_time_ms: number
   }
   charts_data?: {
-    sessions_trend: any[]
-    traffic_trend: any[]
-    user_activity: any[]
+    sessions_trend: TrendDataPoint[]
+    traffic_trend: TrendDataPoint[]
+    user_activity: TrendDataPoint[]
   }
 }
 
@@ -98,13 +106,14 @@ class DashboardService {
         activeUsers: response.active_users,
         totalSessions: response.total_sessions,
         activeSessions: response.active_sessions,
-        totalRevenue: response.monthly_revenue * 12, // Estimate yearly from monthly
-        monthlyRevenue: response.monthly_revenue,
+        totalRevenue: (response.monthly_revenue ?? 0) * 12, // Estimate yearly from monthly
+        monthlyRevenue: response.monthly_revenue ?? 0,
         totalDevices: response.total_nas,
         activeDevices: response.active_nas,
+        totalTraffic: response.today_traffic_gb ?? 0,
         bandwidth: {
-          upload: response.today_traffic_gb / 2, // Mock split
-          download: response.today_traffic_gb / 2
+          upload: (response.today_traffic_gb ?? 0) / 2, // Mock split
+          download: (response.today_traffic_gb ?? 0) / 2
         },
         systemHealth: response.system_health_score,
         todayLogins: response.today_logins,
@@ -130,10 +139,27 @@ class DashboardService {
       
       return {
         stats: await this._transformStats(response.stats),
+        recentSessions: response.recent_activity,
+        systemStatus: {
+          status: 'healthy',
+          uptime: 0,
+          cpu_usage: 0,
+          memory_usage: 0,
+          disk_usage: 0,
+          network_status: 'connected',
+          last_check: new Date().toISOString()
+        },
+        alerts: response.system_alerts,
         recentActivity: response.recent_activity,
         systemAlerts: response.system_alerts,
-        topUsers: response.top_users,
+        topUsers: response.top_users.map((user, index) => ({
+          ...user,
+          rank: index + 1
+        })),
         quickStats: {
+          traffic_last_hour_gb: response.quick_stats.traffic_last_hour_gb,
+          failed_logins_today: response.quick_stats.failed_logins_today,
+          nas_response_time_ms: response.quick_stats.nas_response_time_ms,
           onlineUsersNow: response.quick_stats.online_users_now,
           sessionsLastHour: response.quick_stats.sessions_last_hour,
           trafficLastHourGb: response.quick_stats.traffic_last_hour_gb,
@@ -156,6 +182,13 @@ class DashboardService {
       const response = await apiService.get<SystemStatusResponse>(`${this.baseUrl}/system-status`)
       
       return {
+        status: response.database_status === 'connected' ? 'healthy' : 'error',
+        uptime: response.uptime_hours * 3600, // Convert hours to seconds
+        cpu_usage: response.cpu_usage_percent,
+        memory_usage: response.memory_usage_percent,
+        disk_usage: response.disk_usage_percent,
+        network_status: response.radius_status,
+        last_check: new Date().toISOString(),
         databaseStatus: response.database_status,
         radiusStatus: response.radius_status,
         cacheStatus: response.cache_status,
@@ -179,7 +212,7 @@ class DashboardService {
     limit: number
   }> {
     try {
-      const params: any = { limit }
+      const params: Record<string, unknown> = { limit }
       if (activityType) {
         params.activity_type = activityType
       }
@@ -219,7 +252,7 @@ class DashboardService {
         params: { metric, days, granularity }
       })
       
-      return this._transformTrendData(response, metric)
+      return this._transformTrendData(response as TrendDataPoint[], metric)
     } catch (error) {
       console.error('Failed to fetch trend data:', error)
       throw error
@@ -243,7 +276,13 @@ class DashboardService {
         params: { days, metric, limit }
       })
       
-      return response.users || []
+      return (response as { users: Array<{
+        username: string
+        traffic_gb: number
+        sessions: number
+        last_login?: string
+        rank: number
+      }> }).users || []
     } catch (error) {
       console.error('Failed to fetch top users:', error)
       throw error
@@ -292,7 +331,7 @@ class DashboardService {
     type: string
     position: { x: number; y: number }
     size: { width: number; height: number }
-    config: any
+    config: Record<string, unknown>
   }>> {
     try {
       return await apiService.get('/graphs/dashboard-widgets')
@@ -305,7 +344,7 @@ class DashboardService {
   /**
    * Save dashboard widgets configuration
    */
-  async saveWidgetsConfig(widgets: any[]): Promise<void> {
+  async saveWidgetsConfig(widgets: DashboardWidget[]): Promise<void> {
     try {
       await apiService.post('/graphs/dashboard-widgets', { widgets })
     } catch (error) {
@@ -324,7 +363,7 @@ class DashboardService {
         responseType: 'blob'
       })
       
-      return response
+      return response as Blob
     } catch (error) {
       console.error('Failed to export dashboard data:', error)
       throw error
@@ -340,13 +379,14 @@ class DashboardService {
       activeUsers: backendStats.active_users,
       totalSessions: backendStats.total_sessions,
       activeSessions: backendStats.active_sessions,
-      totalRevenue: backendStats.monthly_revenue * 12,
-      monthlyRevenue: backendStats.monthly_revenue,
+      totalRevenue: (backendStats.monthly_revenue ?? 0) * 12,
+      monthlyRevenue: backendStats.monthly_revenue ?? 0,
       totalDevices: backendStats.total_nas,
       activeDevices: backendStats.active_nas,
+      totalTraffic: backendStats.today_traffic_gb ?? 0,
       bandwidth: {
-        upload: backendStats.today_traffic_gb / 2,
-        download: backendStats.today_traffic_gb / 2
+        upload: (backendStats.today_traffic_gb ?? 0) / 2,
+        download: (backendStats.today_traffic_gb ?? 0) / 2
       },
       systemHealth: backendStats.system_health_score,
       todayLogins: backendStats.today_logins,
@@ -358,16 +398,16 @@ class DashboardService {
   /**
    * Transform trend data for chart consumption
    */
-  private _transformTrendData(data: any, metric: string): ChartData {
+  private _transformTrendData(data: TrendDataPoint[], metric: string): ChartData {
     if (!data || !Array.isArray(data)) {
-      return { categories: [], series: [] }
+      return { labels: [], datasets: [], categories: [], series: [] }
     }
 
-    const categories = data.map((item: any) => item.date || item.timestamp)
+    const categories = data.map((item: TrendDataPoint) => item.date || item.timestamp).filter(Boolean) as string[]
     
-    const series = [{
-      name: this._getSeriesName(metric),
-      data: data.map((item: any) => {
+    const series: ChartDataset = {
+      label: this._getSeriesName(metric),
+      data: data.map((item: TrendDataPoint) => {
         switch (metric) {
           case 'sessions':
             return item.session_count || item.value || 0
@@ -381,9 +421,9 @@ class DashboardService {
             return item.value || 0
         }
       })
-    }]
+    }
 
-    return { categories, series }
+    return { labels: categories, datasets: [series], categories, series: [series] }
   }
 
   /**
@@ -447,11 +487,3 @@ class DashboardService {
 export const dashboardService = new DashboardService()
 
 export { DashboardService }
-export type { 
-  DashboardStatsResponse, 
-  DashboardOverviewResponse, 
-  SystemStatusResponse,
-  TrendDataParams,
-  TopUsersParams,
-  AlertsParams
-}

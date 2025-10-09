@@ -1,17 +1,13 @@
 <template>
-  <select 
-    v-model="internalValue" 
+  <select
+    v-model="internalValue"
     class="select"
     :class="selectClass"
     :disabled="disabled"
     @change="handleChange"
   >
     <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
-    <option 
-      v-for="option in options" 
-      :key="getOptionValue(option)" 
-      :value="getOptionValue(option)"
-    >
+    <option v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)">
       {{ getOptionLabel(option) }}
     </option>
   </select>
@@ -41,22 +37,25 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<Emits>()
 
 const internalValue = ref(props.modelValue || '')
 
-watch(() => props.modelValue, (newValue) => {
-  internalValue.value = newValue || ''
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    internalValue.value = newValue || ''
+  },
+)
 
 const selectClass = computed(() => {
   return {
     'select--error': props.error,
     'select--disabled': props.disabled,
-    [`select--${props.size}`]: true
+    [`select--${props.size}`]: true,
   }
 })
 
@@ -87,7 +86,9 @@ const handleChange = () => {
   border-radius: 6px;
   background-color: white;
   color: #374151;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .select:focus {
