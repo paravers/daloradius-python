@@ -20,7 +20,7 @@ from .base import BaseModel
 class MessageType(enum.Enum):
     """Message types"""
     LOGIN = "login"
-    SUPPORT = "support" 
+    SUPPORT = "support"
     DASHBOARD = "dashboard"
 
 
@@ -30,14 +30,15 @@ class OperatorAcl(BaseModel):
     Maps to operators_acl table
     """
     __tablename__ = "operators_acl"
-    
-    operator_id = Column(Integer, ForeignKey('operators.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    operator_id = Column(Integer, ForeignKey(
+        'operators.id', ondelete='CASCADE'), nullable=False, index=True)
     file = Column(String(128), nullable=False, index=True)
     access = Column(SmallInteger, nullable=False, default=0)
-    
+
     # Relationship to operator
     operator = relationship("Operator", back_populates="acl_entries")
-    
+
     __table_args__ = (
         {'extend_existing': True}
     )
@@ -50,7 +51,7 @@ class OperatorAclFile(BaseModel):
     """
     __tablename__ = "operators_acl_files"
     __table_args__ = {'extend_existing': True}
-    
+
     file = Column(String(128), nullable=False, unique=True)
     category = Column(String(64), nullable=True, index=True)
     description = Column(Text, nullable=True)
@@ -64,7 +65,7 @@ class Dictionary(BaseModel):
     """
     __tablename__ = "dictionary"
     __table_args__ = {'extend_existing': True}
-    
+
     Type = Column(String(30), nullable=True, index=True)
     Attribute = Column(String(64), nullable=True, index=True)
     Value = Column(String(64), nullable=True)
@@ -83,7 +84,7 @@ class Message(BaseModel):
     """
     __tablename__ = "messages"
     __table_args__ = {'extend_existing': True}
-    
+
     type = Column(Enum(MessageType), nullable=False, index=True)
     content = Column(Text, nullable=False)
     created_on = Column(DateTime(timezone=True), nullable=False, index=True)

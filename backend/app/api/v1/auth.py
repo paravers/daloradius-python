@@ -5,9 +5,9 @@ Comprehensive authentication endpoints including login, logout, registration,
 password management, and token operations.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field

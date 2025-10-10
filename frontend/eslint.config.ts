@@ -30,7 +30,7 @@ export default defineConfigWithVueTs(
       'vue/multi-word-component-names': 'off',
     },
   },
-  
+
   // Custom TypeScript rules overrides
   {
     name: 'app/typescript-rules',
@@ -39,12 +39,12 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
-  
+
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-  
+
   {
     ...pluginPlaywright.configs['flat/recommended'],
     files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],

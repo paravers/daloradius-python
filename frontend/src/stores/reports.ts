@@ -1,6 +1,6 @@
 /**
  * Reports Store
- * 
+ *
  * Pinia store for managing reports state and actions
  */
 
@@ -25,27 +25,27 @@ import type {
   BatchReportItem,
   SystemStatusReport,
   ReportsDashboard,
-  
+
   // Create types
   UpsStatusCreate,
   RaidStatusCreate,
   HeartBeatCreate,
   ReportTemplateCreate,
   ReportGenerationCreate,
-  
+
   // Update types
   UpsStatusUpdate,
   RaidStatusUpdate,
   HeartBeatUpdate,
   ReportTemplateUpdate,
-  
+
   // Query types
   OnlineUsersReportQuery,
   HistoryReportQuery,
   NewUsersReportQuery,
   TopUsersReportQuery,
   SystemLogQuery,
-  BatchReportQuery
+  BatchReportQuery,
 } from '@/types/reports'
 
 export const useReportsStore = defineStore('reports', () => {
@@ -100,44 +100,46 @@ export const useReportsStore = defineStore('reports', () => {
   // Getters
   // =============================================================================
 
-  const activeUpsDevices = computed(() => 
-    upsStatusList.value.filter(ups => ups.status === SystemStatus.ONLINE)
+  const activeUpsDevices = computed(() =>
+    upsStatusList.value.filter((ups) => ups.status === SystemStatus.ONLINE),
   )
 
-  const offlineUpsDevices = computed(() => 
-    upsStatusList.value.filter(ups => ups.status === SystemStatus.OFFLINE)
+  const offlineUpsDevices = computed(() =>
+    upsStatusList.value.filter((ups) => ups.status === SystemStatus.OFFLINE),
   )
 
-  const degradedRaidArrays = computed(() => 
-    raidStatusList.value.filter(raid => 
-      raid.status === SystemStatus.WARNING || raid.failed_disks > 0
-    )
+  const degradedRaidArrays = computed(() =>
+    raidStatusList.value.filter(
+      (raid) => raid.status === SystemStatus.WARNING || raid.failed_disks > 0,
+    ),
   )
 
-  const offlineServices = computed(() => 
-    heartBeatList.value.filter(hb => hb.status === SystemStatus.OFFLINE)
+  const offlineServices = computed(() =>
+    heartBeatList.value.filter((hb) => hb.status === SystemStatus.OFFLINE),
   )
 
-  const publicTemplates = computed(() => 
-    reportTemplates.value.filter(template => template.is_public && template.is_active)
+  const publicTemplates = computed(() =>
+    reportTemplates.value.filter((template) => template.is_public && template.is_active),
   )
 
-  const runningReports = computed(() => 
-    reportGenerations.value.filter(report => 
-      report.status === 'running' || report.status === 'pending'
-    )
+  const runningReports = computed(() =>
+    reportGenerations.value.filter(
+      (report) => report.status === 'running' || report.status === 'pending',
+    ),
   )
 
-  const completedReports = computed(() => 
-    reportGenerations.value.filter(report => report.status === 'completed')
+  const completedReports = computed(() =>
+    reportGenerations.value.filter((report) => report.status === 'completed'),
   )
 
   const systemHealthScore = computed(() => {
     if (!systemStatusReport.value) return 0
-    
+
     const totalServices = heartBeatList.value.length
-    const onlineServices = heartBeatList.value.filter(hb => hb.status === SystemStatus.ONLINE).length
-    
+    const onlineServices = heartBeatList.value.filter(
+      (hb) => hb.status === SystemStatus.ONLINE,
+    ).length
+
     if (totalServices === 0) return 100
     return Math.round((onlineServices / totalServices) * 100)
   })
@@ -175,7 +177,7 @@ export const useReportsStore = defineStore('reports', () => {
   const updateUpsStatus = async (id: number, data: UpsStatusUpdate) => {
     try {
       const updatedUps = await reportsApiService.updateUpsStatus(id, data)
-      const index = upsStatusList.value.findIndex(ups => ups.id === id)
+      const index = upsStatusList.value.findIndex((ups) => ups.id === id)
       if (index !== -1) {
         upsStatusList.value[index] = updatedUps
       }
@@ -191,7 +193,7 @@ export const useReportsStore = defineStore('reports', () => {
   const deleteUpsStatus = async (id: number) => {
     try {
       await reportsApiService.deleteUpsStatus(id)
-      upsStatusList.value = upsStatusList.value.filter(ups => ups.id !== id)
+      upsStatusList.value = upsStatusList.value.filter((ups) => ups.id !== id)
       message.success('UPS status deleted successfully')
     } catch (error) {
       console.error('Error deleting UPS status:', error)
@@ -242,7 +244,7 @@ export const useReportsStore = defineStore('reports', () => {
   const updateRaidStatus = async (id: number, data: RaidStatusUpdate) => {
     try {
       const updatedRaid = await reportsApiService.updateRaidStatus(id, data)
-      const index = raidStatusList.value.findIndex(raid => raid.id === id)
+      const index = raidStatusList.value.findIndex((raid) => raid.id === id)
       if (index !== -1) {
         raidStatusList.value[index] = updatedRaid
       }
@@ -258,7 +260,7 @@ export const useReportsStore = defineStore('reports', () => {
   const deleteRaidStatus = async (id: number) => {
     try {
       await reportsApiService.deleteRaidStatus(id)
-      raidStatusList.value = raidStatusList.value.filter(raid => raid.id !== id)
+      raidStatusList.value = raidStatusList.value.filter((raid) => raid.id !== id)
       message.success('RAID status deleted successfully')
     } catch (error) {
       console.error('Error deleting RAID status:', error)
@@ -309,7 +311,7 @@ export const useReportsStore = defineStore('reports', () => {
   const updateHeartBeat = async (id: number, data: HeartBeatUpdate) => {
     try {
       const updatedHeartBeat = await reportsApiService.updateHeartBeat(id, data)
-      const index = heartBeatList.value.findIndex(hb => hb.id === id)
+      const index = heartBeatList.value.findIndex((hb) => hb.id === id)
       if (index !== -1) {
         heartBeatList.value[index] = updatedHeartBeat
       }
@@ -325,7 +327,7 @@ export const useReportsStore = defineStore('reports', () => {
   const deleteHeartBeat = async (id: number) => {
     try {
       await reportsApiService.deleteHeartBeat(id)
-      heartBeatList.value = heartBeatList.value.filter(hb => hb.id !== id)
+      heartBeatList.value = heartBeatList.value.filter((hb) => hb.id !== id)
       message.success('HeartBeat deleted successfully')
     } catch (error) {
       console.error('Error deleting HeartBeat:', error)
@@ -376,7 +378,7 @@ export const useReportsStore = defineStore('reports', () => {
   const updateReportTemplate = async (id: number, data: ReportTemplateUpdate) => {
     try {
       const updatedTemplate = await reportsApiService.updateReportTemplate(id, data)
-      const index = reportTemplates.value.findIndex(template => template.id === id)
+      const index = reportTemplates.value.findIndex((template) => template.id === id)
       if (index !== -1) {
         reportTemplates.value[index] = updatedTemplate
       }
@@ -392,7 +394,7 @@ export const useReportsStore = defineStore('reports', () => {
   const deleteReportTemplate = async (id: number) => {
     try {
       await reportsApiService.deleteReportTemplate(id)
-      reportTemplates.value = reportTemplates.value.filter(template => template.id !== id)
+      reportTemplates.value = reportTemplates.value.filter((template) => template.id !== id)
       message.success('Report template deleted successfully')
     } catch (error) {
       console.error('Error deleting report template:', error)
@@ -443,7 +445,7 @@ export const useReportsStore = defineStore('reports', () => {
   const pollReportStatus = async (generationId: number) => {
     try {
       const report = await reportsApiService.getReportGeneration(generationId)
-      const index = reportGenerations.value.findIndex(r => r.id === generationId)
+      const index = reportGenerations.value.findIndex((r) => r.id === generationId)
       if (index !== -1) {
         reportGenerations.value[index] = report
       }
@@ -579,11 +581,11 @@ export const useReportsStore = defineStore('reports', () => {
   const exportReport = async (
     reportType: string,
     format: 'csv' | 'excel' | 'pdf' | 'json',
-    query?: Record<string, unknown>
+    query?: Record<string, unknown>,
   ) => {
     try {
       const blob = await reportsApiService.exportReport(reportType, format, query)
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -593,7 +595,7 @@ export const useReportsStore = defineStore('reports', () => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       message.success('Report exported successfully')
     } catch (error) {
       console.error('Error exporting report:', error)
@@ -605,7 +607,7 @@ export const useReportsStore = defineStore('reports', () => {
   const downloadReportFile = async (generationId: number, filename?: string) => {
     try {
       const blob = await reportsApiService.downloadReportFile(generationId)
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -615,7 +617,7 @@ export const useReportsStore = defineStore('reports', () => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       message.success('Report downloaded successfully')
     } catch (error) {
       console.error('Error downloading report:', error)
@@ -632,7 +634,7 @@ export const useReportsStore = defineStore('reports', () => {
       fetchUpsSummary(),
       fetchRaidSummary(),
       fetchHeartBeatSummary(),
-      fetchSystemStatusReport()
+      fetchSystemStatusReport(),
     ])
   }
 
@@ -736,6 +738,6 @@ export const useReportsStore = defineStore('reports', () => {
     refreshAllSystemData,
     setReportType,
     setReportFilters,
-    clearReportData
+    clearReportData,
   }
 })

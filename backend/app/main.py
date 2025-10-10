@@ -11,7 +11,6 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import HTTPBearer
 from contextlib import asynccontextmanager
 import logging
-import os
 
 from app.core.config import settings
 from app.core.logging import setup_logging

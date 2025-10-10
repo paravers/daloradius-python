@@ -6,7 +6,7 @@ and serialization in the user management API endpoints.
 """
 
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, EmailStr, Field, validator
 from enum import Enum
 

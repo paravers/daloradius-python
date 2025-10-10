@@ -5,10 +5,10 @@ This module provides RESTful API endpoints for managing RADIUS attributes,
 including RadCheck (authentication) and RadReply (authorization) attributes.
 """
 
-from typing import List, Optional, Any, Dict
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError
 
 from ...db.session import get_db
 from ...repositories.radius import RadcheckRepository, RadreplyRepository

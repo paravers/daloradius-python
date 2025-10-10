@@ -1,6 +1,6 @@
 /**
  * Reports API Service
- * 
+ *
  * Service class for handling all reports-related API calls
  */
 
@@ -11,26 +11,26 @@ import type {
   UpsStatusCreate,
   UpsStatusUpdate,
   UpsStatusResponse,
-  
+
   // RAID Status types
   RaidStatusCreate,
   RaidStatusUpdate,
   RaidStatusResponse,
-  
+
   // HeartBeat types
   HeartBeatCreate,
   HeartBeatUpdate,
   HeartBeatResponse,
-  
+
   // Report Template types
   ReportTemplateCreate,
   ReportTemplateUpdate,
   ReportTemplateResponse,
-  
+
   // Report Generation types
   ReportGenerationCreate,
   ReportGenerationResponse,
-  
+
   // Report Query types
   OnlineUsersReportQuery,
   HistoryReportQuery,
@@ -38,7 +38,7 @@ import type {
   TopUsersReportQuery,
   SystemLogQuery,
   BatchReportQuery,
-  
+
   // Report Data types
   OnlineUserReport,
   HistoryReportItem,
@@ -48,9 +48,9 @@ import type {
   BatchReportItem,
   SystemStatusReport,
   ReportsDashboard,
-  
+
   // Enums
-  ReportType
+  ReportType,
 } from '@/types/reports'
 
 export class ReportsApiService {
@@ -63,14 +63,14 @@ export class ReportsApiService {
   async createUpsStatus(data: UpsStatusCreate): Promise<UpsStatusResponse> {
     const response: AxiosResponse<UpsStatusResponse> = await apiService.post(
       `${this.baseUrl}/ups-status`,
-      data
+      data,
     )
     return response.data
   }
 
   async getUpsStatus(id: number): Promise<UpsStatusResponse> {
     const response: AxiosResponse<UpsStatusResponse> = await apiService.get(
-      `${this.baseUrl}/ups-status/${id}`
+      `${this.baseUrl}/ups-status/${id}`,
     )
     return response.data
   }
@@ -78,7 +78,7 @@ export class ReportsApiService {
   async updateUpsStatus(id: number, data: UpsStatusUpdate): Promise<UpsStatusResponse> {
     const response: AxiosResponse<UpsStatusResponse> = await apiService.put(
       `${this.baseUrl}/ups-status/${id}`,
-      data
+      data,
     )
     return response.data
   }
@@ -87,20 +87,17 @@ export class ReportsApiService {
     await apiService.delete(`${this.baseUrl}/ups-status/${id}`)
   }
 
-  async listUpsStatus(params?: {
-    skip?: number
-    limit?: number
-  }): Promise<UpsStatusResponse[]> {
+  async listUpsStatus(params?: { skip?: number; limit?: number }): Promise<UpsStatusResponse[]> {
     const response: AxiosResponse<UpsStatusResponse[]> = await apiService.get(
       `${this.baseUrl}/ups-status`,
-      { params }
+      { params },
     )
     return response.data
   }
 
   async getUpsSummary(): Promise<Record<string, unknown>> {
     const response: AxiosResponse<Record<string, unknown>> = await apiService.get(
-      `${this.baseUrl}/ups-status/summary`
+      `${this.baseUrl}/ups-status/summary`,
     )
     return response.data
   }
@@ -112,14 +109,14 @@ export class ReportsApiService {
   async createRaidStatus(data: RaidStatusCreate): Promise<RaidStatusResponse> {
     const response: AxiosResponse<RaidStatusResponse> = await apiService.post(
       `${this.baseUrl}/raid-status`,
-      data
+      data,
     )
     return response.data
   }
 
   async getRaidStatus(id: number): Promise<RaidStatusResponse> {
     const response: AxiosResponse<RaidStatusResponse> = await apiService.get(
-      `${this.baseUrl}/raid-status/${id}`
+      `${this.baseUrl}/raid-status/${id}`,
     )
     return response.data
   }
@@ -127,7 +124,7 @@ export class ReportsApiService {
   async updateRaidStatus(id: number, data: RaidStatusUpdate): Promise<RaidStatusResponse> {
     const response: AxiosResponse<RaidStatusResponse> = await apiService.put(
       `${this.baseUrl}/raid-status/${id}`,
-      data
+      data,
     )
     return response.data
   }
@@ -136,20 +133,17 @@ export class ReportsApiService {
     await apiService.delete(`${this.baseUrl}/raid-status/${id}`)
   }
 
-  async listRaidStatus(params?: {
-    skip?: number
-    limit?: number
-  }): Promise<RaidStatusResponse[]> {
+  async listRaidStatus(params?: { skip?: number; limit?: number }): Promise<RaidStatusResponse[]> {
     const response: AxiosResponse<RaidStatusResponse[]> = await apiService.get(
       `${this.baseUrl}/raid-status`,
-      { params }
+      { params },
     )
     return response.data
   }
 
   async getRaidSummary(): Promise<Record<string, unknown>> {
     const response: AxiosResponse<Record<string, unknown>> = await apiService.get(
-      `${this.baseUrl}/raid-status/summary`
+      `${this.baseUrl}/raid-status/summary`,
     )
     return response.data
   }
@@ -161,14 +155,14 @@ export class ReportsApiService {
   async createHeartBeat(data: HeartBeatCreate): Promise<HeartBeatResponse> {
     const response: AxiosResponse<HeartBeatResponse> = await apiService.post(
       `${this.baseUrl}/heartbeat`,
-      data
+      data,
     )
     return response.data
   }
 
   async getHeartBeat(id: number): Promise<HeartBeatResponse> {
     const response: AxiosResponse<HeartBeatResponse> = await apiService.get(
-      `${this.baseUrl}/heartbeat/${id}`
+      `${this.baseUrl}/heartbeat/${id}`,
     )
     return response.data
   }
@@ -176,7 +170,7 @@ export class ReportsApiService {
   async updateHeartBeat(id: number, data: HeartBeatUpdate): Promise<HeartBeatResponse> {
     const response: AxiosResponse<HeartBeatResponse> = await apiService.put(
       `${this.baseUrl}/heartbeat/${id}`,
-      data
+      data,
     )
     return response.data
   }
@@ -185,20 +179,17 @@ export class ReportsApiService {
     await apiService.delete(`${this.baseUrl}/heartbeat/${id}`)
   }
 
-  async listHeartBeats(params?: {
-    skip?: number
-    limit?: number
-  }): Promise<HeartBeatResponse[]> {
+  async listHeartBeats(params?: { skip?: number; limit?: number }): Promise<HeartBeatResponse[]> {
     const response: AxiosResponse<HeartBeatResponse[]> = await apiService.get(
       `${this.baseUrl}/heartbeat`,
-      { params }
+      { params },
     )
     return response.data
   }
 
   async getHeartBeatSummary(): Promise<Record<string, unknown>> {
     const response: AxiosResponse<Record<string, unknown>> = await apiService.get(
-      `${this.baseUrl}/heartbeat/summary`
+      `${this.baseUrl}/heartbeat/summary`,
     )
     return response.data
   }
@@ -210,22 +201,25 @@ export class ReportsApiService {
   async createReportTemplate(data: ReportTemplateCreate): Promise<ReportTemplateResponse> {
     const response: AxiosResponse<ReportTemplateResponse> = await apiService.post(
       `${this.baseUrl}/templates`,
-      data
+      data,
     )
     return response.data
   }
 
   async getReportTemplate(id: number): Promise<ReportTemplateResponse> {
     const response: AxiosResponse<ReportTemplateResponse> = await apiService.get(
-      `${this.baseUrl}/templates/${id}`
+      `${this.baseUrl}/templates/${id}`,
     )
     return response.data
   }
 
-  async updateReportTemplate(id: number, data: ReportTemplateUpdate): Promise<ReportTemplateResponse> {
+  async updateReportTemplate(
+    id: number,
+    data: ReportTemplateUpdate,
+  ): Promise<ReportTemplateResponse> {
     const response: AxiosResponse<ReportTemplateResponse> = await apiService.put(
       `${this.baseUrl}/templates/${id}`,
-      data
+      data,
     )
     return response.data
   }
@@ -241,7 +235,7 @@ export class ReportsApiService {
   }): Promise<ReportTemplateResponse[]> {
     const response: AxiosResponse<ReportTemplateResponse[]> = await apiService.get(
       `${this.baseUrl}/templates`,
-      { params }
+      { params },
     )
     return response.data
   }
@@ -253,28 +247,28 @@ export class ReportsApiService {
   async createReportGeneration(data: ReportGenerationCreate): Promise<ReportGenerationResponse> {
     const response: AxiosResponse<ReportGenerationResponse> = await apiService.post(
       `${this.baseUrl}/generate`,
-      data
+      data,
     )
     return response.data
   }
 
   async getReportGeneration(id: number): Promise<ReportGenerationResponse> {
     const response: AxiosResponse<ReportGenerationResponse> = await apiService.get(
-      `${this.baseUrl}/generate/${id}`
+      `${this.baseUrl}/generate/${id}`,
     )
     return response.data
   }
 
   async getUserReportGenerations(username: string): Promise<ReportGenerationResponse[]> {
     const response: AxiosResponse<ReportGenerationResponse[]> = await apiService.get(
-      `${this.baseUrl}/generate/user/${username}`
+      `${this.baseUrl}/generate/user/${username}`,
     )
     return response.data
   }
 
   async getPendingReports(): Promise<ReportGenerationResponse[]> {
     const response: AxiosResponse<ReportGenerationResponse[]> = await apiService.get(
-      `${this.baseUrl}/generate/pending`
+      `${this.baseUrl}/generate/pending`,
     )
     return response.data
   }
@@ -286,7 +280,7 @@ export class ReportsApiService {
   async getOnlineUsersReport(query?: OnlineUsersReportQuery): Promise<OnlineUserReport[]> {
     const response: AxiosResponse<OnlineUserReport[]> = await apiService.get(
       `${this.baseUrl}/data/online-users`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
@@ -294,7 +288,7 @@ export class ReportsApiService {
   async getHistoryReport(query?: HistoryReportQuery): Promise<HistoryReportItem[]> {
     const response: AxiosResponse<HistoryReportItem[]> = await apiService.get(
       `${this.baseUrl}/data/history`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
@@ -302,7 +296,7 @@ export class ReportsApiService {
   async getLastConnectReport(limit = 100): Promise<Record<string, unknown>[]> {
     const response: AxiosResponse<Record<string, unknown>[]> = await apiService.get(
       `${this.baseUrl}/data/last-connect`,
-      { params: { limit } }
+      { params: { limit } },
     )
     return response.data
   }
@@ -310,7 +304,7 @@ export class ReportsApiService {
   async getNewUsersReport(query?: NewUsersReportQuery): Promise<NewUserReportItem[]> {
     const response: AxiosResponse<NewUserReportItem[]> = await apiService.get(
       `${this.baseUrl}/data/new-users`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
@@ -318,7 +312,7 @@ export class ReportsApiService {
   async getTopUsersReport(query?: TopUsersReportQuery): Promise<TopUserReportItem[]> {
     const response: AxiosResponse<TopUserReportItem[]> = await apiService.get(
       `${this.baseUrl}/data/top-users`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
@@ -326,7 +320,7 @@ export class ReportsApiService {
   async getSystemLogsReport(query?: SystemLogQuery): Promise<SystemLogReportItem[]> {
     const response: AxiosResponse<SystemLogReportItem[]> = await apiService.get(
       `${this.baseUrl}/data/system-logs`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
@@ -334,21 +328,21 @@ export class ReportsApiService {
   async getBatchReport(query?: BatchReportQuery): Promise<BatchReportItem[]> {
     const response: AxiosResponse<BatchReportItem[]> = await apiService.get(
       `${this.baseUrl}/data/batch`,
-      { params: query }
+      { params: query },
     )
     return response.data
   }
 
   async getSystemStatusReport(): Promise<SystemStatusReport> {
     const response: AxiosResponse<SystemStatusReport> = await apiService.get(
-      `${this.baseUrl}/data/system-status`
+      `${this.baseUrl}/data/system-status`,
     )
     return response.data
   }
 
   async getReportsDashboard(): Promise<ReportsDashboard> {
     const response: AxiosResponse<ReportsDashboard> = await apiService.get(
-      `${this.baseUrl}/dashboard`
+      `${this.baseUrl}/dashboard`,
     )
     return response.data
   }
@@ -360,23 +354,19 @@ export class ReportsApiService {
   async exportReport(
     reportType: string,
     format: 'csv' | 'excel' | 'pdf' | 'json',
-    query?: Record<string, unknown>
+    query?: Record<string, unknown>,
   ): Promise<Blob> {
-    const response = await apiService.get(
-      `${this.baseUrl}/export/${reportType}`,
-      {
-        params: { ...query, format },
-        responseType: 'blob'
-      }
-    ) as AxiosResponse<Blob>
+    const response = (await apiService.get(`${this.baseUrl}/export/${reportType}`, {
+      params: { ...query, format },
+      responseType: 'blob',
+    })) as AxiosResponse<Blob>
     return response.data
   }
 
   async downloadReportFile(generationId: number): Promise<Blob> {
-    const response = await apiService.get(
-      `${this.baseUrl}/download/${generationId}`,
-      { responseType: 'blob' }
-    ) as AxiosResponse<Blob>
+    const response = (await apiService.get(`${this.baseUrl}/download/${generationId}`, {
+      responseType: 'blob',
+    })) as AxiosResponse<Blob>
     return response.data
   }
 
@@ -385,15 +375,15 @@ export class ReportsApiService {
   // =============================================================================
 
   async getRealtimeSystemStatus(): Promise<Record<string, unknown>> {
-    const response = await apiService.get(
-      `${this.baseUrl}/realtime/system-status`
-    ) as AxiosResponse<Record<string, unknown>>
+    const response = (await apiService.get(
+      `${this.baseUrl}/realtime/system-status`,
+    )) as AxiosResponse<Record<string, unknown>>
     return response.data
   }
 
   async getRealtimeOnlineUsers(): Promise<OnlineUserReport[]> {
     const response: AxiosResponse<OnlineUserReport[]> = await apiService.get(
-      `${this.baseUrl}/realtime/online-users`
+      `${this.baseUrl}/realtime/online-users`,
     )
     return response.data
   }
@@ -402,15 +392,16 @@ export class ReportsApiService {
   // Batch Operations
   // =============================================================================
 
-  async bulkUpdateSystemStatus(updates: Array<{
-    type: 'ups' | 'raid' | 'heartbeat'
-    id: number
-    data: Record<string, unknown>
-  }>): Promise<Record<string, unknown>> {
-    const response = await apiService.post(
-      `${this.baseUrl}/bulk/system-status`,
-      { updates }
-    ) as AxiosResponse<Record<string, unknown>>
+  async bulkUpdateSystemStatus(
+    updates: Array<{
+      type: 'ups' | 'raid' | 'heartbeat'
+      id: number
+      data: Record<string, unknown>
+    }>,
+  ): Promise<Record<string, unknown>> {
+    const response = (await apiService.post(`${this.baseUrl}/bulk/system-status`, {
+      updates,
+    })) as AxiosResponse<Record<string, unknown>>
     return response.data
   }
 
@@ -419,10 +410,9 @@ export class ReportsApiService {
     schedule: string // cron expression
     parameters?: Record<string, unknown>
   }): Promise<Record<string, unknown>> {
-    const response = await apiService.post(
-      `${this.baseUrl}/schedule`,
-      data
-    ) as AxiosResponse<Record<string, unknown>>
+    const response = (await apiService.post(`${this.baseUrl}/schedule`, data)) as AxiosResponse<
+      Record<string, unknown>
+    >
     return response.data
   }
 
@@ -434,24 +424,23 @@ export class ReportsApiService {
     start: string
     end: string
   }): Promise<Record<string, unknown>> {
-    const response = await apiService.get(
-      `${this.baseUrl}/analytics`,
-      { params: dateRange }
-    ) as AxiosResponse<Record<string, unknown>>
+    const response = (await apiService.get(`${this.baseUrl}/analytics`, {
+      params: dateRange,
+    })) as AxiosResponse<Record<string, unknown>>
     return response.data
   }
 
   async getUsageStatistics(): Promise<Record<string, unknown>> {
-    const response = await apiService.get(
-      `${this.baseUrl}/analytics/usage`
-    ) as AxiosResponse<Record<string, unknown>>
+    const response = (await apiService.get(`${this.baseUrl}/analytics/usage`)) as AxiosResponse<
+      Record<string, unknown>
+    >
     return response.data
   }
 
   async getPerformanceMetrics(): Promise<Record<string, unknown>> {
-    const response = await apiService.get(
-      `${this.baseUrl}/analytics/performance`
-    ) as AxiosResponse<Record<string, unknown>>
+    const response = (await apiService.get(
+      `${this.baseUrl}/analytics/performance`,
+    )) as AxiosResponse<Record<string, unknown>>
     return response.data
   }
 }

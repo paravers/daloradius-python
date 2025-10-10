@@ -27,7 +27,7 @@ from app.services.accounting import (
 from app.schemas.accounting import (
     RadAcctResponse, AccountingQuery, AccountingQueryFilters,
     PaginatedAccountingResponse, AccountingOverview,
-    TopUsersReport, HourlyTrafficReport, DailyTrafficReport,
+    HourlyTrafficReport,
     NasUsageReport, CustomQueryResult, MaintenanceResult,
     PaginatedTopUsersResponse, UserTrafficSummaryResponse,
     NasTrafficSummaryResponse, AccountingTimeRangeEnum,

@@ -5,10 +5,10 @@ This module contains all application settings, database configuration,
 and environment-specific configurations.
 """
 
-import os
 from functools import lru_cache
 from typing import List, Optional
-from pydantic import BaseSettings, PostgresDsn, validator
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     DATABASE_HOST: str = "localhost"
     DATABASE_PORT: str = "5432"
     DATABASE_NAME: str = "daloradius"
-    DATABASE_URL: Optional[PostgresDsn] = None
+    DATABASE_URL: Optional[str] = None
 
     # Legacy MySQL support (for migration phase)
     MYSQL_USER: str = "radius"
@@ -121,14 +121,14 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
 
-        return PostgresDsn.build(
-            scheme=values.get("DATABASE_SCHEME"),
-            user=values.get("DATABASE_USER"),
-            password=values.get("DATABASE_PASSWORD"),
-            host=values.get("DATABASE_HOST"),
-            port=values.get("DATABASE_PORT"),
-            path=f"/{values.get('DATABASE_NAME') or ''}",
-        )
+        scheme = values.get("DATABASE_SCHEME") or "postgresql"
+        user = values.get("DATABASE_USER") or ""
+        password = values.get("DATABASE_PASSWORD") or ""
+        host = values.get("DATABASE_HOST") or "localhost"
+        port = values.get("DATABASE_PORT") or "5432"
+        db_name = values.get("DATABASE_NAME") or ""
+
+        return f"{scheme}://{user}:{password}@{host}:{port}/{db_name}"
 
     @validator("ALLOWED_HOSTS", pre=True)
     def parse_cors_origins(cls, v: str) -> List[str]:

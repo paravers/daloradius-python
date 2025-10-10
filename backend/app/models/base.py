@@ -77,7 +77,7 @@ class BaseModel(Base, TimestampMixin, AuditMixin):
     All models should inherit from this class
     """
     __abstract__ = True
-    
+
     id = Column(
         Integer,
         primary_key=True,
@@ -85,7 +85,7 @@ class BaseModel(Base, TimestampMixin, AuditMixin):
         autoincrement=True,
         comment="Primary key"
     )
-    
+
     @declared_attr
     def __tablename__(cls) -> str:
         """
@@ -95,7 +95,7 @@ class BaseModel(Base, TimestampMixin, AuditMixin):
         import re
         name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert model instance to dictionary
@@ -104,7 +104,7 @@ class BaseModel(Base, TimestampMixin, AuditMixin):
             column.name: getattr(self, column.name)
             for column in self.__table__.columns
         }
-    
+
     def update_from_dict(self, data: Dict[str, Any]) -> None:
         """
         Update model instance from dictionary
@@ -112,7 +112,7 @@ class BaseModel(Base, TimestampMixin, AuditMixin):
         for key, value in data.items():
             if hasattr(self, key):
                 setattr(self, key, value)
-    
+
     def __repr__(self) -> str:
         """
         String representation of the model
@@ -126,7 +126,7 @@ class RadiusBaseModel(BaseModel):
     These tables typically don't need audit fields as they're managed by RADIUS server
     """
     __abstract__ = True
-    
+
     # Override to remove audit fields for RADIUS tables
     created_by = None
     updated_by = None
@@ -138,7 +138,7 @@ class LegacyBaseModel(Base):
     with existing daloRADIUS PHP schema
     """
     __abstract__ = True
-    
+
     # Legacy tables use different timestamp field names
     creationdate = Column(
         DateTime,

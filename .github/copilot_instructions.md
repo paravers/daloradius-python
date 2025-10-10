@@ -39,7 +39,7 @@
 
 7. 例子（短）
 
-- 任务：为 `api/service.py` 的 create 接口添加 IPv4 校验。质量门：新增测试通过且 `flake8 --ignore=W293,E501` 无错误。验证：`python -m pytest tests/test_service_validation.py -q`。
+- 任务：为 `api/service.py` 的 create 接口添加 IPv4 校验。质量门：新增测试通过且 `mypy` 及 `flake8 --ignore=W293,E501` 无错误。验证：`python -m pytest tests/test_service_validation.py -q`。
 
 9. 真实环境的信息
 

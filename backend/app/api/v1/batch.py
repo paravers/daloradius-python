@@ -6,7 +6,7 @@ including batch history tracking and batch operation execution.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
@@ -17,7 +17,6 @@ from app.models.user import BatchHistory, User
 from app.schemas.batch import (
     BatchHistoryCreate,
     BatchHistoryListResponse,
-    BatchHistoryQuery,
     BatchHistoryResponse,
     BatchHistoryUpdate,
     BatchOperationRequest,

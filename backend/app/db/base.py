@@ -14,12 +14,13 @@ from typing import Generator, AsyncGenerator
 
 # Database URL from environment variables
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
+    "DATABASE_URL",
     "postgresql+asyncpg://daloradius:password@localhost:5432/daloradius"
 )
 
 # Sync database URL (for Alembic migrations)
-SYNC_DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+SYNC_DATABASE_URL = DATABASE_URL.replace(
+    "postgresql+asyncpg://", "postgresql://")
 
 # Create async engine
 async_engine = create_async_engine(
@@ -90,10 +91,10 @@ async def init_db() -> None:
     Initialize database tables
     """
     # Import all models to ensure they are registered with SQLAlchemy
-    from app.models import (
+    from app.models import (  # noqa: F401
         user, radius, accounting, billing, nas, system, hotspot
     )
-    
+
     async with async_engine.begin() as conn:
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)

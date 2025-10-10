@@ -456,8 +456,8 @@ const handleFiltersApplied = (filters: Record<string, unknown>) => {
 }
 
 // 数据转换函数 - 将 store 数据转换为组件期望的格式
-const transformedOnlineUsers = computed(() => 
-  onlineUsers.value.map(user => ({
+const transformedOnlineUsers = computed(() =>
+  onlineUsers.value.map((user) => ({
     username: user.username,
     framedipaddress: user.framed_ip_address,
     callingstationid: user.session_id,
@@ -468,8 +468,8 @@ const transformedOnlineUsers = computed(() =>
     acctinputoctets: user.input_octets,
     acctoutputoctets: user.output_octets,
     hotspot: '',
-    nasshortname: user.nas_ip_address
-  }))
+    nasshortname: user.nas_ip_address,
+  })),
 )
 
 const transformedHistoryReports = computed(() =>
@@ -482,8 +482,8 @@ const transformedHistoryReports = computed(() =>
     acctinputoctets: session.input_octets,
     acctoutputoctets: session.output_octets,
     nasipaddress: session.nas_ip_address,
-    acctterminatecause: session.terminate_cause || 'User-Request'
-  }))
+    acctterminatecause: session.terminate_cause || 'User-Request',
+  })),
 )
 
 const transformedNewUsersReports = computed(() =>
@@ -494,8 +494,8 @@ const transformedNewUsersReports = computed(() =>
     lastname: '',
     email: user.email || '',
     creationdate: user.created_date,
-    firstLogin: user.first_login
-  }))
+    firstLogin: user.first_login,
+  })),
 )
 
 const transformedSystemLogsReports = computed(() =>
@@ -506,8 +506,8 @@ const transformedSystemLogsReports = computed(() =>
     logger_name: log.logger_name,
     message: log.message,
     username: log.username,
-    ip_address: log.ip_address
-  }))
+    ip_address: log.ip_address,
+  })),
 )
 
 const transformedBatchReports = computed(() =>
@@ -523,8 +523,8 @@ const transformedBatchReports = computed(() =>
     status: 'completed',
     progress: Math.round((batch.success_count / batch.user_count) * 100),
     created_at: batch.created_date,
-    updated_at: batch.created_date
-  }))
+    updated_at: batch.created_date,
+  })),
 )
 
 // 各种报表的刷新方法

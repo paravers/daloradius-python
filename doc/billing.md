@@ -57,8 +57,8 @@ Edit your own or an existing HTML invoice template to match your design preferen
 
 A good start point could be copying, renaming and modifying the default templates:
 
-* `invoice_template.html` for the invoice body.
-* `invoice_item_template.html` for the invoice items.
+- `invoice_template.html` for the invoice body.
+- `invoice_item_template.html` for the invoice items.
 
 With the new style billing system, you can use a lot of new field names, to improve the result and details of your invoices.
 

@@ -1,6 +1,6 @@
 /**
  * Reports System Type Definitions
- * 
+ *
  * TypeScript interfaces and types for the reports system
  */
 
@@ -14,7 +14,7 @@ export enum ReportType {
   BATCH_REPORT = 'batch_report',
   SYSTEM_LOGS = 'system_logs',
   SYSTEM_STATUS = 'system_status',
-  HEARTBEAT = 'heartbeat'
+  HEARTBEAT = 'heartbeat',
 }
 
 export enum LogLevel {
@@ -22,7 +22,7 @@ export enum LogLevel {
   INFO = 'INFO',
   WARNING = 'WARNING',
   ERROR = 'ERROR',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export enum SystemStatus {
@@ -30,7 +30,7 @@ export enum SystemStatus {
   OFFLINE = 'offline',
   WARNING = 'warning',
   ERROR = 'error',
-  MAINTENANCE = 'maintenance'
+  MAINTENANCE = 'maintenance',
 }
 
 // =============================================================================
@@ -505,7 +505,7 @@ export interface ReportFormData {
 }
 
 // =============================================================================
-// Additional Report Data Interfaces  
+// Additional Report Data Interfaces
 // =============================================================================
 
 export interface LastConnect {

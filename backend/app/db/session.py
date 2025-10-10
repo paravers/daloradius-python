@@ -7,6 +7,7 @@ for the daloRADIUS application.
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
+from sqlalchemy import text
 import os
 from typing import AsyncGenerator
 
@@ -104,7 +105,7 @@ class DatabaseManager:
         """
         try:
             async with AsyncSessionLocal() as session:
-                await session.execute("SELECT 1")
+                await session.execute(text("SELECT 1"))
                 return True
         except Exception:
             return False
