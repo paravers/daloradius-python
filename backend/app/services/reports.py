@@ -8,7 +8,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.reports import (
@@ -40,7 +40,7 @@ logger = get_logger(__name__)
 class UpsStatusService:
     """Service for UPS status management"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = UpsStatusRepository(db)
 
@@ -123,7 +123,7 @@ class UpsStatusService:
 class RaidStatusService:
     """Service for RAID status management"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = RaidStatusRepository(db)
 
@@ -206,7 +206,7 @@ class RaidStatusService:
 class HeartBeatService:
     """Service for HeartBeat monitoring"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = HeartBeatRepository(db)
 
@@ -304,7 +304,7 @@ class HeartBeatService:
 class ReportTemplateService:
     """Service for report template management"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = ReportTemplateRepository(db)
 
@@ -380,7 +380,7 @@ class ReportTemplateService:
 class ReportGenerationService:
     """Service for report generation management"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = ReportGenerationRepository(db)
         self.reports_repository = ReportsRepository(db)
@@ -531,7 +531,7 @@ class ReportGenerationService:
 class ReportsService:
     """Main service for report generation and analysis"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = ReportsRepository(db)
 

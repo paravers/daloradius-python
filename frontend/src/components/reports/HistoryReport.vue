@@ -36,7 +36,9 @@
             <div class="traffic-summary">
               <div>上传: {{ formatBytes(record.acctinputoctets) }}</div>
               <div>下载: {{ formatBytes(record.acctoutputoctets) }}</div>
-              <div class="total">总计: {{ formatBytes(record.acctinputoctets + record.acctoutputoctets) }}</div>
+              <div class="total">
+                总计: {{ formatBytes(record.acctinputoctets + record.acctoutputoctets) }}
+              </div>
             </div>
           </template>
           <template v-else-if="column.key === 'acctterminatecause'">
@@ -184,7 +186,7 @@ const handleDateChange = () => {
   .traffic-summary {
     font-size: 12px;
     line-height: 1.6;
-    
+
     .total {
       font-weight: bold;
       color: #1890ff;

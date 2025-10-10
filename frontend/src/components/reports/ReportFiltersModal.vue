@@ -74,12 +74,7 @@
         </a-form-item>
 
         <a-form-item label="显示数量">
-          <a-input-number
-            v-model:value="filters.limit"
-            :min="5"
-            :max="100"
-            style="width: 100%"
-          />
+          <a-input-number v-model:value="filters.limit" :min="5" :max="100" style="width: 100%" />
         </a-form-item>
       </template>
     </a-form>
@@ -120,20 +115,35 @@ const filters = ref<Record<string, unknown>>({
 
 const datePresets = [
   { label: '今天', value: [dayjs().startOf('day'), dayjs()] as [Dayjs, Dayjs] },
-  { label: '昨天', value: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')] as [Dayjs, Dayjs] },
+  {
+    label: '昨天',
+    value: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')] as [
+      Dayjs,
+      Dayjs,
+    ],
+  },
   { label: '最近7天', value: [dayjs().subtract(7, 'day'), dayjs()] as [Dayjs, Dayjs] },
   { label: '最近30天', value: [dayjs().subtract(30, 'day'), dayjs()] as [Dayjs, Dayjs] },
   { label: '本月', value: [dayjs().startOf('month'), dayjs()] as [Dayjs, Dayjs] },
-  { label: '上月', value: [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')] as [Dayjs, Dayjs] },
+  {
+    label: '上月',
+    value: [
+      dayjs().subtract(1, 'month').startOf('month'),
+      dayjs().subtract(1, 'month').endOf('month'),
+    ] as [Dayjs, Dayjs],
+  },
 ]
 
 const isUserReport = computed(() => {
   return ['online-users', 'history', 'last-connect', 'new-users'].includes(props.reportType || '')
 })
 
-watch(() => props.visible, (val) => {
-  isVisible.value = val
-})
+watch(
+  () => props.visible,
+  (val) => {
+    isVisible.value = val
+  },
+)
 
 watch(isVisible, (val) => {
   emit('update:visible', val)

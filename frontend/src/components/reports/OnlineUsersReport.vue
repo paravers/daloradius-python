@@ -39,9 +39,7 @@
             </div>
           </template>
           <template v-else-if="column.key === 'actions'">
-            <a-button type="link" size="small" @click="viewDetails(record)">
-              详情
-            </a-button>
+            <a-button type="link" size="small" @click="viewDetails(record)"> 详情 </a-button>
           </template>
         </template>
       </a-table>
@@ -181,7 +179,7 @@ const handleExport = () => {
   .traffic-info {
     font-size: 12px;
     line-height: 1.4;
-    
+
     div {
       &:first-child {
         color: #52c41a;

@@ -48,9 +48,9 @@
     </div>
 
     <div class="pagination__size-selector" v-if="showSizeSelector">
-      <Select 
-        :modelValue="pageSize.toString()" 
-        @update:modelValue="handlePageSizeChange" 
+      <Select
+        :modelValue="pageSize.toString()"
+        @update:modelValue="handlePageSizeChange"
         size="sm"
         :options="['10', '20', '50', '100']"
       >
@@ -69,7 +69,7 @@ import Button from './Button.vue'
 import Select from './Select.vue'
 
 defineOptions({
-  name: 'PaginationComponent'
+  name: 'PaginationComponent',
 })
 
 interface Props {

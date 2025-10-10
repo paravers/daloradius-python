@@ -44,7 +44,9 @@
               <a-progress
                 :percent="calculateUsagePercent(record.used_size, record.total_size)"
                 size="small"
-                :status="getStorageStatus(calculateUsagePercent(record.used_size, record.total_size))"
+                :status="
+                  getStorageStatus(calculateUsagePercent(record.used_size, record.total_size))
+                "
               />
             </div>
           </template>
@@ -157,7 +159,7 @@ const getStorageStatus = (percent: number): 'success' | 'exception' | 'normal' =
 
   .storage-info {
     font-size: 12px;
-    
+
     > div {
       margin-bottom: 4px;
     }

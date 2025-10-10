@@ -21,6 +21,24 @@ export default defineConfigWithVueTs(
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
+
+  // Custom rules overrides
+  {
+    name: 'app/vue-rules',
+    files: ['**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+  
+  // Custom TypeScript rules overrides
+  {
+    name: 'app/typescript-rules',
+    files: ['**/*.{ts,mts,tsx,vue}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
   
   {
     ...pluginVitest.configs.recommended,

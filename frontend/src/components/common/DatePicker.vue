@@ -36,9 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const internalValue = ref(
-  typeof props.modelValue === 'string' ? props.modelValue : ''
-)
+const internalValue = ref(typeof props.modelValue === 'string' ? props.modelValue : '')
 
 watch(
   () => props.modelValue,

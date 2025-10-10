@@ -77,9 +77,13 @@ const columns = [
   { title: '批次名称', dataIndex: 'batch_name', key: 'batch_name' },
   { title: '操作类型', dataIndex: 'operation_type', key: 'operation_type', width: 120 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-  { title: '总数/成功/失败', width: 150, customRender: ({ record }: { record: BatchOperation }) => {
-    return `${record.total_count} / ${record.success_count} / ${record.failed_count}`
-  }},
+  {
+    title: '总数/成功/失败',
+    width: 150,
+    customRender: ({ record }: { record: BatchOperation }) => {
+      return `${record.total_count} / ${record.success_count} / ${record.failed_count}`
+    },
+  },
   { title: '进度', key: 'progress', width: 150 },
   { title: '总耗时', key: 'total_time', width: 120 },
   { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
@@ -121,12 +125,12 @@ const getProgressStatus = (status: string): 'success' | 'exception' | 'active' |
 const calculateDuration = (start?: string, end?: string): string => {
   if (!start) return '-'
   if (!end) return '进行中...'
-  
+
   const duration = new Date(end).getTime() - new Date(start).getTime()
   const seconds = Math.floor(duration / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
-  
+
   if (hours > 0) return `${hours}h ${minutes % 60}m`
   if (minutes > 0) return `${minutes}m ${seconds % 60}s`
   return `${seconds}s`

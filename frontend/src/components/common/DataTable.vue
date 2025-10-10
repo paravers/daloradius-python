@@ -138,7 +138,7 @@ watch(() => props.columns, (newColumns) => {
 
 // 计算属性 - 处理后的列配置
 const computedColumns = computed(() => {
-  let columns = props.columns.filter(col => visibleColumns.value.includes(col.key))
+  const columns = props.columns.filter(col => visibleColumns.value.includes(col.key))
   
   // 添加操作列
   if (props.actionButtons && props.actionButtons.length > 0) {

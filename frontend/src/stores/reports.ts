@@ -8,14 +8,15 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { reportsApiService } from '@/services/reports'
-import {
+import { ReportType, SystemStatus } from '@/types/reports'
+import type { LastConnect } from '@/types/reports'
+import type {
   // Types
   UpsStatusResponse,
   RaidStatusResponse,
   HeartBeatResponse,
   ReportTemplateResponse,
   ReportGenerationResponse,
-  ServerMonitoringResponse,
   OnlineUserReport,
   HistoryReportItem,
   NewUserReportItem,
@@ -44,11 +45,7 @@ import {
   NewUsersReportQuery,
   TopUsersReportQuery,
   SystemLogQuery,
-  BatchReportQuery,
-  
-  // Enums
-  ReportType,
-  SystemStatus
+  BatchReportQuery
 } from '@/types/reports'
 
 export const useReportsStore = defineStore('reports', () => {
@@ -59,17 +56,17 @@ export const useReportsStore = defineStore('reports', () => {
   // UPS Status
   const upsStatusList = ref<UpsStatusResponse[]>([])
   const upsStatusLoading = ref(false)
-  const upsSummary = ref<any>({})
+  const upsSummary = ref<Record<string, unknown>>({})
 
   // RAID Status
   const raidStatusList = ref<RaidStatusResponse[]>([])
   const raidStatusLoading = ref(false)
-  const raidSummary = ref<any>({})
+  const raidSummary = ref<Record<string, unknown>>({})
 
   // HeartBeat
   const heartBeatList = ref<HeartBeatResponse[]>([])
   const heartBeatLoading = ref(false)
-  const heartBeatSummary = ref<any>({})
+  const heartBeatSummary = ref<Record<string, unknown>>({})
 
   // Report Templates
   const reportTemplates = ref<ReportTemplateResponse[]>([])
@@ -87,7 +84,7 @@ export const useReportsStore = defineStore('reports', () => {
   const topUsersReports = ref<TopUserReportItem[]>([])
   const systemLogsReports = ref<SystemLogReportItem[]>([])
   const batchReports = ref<BatchReportItem[]>([])
-  const lastConnectReports = ref<any[]>([])
+  const lastConnectReports = ref<LastConnect[]>([])
 
   // System Status
   const systemStatusReport = ref<SystemStatusReport | null>(null)
@@ -97,7 +94,7 @@ export const useReportsStore = defineStore('reports', () => {
   const reportDataLoading = ref(false)
   const dashboardLoading = ref(false)
   const selectedReportType = ref<ReportType>(ReportType.ONLINE_USERS)
-  const reportFilters = ref<any>({})
+  const reportFilters = ref<Record<string, unknown>>({})
 
   // =============================================================================
   // Getters
@@ -491,7 +488,7 @@ export const useReportsStore = defineStore('reports', () => {
     try {
       reportDataLoading.value = true
       const data = await reportsApiService.getLastConnectReport(limit)
-      lastConnectReports.value = data
+      lastConnectReports.value = data as unknown as LastConnect[]
     } catch (error) {
       console.error('Error fetching last connect report:', error)
       message.error('Failed to fetch last connect report')
@@ -582,7 +579,7 @@ export const useReportsStore = defineStore('reports', () => {
   const exportReport = async (
     reportType: string,
     format: 'csv' | 'excel' | 'pdf' | 'json',
-    query?: any
+    query?: Record<string, unknown>
   ) => {
     try {
       const blob = await reportsApiService.exportReport(reportType, format, query)
@@ -643,7 +640,7 @@ export const useReportsStore = defineStore('reports', () => {
     selectedReportType.value = type
   }
 
-  const setReportFilters = (filters: any) => {
+  const setReportFilters = (filters: Record<string, unknown>) => {
     reportFilters.value = filters
   }
 

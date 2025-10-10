@@ -86,7 +86,9 @@
               <ClockCircleOutlined class="stat-icon" />
               <div class="stat-content">
                 <div class="stat-title">平均会话时长</div>
-                <div class="stat-number">{{ formatDuration(dashboardData?.avg_session_time || 0) }}</div>
+                <div class="stat-number">
+                  {{ formatDuration(dashboardData?.avg_session_time || 0) }}
+                </div>
               </div>
             </div>
           </div>
@@ -104,7 +106,12 @@
 </template>
 
 <script setup lang="ts">
-import { BarChartOutlined, LineChartOutlined, ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import {
+  BarChartOutlined,
+  LineChartOutlined,
+  ClockCircleOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons-vue'
 
 interface DashboardData {
   online_users_count?: number

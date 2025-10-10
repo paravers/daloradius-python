@@ -503,3 +503,15 @@ export interface ReportFormData {
   template?: number
   parameters?: Record<string, any>
 }
+
+// =============================================================================
+// Additional Report Data Interfaces  
+// =============================================================================
+
+export interface LastConnect {
+  id: number
+  username: string
+  pass?: string
+  reply: string
+  authdate: string
+}

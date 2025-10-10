@@ -1,10 +1,7 @@
 <template>
   <div class="batch-operations">
-    <PageHeader 
-      title="批量操作管理"
-      subtitle="管理和监控批量操作历史记录"
-    />
-    
+    <PageHeader title="批量操作管理" subtitle="管理和监控批量操作历史记录" />
+
     <div class="content-container">
       <!-- Statistics Cards -->
       <div class="stats-grid">
@@ -20,18 +17,8 @@
           icon="calendar-week"
           color="success"
         />
-        <StatsCard
-          label="成功率"
-          :value="successRate + '%'"
-          icon="check-circle"
-          color="primary"
-        />
-        <StatsCard
-          label="运行中"
-          :value="runningOperations"
-          icon="sync"
-          color="warning"
-        />
+        <StatsCard label="成功率" :value="successRate + '%'" icon="check-circle" color="primary" />
+        <StatsCard label="运行中" :value="runningOperations" icon="sync" color="warning" />
       </div>
 
       <!-- Filters -->
@@ -47,7 +34,7 @@
                 @change="handleFilterChange"
               />
             </FormField>
-            
+
             <FormField label="状态" class="filter-field">
               <Select
                 v-model="filters.status"
@@ -57,7 +44,7 @@
                 @change="handleFilterChange"
               />
             </FormField>
-            
+
             <FormField label="Hotspot" class="filter-field">
               <Input
                 v-model="filters.hotspot_id"
@@ -66,7 +53,7 @@
                 @input="handleFilterChange"
               />
             </FormField>
-            
+
             <FormField label="日期范围" class="filter-field">
               <DatePicker
                 v-model="dateRange"
@@ -76,7 +63,7 @@
                 @change="handleDateRangeChange"
               />
             </FormField>
-            
+
             <div class="filter-actions">
               <Button @click="resetFilters" variant="secondary">
                 <Icon name="refresh" />
@@ -98,7 +85,7 @@
             </Button>
           </div>
         </template>
-        
+
         <DataTable
           :dataSource="dataSource"
           :columns="columns"
@@ -111,14 +98,8 @@
       </Card>
 
       <!-- Batch Operation Details Modal -->
-      <Modal
-        v-model:show="showDetailsModal"
-        title="批量操作详情"
-      >
-        <BatchOperationDetails
-          v-if="selectedOperation"
-          :operation="selectedOperation"
-        />
+      <Modal v-model:show="showDetailsModal" title="批量操作详情">
+        <BatchOperationDetails v-if="selectedOperation" :operation="selectedOperation" />
       </Modal>
     </div>
   </div>
@@ -143,14 +124,8 @@ import Modal from '@/components/common/Modal.vue'
 import BatchOperationDetails from '@/components/batch/BatchOperationDetails.vue'
 
 // Composables
-const {
-  batchHistory,
-  stats,
-  loading,
-  fetchBatchHistory,
-  fetchBatchStats,
-  getBatchDetails
-} = useBatchOperations()
+const { batchHistory, stats, loading, fetchBatchHistory, fetchBatchStats, getBatchDetails } =
+  useBatchOperations()
 
 // Reactive state
 const showDetailsModal = ref(false)
@@ -166,7 +141,7 @@ const filters = reactive<BatchHistoryQuery>({
   page: 1,
   size: 20,
   sort_by: 'created_at',
-  sort_order: 'desc'
+  sort_order: 'desc',
 })
 
 const pagination = reactive({
@@ -175,14 +150,14 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: true
+  showTotal: true,
 })
 
 // Computed
 const dataSource = computed(() => ({
   data: batchHistory.value,
   total: pagination.total,
-  loading: loading.value
+  loading: loading.value,
 }))
 
 // Options
@@ -195,7 +170,7 @@ const operationTypeOptions = [
   { label: 'NAS删除', value: 'nas_delete' },
   { label: 'NAS更新', value: 'nas_update' },
   { label: '组删除', value: 'group_delete' },
-  { label: '组更新', value: 'group_update' }
+  { label: '组更新', value: 'group_update' },
 ]
 
 const statusOptions = [
@@ -203,7 +178,7 @@ const statusOptions = [
   { label: '运行中', value: 'running' },
   { label: '已完成', value: 'completed' },
   { label: '已失败', value: 'failed' },
-  { label: '已取消', value: 'cancelled' }
+  { label: '已取消', value: 'cancelled' },
 ]
 
 // Computed
@@ -226,13 +201,13 @@ const columns = [
     dataIndex: 'id',
     key: 'id',
     width: 80,
-    sorter: true
+    sorter: true,
   },
   {
     title: '操作名称',
     dataIndex: 'batch_name',
     key: 'batch_name',
-    ellipsis: true
+    ellipsis: true,
   },
   {
     title: '操作类型',
@@ -240,9 +215,9 @@ const columns = [
     key: 'operation_type',
     width: 120,
     customRender: ({ text }: { text: string }) => {
-      const option = operationTypeOptions.find(opt => opt.value === text)
+      const option = operationTypeOptions.find((opt) => opt.value === text)
       return option ? option.label : text
-    }
+    },
   },
   {
     title: '状态',
@@ -255,32 +230,32 @@ const columns = [
         running: { color: 'blue', text: '运行中' },
         completed: { color: 'green', text: '已完成' },
         failed: { color: 'red', text: '已失败' },
-        cancelled: { color: 'gray', text: '已取消' }
+        cancelled: { color: 'gray', text: '已取消' },
       }
       const status = statusMap[text as keyof typeof statusMap] || { color: 'gray', text }
       return `<span style="color: ${status.color}">${status.text}</span>`
-    }
+    },
   },
   {
     title: '总数',
     dataIndex: 'total_count',
     key: 'total_count',
     width: 80,
-    align: 'center' as const
+    align: 'center' as const,
   },
   {
     title: '成功',
     dataIndex: 'success_count',
     key: 'success_count',
     width: 80,
-    align: 'center' as const
+    align: 'center' as const,
   },
   {
     title: '失败',
     dataIndex: 'failure_count',
     key: 'failure_count',
     width: 80,
-    align: 'center' as const
+    align: 'center' as const,
   },
   {
     title: '创建时间',
@@ -290,7 +265,7 @@ const columns = [
     sorter: true,
     customRender: ({ text }: { text: string }) => {
       return new Date(text).toLocaleString('zh-CN')
-    }
+    },
   },
   {
     title: '操作',
@@ -302,8 +277,8 @@ const columns = [
           <span>详情</span>
         </button>
       `
-    }
-  }
+    },
+  },
 ]
 
 // Methods
@@ -334,7 +309,7 @@ const resetFilters = () => {
     page: 1,
     size: 20,
     sort_by: 'created_at',
-    sort_order: 'desc'
+    sort_order: 'desc',
   })
   dateRange.value = null
   pagination.current = 1
@@ -399,7 +374,7 @@ const setupTableEventListeners = () => {
         const action = actionBtn.getAttribute('data-action')
         const id = actionBtn.getAttribute('data-id')
         if (action && id) {
-          const record = batchHistory.value.find(item => item.id === parseInt(id))
+          const record = batchHistory.value.find((item) => item.id === parseInt(id))
           if (record) {
             handleRowAction(action, record)
           }
@@ -417,10 +392,14 @@ onMounted(() => {
 })
 
 // Watchers
-watch(() => batchHistory.value, () => {
-  // Re-setup event listeners when table data changes
-  setTimeout(setupTableEventListeners, 100)
-}, { flush: 'post' })
+watch(
+  () => batchHistory.value,
+  () => {
+    // Re-setup event listeners when table data changes
+    setTimeout(setupTableEventListeners, 100)
+  },
+  { flush: 'post' },
+)
 </script>
 
 <style scoped>
@@ -512,12 +491,12 @@ watch(() => batchHistory.value, () => {
   .batch-operations {
     padding: 16px;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .filters-grid {
     grid-template-columns: 1fr;
     gap: 12px;

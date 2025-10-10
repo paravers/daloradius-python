@@ -61,11 +61,7 @@
     <div class="main-content">
       <!-- 左侧导航 -->
       <div class="sidebar">
-        <a-menu
-          v-model:selectedKeys="selectedKeys"
-          mode="inline"
-          @select="handleMenuSelect"
-        >
+        <a-menu v-model:selectedKeys="selectedKeys" mode="inline" @select="handleMenuSelect">
           <a-menu-item-group title="用户报表">
             <a-menu-item key="online-users">
               <template #icon><UserOutlined /></template>
@@ -152,23 +148,23 @@
         <!-- 动态报表内容 -->
         <div class="report-content">
           <!-- 在线用户报表 -->
-          <OnlineUsersReport 
+          <OnlineUsersReport
             v-if="selectedKeys[0] === 'online-users'"
-            :data="onlineUsers"
+            :data="transformedOnlineUsers"
             :loading="reportDataLoading"
             @refresh="fetchOnlineUsersReport"
           />
 
           <!-- 历史报表 -->
-          <HistoryReport 
+          <HistoryReport
             v-else-if="selectedKeys[0] === 'history'"
-            :data="historyReports"
+            :data="transformedHistoryReports"
             :loading="reportDataLoading"
             @refresh="fetchHistoryReport"
           />
 
           <!-- 最近连接报表 -->
-          <LastConnectReport 
+          <LastConnectReport
             v-else-if="selectedKeys[0] === 'last-connect'"
             :data="lastConnectReports"
             :loading="reportDataLoading"
@@ -176,15 +172,15 @@
           />
 
           <!-- 新用户报表 -->
-          <NewUsersReport 
+          <NewUsersReport
             v-else-if="selectedKeys[0] === 'new-users'"
-            :data="newUsersReports"
+            :data="transformedNewUsersReports"
             :loading="reportDataLoading"
             @refresh="fetchNewUsersReport"
           />
 
           <!-- 热门用户报表 -->
-          <TopUsersReport 
+          <TopUsersReport
             v-else-if="selectedKeys[0] === 'top-users'"
             :data="topUsersReports"
             :loading="reportDataLoading"
@@ -192,31 +188,31 @@
           />
 
           <!-- 系统日志报表 -->
-          <SystemLogsReport 
+          <SystemLogsReport
             v-else-if="selectedKeys[0] === 'system-logs'"
-            :data="systemLogsReports"
+            :data="transformedSystemLogsReports"
             :loading="reportDataLoading"
             @refresh="fetchSystemLogsReport"
           />
 
           <!-- 批量报表 -->
-          <BatchReport 
+          <BatchReport
             v-else-if="selectedKeys[0] === 'batch-report'"
-            :data="batchReports"
+            :data="transformedBatchReports"
             :loading="reportDataLoading"
             @refresh="fetchBatchReport"
           />
 
           <!-- 系统状态报表 -->
-          <SystemStatusReport 
+          <SystemStatusReport
             v-else-if="selectedKeys[0] === 'system-status'"
-            :data="systemStatusReport"
+            :data="systemStatusReport as any"
             :loading="reportDataLoading"
             @refresh="fetchSystemStatusReport"
           />
 
           <!-- 心跳监控报表 -->
-          <HeartBeatReport 
+          <HeartBeatReport
             v-else-if="selectedKeys[0] === 'heartbeat'"
             :data="heartBeatList"
             :loading="heartBeatLoading"
@@ -224,7 +220,7 @@
           />
 
           <!-- UPS状态报表 -->
-          <UpsStatusReport 
+          <UpsStatusReport
             v-else-if="selectedKeys[0] === 'ups-status'"
             :data="upsStatusList"
             :loading="upsStatusLoading"
@@ -232,7 +228,7 @@
           />
 
           <!-- RAID状态报表 -->
-          <RaidStatusReport 
+          <RaidStatusReport
             v-else-if="selectedKeys[0] === 'raid-status'"
             :data="raidStatusList"
             :loading="raidStatusLoading"
@@ -240,10 +236,10 @@
           />
 
           <!-- 默认仪表板 -->
-          <ReportsDashboard 
+          <ReportsDashboard
             v-else
             :dashboard-data="dashboardData"
-            :system-status="systemStatusReport"
+            :system-status="systemStatusReport as any"
             :loading="dashboardLoading"
             @refresh="refreshDashboard"
           />
@@ -252,15 +248,12 @@
     </div>
 
     <!-- 创建报表模态框 -->
-    <CreateReportModal
-      v-model:visible="showCreateModal"
-      @created="handleReportCreated"
-    />
+    <CreateReportModal v-model:visible="showCreateModal" @created="handleReportCreated" />
 
     <!-- 报表模板模态框 -->
     <ReportTemplateModal
       v-model:visible="showTemplateModal"
-      @template-selected="handleTemplateSelected"
+      @template-selected="(template: any) => handleTemplateSelected(template)"
     />
 
     <!-- 筛选器模态框 -->
@@ -291,7 +284,7 @@ import {
   ThunderboltOutlined,
   HddOutlined,
   FilterOutlined,
-  DownloadOutlined
+  DownloadOutlined,
 } from '@ant-design/icons-vue'
 
 // Store
@@ -324,7 +317,7 @@ const {
   reportsDashboard: dashboardData,
   dashboardLoading,
   systemHealthScore,
-  
+
   // 报表数据
   onlineUsers,
   historyReports,
@@ -334,7 +327,7 @@ const {
   systemLogsReports,
   batchReports,
   systemStatusReport,
-  
+
   // 监控数据
   heartBeatList,
   heartBeatLoading,
@@ -342,10 +335,10 @@ const {
   upsStatusLoading,
   raidStatusList,
   raidStatusLoading,
-  
+
   // UI状态
   reportDataLoading,
-  pendingReports
+  pendingReports,
 } = storeToRefs(reportsStore)
 
 // 页面状态
@@ -359,22 +352,19 @@ onMounted(async () => {
   await Promise.all([
     reportsStore.fetchReportsDashboard(),
     reportsStore.fetchOnlineUsersReport(),
-    reportsStore.fetchPendingReports()
+    reportsStore.fetchPendingReports(),
   ])
 })
 
 // 刷新仪表板
 const refreshDashboard = async () => {
-  await Promise.all([
-    reportsStore.fetchReportsDashboard(),
-    reportsStore.refreshAllSystemData()
-  ])
+  await Promise.all([reportsStore.fetchReportsDashboard(), reportsStore.refreshAllSystemData()])
 }
 
 // 菜单选择处理
 const handleMenuSelect = async ({ key }: { key: string }) => {
   selectedKeys.value = [key]
-  
+
   // 根据选择的报表类型加载相应数据
   switch (key) {
     case 'online-users':
@@ -417,16 +407,16 @@ const handleMenuSelect = async ({ key }: { key: string }) => {
 const getCurrentReportTitle = () => {
   const titles: Record<string, string> = {
     'online-users': '在线用户报表',
-    'history': '历史报表',
+    history: '历史报表',
     'last-connect': '最近连接报表',
     'new-users': '新用户报表',
     'top-users': '热门用户报表',
     'system-logs': '系统日志报表',
     'batch-report': '批量操作报表',
     'system-status': '系统状态报表',
-    'heartbeat': '心跳监控报表',
+    heartbeat: '心跳监控报表',
     'ups-status': 'UPS状态报表',
-    'raid-status': 'RAID状态报表'
+    'raid-status': 'RAID状态报表',
   }
   return titles[selectedKeys.value[0]] || '报表仪表板'
 }
@@ -464,6 +454,78 @@ const handleFiltersApplied = (filters: Record<string, unknown>) => {
   reportsStore.setReportFilters(filters)
   refreshCurrentReport()
 }
+
+// 数据转换函数 - 将 store 数据转换为组件期望的格式
+const transformedOnlineUsers = computed(() => 
+  onlineUsers.value.map(user => ({
+    username: user.username,
+    framedipaddress: user.framed_ip_address,
+    callingstationid: user.session_id,
+    acctstarttime: user.start_time,
+    acctsessiontime: user.session_duration,
+    nasipaddress: user.nas_ip_address,
+    calledstationid: '',
+    acctinputoctets: user.input_octets,
+    acctoutputoctets: user.output_octets,
+    hotspot: '',
+    nasshortname: user.nas_ip_address
+  }))
+)
+
+const transformedHistoryReports = computed(() =>
+  historyReports.value.map((session, index) => ({
+    id: index + 1,
+    username: session.username,
+    acctstarttime: session.session_start,
+    acctstoptime: session.session_end,
+    acctsessiontime: session.session_time,
+    acctinputoctets: session.input_octets,
+    acctoutputoctets: session.output_octets,
+    nasipaddress: session.nas_ip_address,
+    acctterminatecause: session.terminate_cause || 'User-Request'
+  }))
+)
+
+const transformedNewUsersReports = computed(() =>
+  newUsersReports.value.map((user, index) => ({
+    id: index + 1,
+    username: user.username,
+    firstname: '',
+    lastname: '',
+    email: user.email || '',
+    creationdate: user.created_date,
+    firstLogin: user.first_login
+  }))
+)
+
+const transformedSystemLogsReports = computed(() =>
+  systemLogsReports.value.map((log, index) => ({
+    id: index + 1,
+    timestamp: log.timestamp,
+    log_level: log.log_level,
+    logger_name: log.logger_name,
+    message: log.message,
+    username: log.username,
+    ip_address: log.ip_address
+  }))
+)
+
+const transformedBatchReports = computed(() =>
+  batchReports.value.map((batch, index) => ({
+    id: index + 1,
+    operation_type: 'bulk_operation',
+    batch_name: batch.batch_name,
+    description: batch.description || '',
+    total_count: batch.user_count,
+    processed_count: batch.success_count,
+    success_count: batch.success_count,
+    failed_count: batch.failed_count,
+    status: 'completed',
+    progress: Math.round((batch.success_count / batch.user_count) * 100),
+    created_at: batch.created_date,
+    updated_at: batch.created_date
+  }))
+)
 
 // 各种报表的刷新方法
 const fetchOnlineUsersReport = () => reportsStore.fetchOnlineUsersReport()
@@ -662,336 +724,43 @@ const fetchRaidStatusList = () => reportsStore.fetchRaidStatusList()
 </style>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { message, Modal } from 'ant-design-vue';
+import { ref, computed, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
   FileTextOutlined,
-  EditOutlined,
-  CopyOutlined,
-  ClockCircleOutlined,
-  DownOutlined
-} from '@ant-design/icons-vue';
+  ReloadOutlined,
+  UserOutlined,
+  HistoryOutlined,
+  LinkOutlined,
+  UserAddOutlined,
+  CrownOutlined,
+  FileSearchOutlined,
+  GroupOutlined,
+  DashboardOutlined,
+  HeartOutlined,
+  ThunderboltOutlined,
+  HddOutlined,
+  FilterOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons-vue'
 // import DataTable from '@/components/common/DataTable.vue';
 // import SearchForm from '@/components/common/SearchForm.vue';
-import StatCard from '@/components/common/StatCard.vue';
-// TODO: Create missing report detail components
-// import ReportDetail from '@/components/reports/ReportDetail.vue';
-// import ReportForm from '@/components/reports/ReportForm.vue';
-// import ReportResult from '@/components/reports/ReportResult.vue';
-// import ReportTemplates from '@/components/reports/ReportTemplates.vue';
-// import ReportSchedule from '@/components/reports/ReportSchedule.vue';
-import { useReportManagement, useReportGeneration } from '@/composables/useReportManagement';
-import type { 
-  Report, 
-  CreateReportRequest, 
-  UpdateReportRequest, 
-  ReportType, 
-  ReportStatus, 
-  ReportFormat 
-} from '@/types/report';
-import { REPORT_TYPE_OPTIONS, REPORT_STATUS_OPTIONS } from '@/types/report';
+import StatCard from '@/components/common/StatCard.vue'
 
-// 组合式函数
-const {
-  reports,
-  loading,
-  total,
-  currentPage,
-  pageSize,
-  searchParams,
-  selectedReports,
-  selectedReport,
-  hasSelection,
-  selectionCount,
-  fetchReports,
-  createReport,
-  updateReport,
-  deleteReport: deleteReportById,
-  deleteSelectedReports,
-  searchReports,
-  resetSearch,
-  onPageChange,
-  toggleAllSelection,
-  clearSelection
-} = useReportManagement();
+// 组合式函数 (仅保留已使用的)
 
-const {
-  reportData,
-  generating,
-  exporting,
-  generateReport,
-  exportReport,
-  clearReportData
-} = useReportGeneration();
-
-// 响应式状态
-const showDetailDrawer = ref(false);
-const showCreateModal = ref(false);
-const showEditModal = ref(false);
-const showResultModal = ref(false);
-const showTemplateModal = ref(false);
-const showScheduleModal = ref(false);
-const editingReport = ref<Report | null>(null);
-const schedulingReport = ref<Report | null>(null);
-
-// 模拟统计数据
-const monthlyGeneratedCount = ref(45);
-
-// 计算属性
-const activeReportsCount = computed(() => 
-  reports.value.filter(r => r.status === 'active').length
-);
-
-const draftReportsCount = computed(() => 
-  reports.value.filter(r => r.status === 'draft').length
-);
-
-// 搜索字段配置
-const searchFields = [
-  {
-    key: 'name',
-    label: '报表名称',
-    type: 'input',
-    placeholder: '请输入报表名称'
-  },
-  {
-    key: 'type',
-    label: '报表类型',
-    type: 'select',
-    options: REPORT_TYPE_OPTIONS
-  },
-  {
-    key: 'status',
-    label: '报表状态',
-    type: 'select',
-    options: REPORT_STATUS_OPTIONS
-  },
-  {
-    key: 'createdBy',
-    label: '创建人',
-    type: 'input',
-    placeholder: '请输入创建人'
-  }
-];
-
-// 表格列配置
-const columns = [
-  {
-    title: '报表名称',
-    dataIndex: 'name',
-    key: 'name',
-    sorter: true,
-    width: 200
-  },
-  {
-    title: '报表类型',
-    dataIndex: 'type',
-    key: 'type',
-    slots: { customRender: 'type' },
-    width: 120
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    slots: { customRender: 'status' },
-    width: 100
-  },
-  {
-    title: '创建人',
-    dataIndex: 'createdBy',
-    key: 'createdBy',
-    width: 100
-  },
-  {
-    title: '最后运行',
-    dataIndex: 'lastRunTime',
-    key: 'lastRunTime',
-    slots: { customRender: 'lastRunTime' },
-    width: 160
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    key: 'createTime',
-    sorter: true,
-    width: 160
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    slots: { customRender: 'actions' },
-    width: 150,
-    fixed: 'right'
-  }
-];
-
-// 事件处理
-const handleTableChange = ({ current, pageSize: size }: any) => {
-  onPageChange(current, size);
-};
-
-const viewReport = (report: Report) => {
-  selectedReport.value = report;
-  showDetailDrawer.value = true;
-};
-
-const editReport = (report: Report) => {
-  editingReport.value = report;
-  showEditModal.value = true;
-};
-
-const handleCreateReport = async (data: CreateReportRequest) => {
-  try {
-    await createReport(data);
-    showCreateModal.value = false;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const handleUpdateReport = async (data: UpdateReportRequest) => {
-  if (!editingReport.value) return;
-  
-  try {
-    await updateReport(editingReport.value.id, data);
-    showEditModal.value = false;
-    editingReport.value = null;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const deleteReport = (reportId: string) => {
-  Modal.confirm({
-    title: '确认删除',
-    content: '确定要删除这个报表吗？删除后无法恢复。',
-    okText: '确定',
-    cancelText: '取消',
-    okType: 'danger',
-    onOk: () => deleteReportById(reportId)
-  });
-};
-
-const handleBatchDelete = () => {
-  if (selectedReports.value.length === 0) {
-    message.warning('请先选择要删除的报表');
-    return;
-  }
-
-  Modal.confirm({
-    title: '批量删除确认',
-    content: `确定要删除选中的 ${selectedReports.value.length} 个报表吗？删除后无法恢复。`,
-    okText: '确定',
-    cancelText: '取消',
-    okType: 'danger',
-    onOk: deleteSelectedReports
-  });
-};
-
-const generateReportData = async (report: Report) => {
-  try {
-    // 这里可以添加参数输入对话框
-    const request = {
-      reportId: report.id,
-      parameters: {}, // 实际应该从用户输入获取
-      format: 'json' as ReportFormat
-    };
-    
-    const data = await generateReport(request);
-    showResultModal.value = true;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const duplicateReport = async (report: Report) => {
-  try {
-    const duplicateData = {
-      ...report,
-      name: `${report.name} - 副本`,
-      status: 'draft' as ReportStatus
-    };
-    
-    await createReport(duplicateData);
-    message.success('报表复制成功');
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const scheduleReport = (report: Report) => {
-  schedulingReport.value = report;
-  showScheduleModal.value = true;
-};
-
-const handleScheduleReport = (scheduleData: any) => {
-  message.success('定时任务配置成功');
-  showScheduleModal.value = false;
-  schedulingReport.value = null;
-};
-
-const handleSelectTemplate = (template: any) => {
-  // 基于模板创建报表
-  const templateData = {
-    name: `基于${template.name}的报表`,
-    type: template.type,
-    description: template.description,
-    parameters: template.parameters,
-    templateId: template.id
-  };
-  
-  showTemplateModal.value = false;
-  // 可以直接创建或打开表单预填充数据
-  handleCreateReport(templateData);
-};
-
-const handleExportReport = (format: ReportFormat) => {
-  if (!reportData.value) return;
-  exportReport(reportData.value.reportId, format, reportData.value);
-};
-
-// 工具函数
-const getTypeText = (type: ReportType): string => {
-  const typeMap = {
-    user_usage: '用户使用统计',
-    traffic_analysis: '流量分析',
-    revenue_statistics: '收入统计',
-    device_performance: '设备性能',
-    session_analysis: '会话分析',
-    billing_summary: '计费汇总',
-    custom_query: '自定义查询'
-  };
-  return typeMap[type] || type;
-};
-
-const getStatusColor = (status: ReportStatus): string => {
-  const colorMap = {
-    draft: 'default',
-    active: 'green',
-    paused: 'orange',
-    archived: 'red'
-  };
-  return colorMap[status] || 'default';
-};
-
-const getStatusText = (status: ReportStatus): string => {
-  const textMap = {
-    draft: '草稿',
-    active: '活跃',
-    paused: '暂停',
-    archived: '归档'
-  };
-  return textMap[status] || status;
-};
+// 响应式状态 (仅保留已使用的)
+const showCreateModal = ref(false)
+const showTemplateModal = ref(false)
 
 // 生命周期
 onMounted(() => {
-  fetchReports();
-});
+  // 初始化页面数据
+  reportsStore.fetchReportsDashboard()
+  reportsStore.fetchOnlineUsersReport()
+  reportsStore.fetchPendingReports()
+})
 </script>
 
 <style scoped>

@@ -36,14 +36,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ReloadOutlined } from '@ant-design/icons-vue'
-
-interface LastConnect {
-  id: number
-  username: string
-  pass?: string
-  reply: string
-  authdate: string
-}
+import type { LastConnect } from '@/types/reports'
 
 interface Props {
   data: LastConnect[]

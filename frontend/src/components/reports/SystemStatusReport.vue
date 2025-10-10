@@ -76,19 +76,19 @@
             <h3><CloudServerOutlined /> 系统资源</h3>
             <a-descriptions bordered :column="1" size="small">
               <a-descriptions-item label="CPU 使用率">
-                <a-progress 
-                  :percent="data?.cpu_usage || 0" 
+                <a-progress
+                  :percent="data?.cpu_usage || 0"
                   :status="getResourceStatus(data?.cpu_usage || 0)"
                 />
               </a-descriptions-item>
               <a-descriptions-item label="内存使用率">
-                <a-progress 
+                <a-progress
                   :percent="data?.memory_usage || 0"
                   :status="getResourceStatus(data?.memory_usage || 0)"
                 />
               </a-descriptions-item>
               <a-descriptions-item label="磁盘使用率">
-                <a-progress 
+                <a-progress
                   :percent="data?.disk_usage || 0"
                   :status="getResourceStatus(data?.disk_usage || 0)"
                 />
@@ -102,7 +102,13 @@
 </template>
 
 <script setup lang="ts">
-import { ReloadOutlined, WifiOutlined, DatabaseOutlined, GlobalOutlined, CloudServerOutlined } from '@ant-design/icons-vue'
+import {
+  ReloadOutlined,
+  WifiOutlined,
+  DatabaseOutlined,
+  GlobalOutlined,
+  CloudServerOutlined,
+} from '@ant-design/icons-vue'
 
 interface SystemStatusData {
   radius_status?: string

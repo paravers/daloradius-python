@@ -6,12 +6,7 @@
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <a-form
-      ref="formRef"
-      :model="formData"
-      :rules="rules"
-      layout="vertical"
-    >
+    <a-form ref="formRef" :model="formData" :rules="rules" layout="vertical">
       <a-form-item label="报表名称" name="name">
         <a-input v-model:value="formData.name" placeholder="请输入报表名称" />
       </a-form-item>
@@ -30,11 +25,7 @@
       </a-form-item>
 
       <a-form-item label="描述" name="description">
-        <a-textarea
-          v-model:value="formData.description"
-          placeholder="请输入报表描述"
-          :rows="3"
-        />
+        <a-textarea v-model:value="formData.description" placeholder="请输入报表描述" :rows="3" />
       </a-form-item>
 
       <a-form-item label="公开报表" name="is_public">
@@ -73,17 +64,16 @@ const formData = reactive({
 })
 
 const rules = {
-  name: [
-    { required: true, message: '请输入报表名称', trigger: 'blur' },
-  ],
-  report_type: [
-    { required: true, message: '请选择报表类型', trigger: 'change' },
-  ],
+  name: [{ required: true, message: '请输入报表名称', trigger: 'blur' }],
+  report_type: [{ required: true, message: '请选择报表类型', trigger: 'change' }],
 }
 
-watch(() => props.visible, (val) => {
-  isVisible.value = val
-})
+watch(
+  () => props.visible,
+  (val) => {
+    isVisible.value = val
+  },
+)
 
 watch(isVisible, (val) => {
   emit('update:visible', val)

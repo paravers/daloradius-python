@@ -1,16 +1,8 @@
 <template>
-  <a-modal
-    v-model:open="isVisible"
-    title="报表模板"
-    width="800px"
-    :footer="null"
-  >
+  <a-modal v-model:open="isVisible" title="报表模板" width="800px" :footer="null">
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="my" tab="我的模板">
-        <a-list
-          :data-source="myTemplates"
-          :loading="loading"
-        >
+        <a-list :data-source="myTemplates" :loading="loading">
           <template #renderItem="{ item }">
             <a-list-item>
               <a-list-item-meta>
@@ -22,9 +14,7 @@
                 </template>
               </a-list-item-meta>
               <template #actions>
-                <a-button type="link" size="small" @click="selectTemplate(item)">
-                  使用
-                </a-button>
+                <a-button type="link" size="small" @click="selectTemplate(item)"> 使用 </a-button>
               </template>
             </a-list-item>
           </template>
@@ -32,10 +22,7 @@
       </a-tab-pane>
 
       <a-tab-pane key="public" tab="公共模板">
-        <a-list
-          :data-source="publicTemplates"
-          :loading="loading"
-        >
+        <a-list :data-source="publicTemplates" :loading="loading">
           <template #renderItem="{ item }">
             <a-list-item>
               <a-list-item-meta>
@@ -47,9 +34,7 @@
                 </template>
               </a-list-item-meta>
               <template #actions>
-                <a-button type="link" size="small" @click="selectTemplate(item)">
-                  使用
-                </a-button>
+                <a-button type="link" size="small" @click="selectTemplate(item)"> 使用 </a-button>
               </template>
             </a-list-item>
           </template>
@@ -117,9 +102,12 @@ const publicTemplates = ref<Template[]>([
   },
 ])
 
-watch(() => props.visible, (val) => {
-  isVisible.value = val
-})
+watch(
+  () => props.visible,
+  (val) => {
+    isVisible.value = val
+  },
+)
 
 watch(isVisible, (val) => {
   emit('update:visible', val)

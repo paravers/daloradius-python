@@ -257,7 +257,7 @@ export const HOTSPOT_VALIDATION_RULES = {
     message: 'Must be a valid email address'
   },
   website: {
-    pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+    pattern: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
     message: 'Must be a valid website URL'
   }
 }

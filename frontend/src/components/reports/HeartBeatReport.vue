@@ -92,9 +92,13 @@ const columns = [
   { title: '服务名称', dataIndex: 'service_name', key: 'service_name', width: 150 },
   { title: '服务类型', dataIndex: 'service_type', key: 'service_type', width: 120 },
   { title: '主机', dataIndex: 'host_name', key: 'host_name', width: 150 },
-  { title: 'IP:端口', width: 150, customRender: ({ record }: { record: HeartBeat }) => {
-    return `${record.ip_address || '-'}:${record.port || '-'}`
-  }},
+  {
+    title: 'IP:端口',
+    width: 150,
+    customRender: ({ record }: { record: HeartBeat }) => {
+      return `${record.ip_address || '-'}:${record.port || '-'}`
+    },
+  },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
   { title: '响应时间', key: 'response_time', width: 100 },
   { title: '运行时长', key: 'uptime', width: 120 },

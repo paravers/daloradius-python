@@ -279,8 +279,8 @@ export function useUserForm() {
   return {
     // 状态
     visible,
-    loading: loading.readonly(),
-    mode: mode.readonly(),
+    loading: loading.value.readonly(),
+    mode: mode.value.readonly(),
     formRef,
     formModel,
     
